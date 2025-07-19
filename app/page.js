@@ -15,6 +15,7 @@ export default function HomePage() {
     <main className="flex flex-col min-h-screen items-center justify-center">
       <HeroSection/>
       <Gallery/>
+      <Gallery />
       <RoomAvailabilityForm/>
       <HallFeatures/>
       <PricingSection/>
