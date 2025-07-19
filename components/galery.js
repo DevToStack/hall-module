@@ -2,6 +2,7 @@
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import Image from "next/image";
 
 const images = [
     "/image1.jpg",
@@ -44,7 +45,7 @@ const Gallery = () => {
                     {images.map((src, index) => (
                         <div key={index} className="px-3">
                             <div className="rounded-xl overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300">
-                                <img
+                                <Image
                                     src={src}
                                     alt={`Hall ${index + 1}`}
                                     className="w-full h-64 object-cover"

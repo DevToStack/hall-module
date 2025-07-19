@@ -15,7 +15,7 @@ const HeroSection = () => {
                 </h1>
 
                 <p className="mt-4 text-lg sm:text-xl text-red-900">
-                    Whether it's a wedding, party, or conference – find and book the ideal space instantly.
+                    Whether its a wedding, party, or conference  find and book the ideal space instantly.
                 </p>
                 <div className="mt-6 flex justify-center gap-4 flex-wrap">
                 <Link href={"/booking"}>

@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as solidStar } from "@fortawesome/free-solid-svg-icons";
 import { faStar as regularStar } from "@fortawesome/free-regular-svg-icons";
+import Image from "next/image";
 
 const testimonials = [
     {
@@ -57,7 +58,7 @@ const TestimonialSection = () => {
                             className="bg-white rounded-xl shadow-md p-6 text-left hover:shadow-lg transition duration-300"
                         >
                             <div className="flex items-center mb-4">
-                                <img
+                                <Image
                                     src={t.image}
                                     alt={t.name}
                                     className="w-12 h-12 rounded-full object-cover mr-4"
