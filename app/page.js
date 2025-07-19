@@ -2,11 +2,11 @@
 import BookingModal from "@/components/BookingForm";
 import HallFeatures from "@/components/Features";
 import RoomAvailabilityForm from "@/components/Form";
+import Gallery from "@/components/galery";
 import HeroSection from "@/components/hero";
 import PricingSection from "@/components/Price";
 import TestimonialSection from "@/components/Testimonial";
 import { useState } from "react";
-import Link from 'next/link';
 
 export default function HomePage() {
   const [openModal, setOpenModal] = useState(false);
@@ -15,6 +15,7 @@ export default function HomePage() {
       <HeroSection/>
       <RoomAvailabilityForm/>
       <HallFeatures/>
+      <Gallery/>
       <PricingSection/>
       <TestimonialSection/>
       <div>
