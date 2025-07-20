@@ -3,8 +3,8 @@ import BookingModal from "@/components/BookingForm";
 import HallFeatures from "@/components/Features";
 import RoomAvailabilityForm from "@/components/Form";
 import Gallery from "@/components/galery";
+import GallerySection from "@/components/galery1";
 import HeroSection from "@/components/hero";
-import NavBar from "@/components/NavBar";
 import PricingSection from "@/components/Price";
 import TestimonialSection from "@/components/Testimonial";
 import { useState } from "react";
@@ -14,9 +14,14 @@ export default function HomePage() {
   return (
     <main className="flex flex-col min-h-screen items-center justify-center">
       <HeroSection/>
-      <Gallery/>
-      <Gallery />
-      <RoomAvailabilityForm/>
+      <div className="max-xl:flex hidden p-1 bg-gray-700 w-full">
+        <RoomAvailabilityForm />
+      </div>
+      <div className="w-full flex flex-col text-center">
+        <h1 className="p-2 text-3xl">Gallery</h1>
+        <GallerySection />
+      </div>
+
       <HallFeatures/>
       <PricingSection/>
       <TestimonialSection/>

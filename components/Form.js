@@ -3,7 +3,7 @@ const RoomAvailabilityForm = () => {
         <form className="mt-3 mb-3 flex flex-col max-w-5xl max-xl:max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-4 space-y-6 ">
             <h2 className="text-2xl font-bold text-center text-gray-800">Check Room Availability</h2>
 
-            <div className="grid grid-cols-3 max-sm:grid-cols-1 max-xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 max-sm:grid-cols-1 max-xl:grid-cols-2 gap-4">
                 {/* Date */}
                 <div className="flex gap-1">
                     <div className="flex flex-col">
@@ -11,7 +11,7 @@ const RoomAvailabilityForm = () => {
                         <input
                             type="date"
                             id="date"
-                            className="mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
@@ -20,18 +20,18 @@ const RoomAvailabilityForm = () => {
                         <input
                             type="date"
                             id="date"
-                            className="mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
                 </div>
 
                 {/* Time Slot */}
-                <div className="flex flex-col">
+                <div className="flex flex-col hidden">
                     <label htmlFor="time" className="text-gray-700 font-medium">Time Slot</label>
                     <select
                         id="time"
-                        className="mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="mt-1 p-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                         required
                     >
                         <option value="">Select Time</option>
@@ -49,7 +49,7 @@ const RoomAvailabilityForm = () => {
                         type="number"
                         id="guests"
                         min="1"
-                        className="mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                         placeholder="e.g. 50"
                     />
                 </div>
