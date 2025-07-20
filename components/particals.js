@@ -18,14 +18,14 @@ const HeroParticlesBackground = () => {
         },
         particles: {
           number: {
-            value: 40,
+            value: 30,
             density: {
               enable: true,
               area: 800,
             },
           },
           color: {
-            value: ['#192949', '#3f5efb', '#fc466b'], // varied theme tones
+            value: ['#192949', '#c2e6ff', '#fc466b'], // varied theme tones
           },
           shape: {
             type: ['circle', 'triangle', 'edge'], // multiple shapes
@@ -35,18 +35,18 @@ const HeroParticlesBackground = () => {
             random: true,
             anim: {
               enable: true,
-              speed: 0.5,
+              speed: 1,
               opacity_min: 0.1,
               sync: false,
             },
           },
           size: {
-            value: { min: 2, max: 6 },
+            value: { min: 4, max: 8 },
             random: true,
           },
           move: {
             enable: true,
-            speed: 1,
+            speed: 1.7,
             direction: 'none',
             random: true,
             straight: false,
@@ -56,9 +56,9 @@ const HeroParticlesBackground = () => {
           },
           links: {
             enable: true,
-            distance: 130,
-            color: '#ffffff',
-            opacity: 0.4,
+            distance:300,
+            color: '#0070ff',
+            opacity: 0.6,
             width: 2,
           },
           rotate: {
@@ -66,13 +66,13 @@ const HeroParticlesBackground = () => {
             direction: "random",
             animation: {
               enable: true,
-              speed: 5,
+              speed: 9,
             },
           },
           wobble: {
             enable: true,
             distance: 5,
-            speed: 1,
+            speed: 2,
           },
         },
         interactivity: {
@@ -84,7 +84,7 @@ const HeroParticlesBackground = () => {
           },
           modes: {
             grab: {
-              distance: 100,
+              distance: 300,
               links: {
                 opacity: 0.5,
               },

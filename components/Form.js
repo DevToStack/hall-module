@@ -1,26 +1,31 @@
 const RoomAvailabilityForm = () => {
     return (
-        <form className="mt-3 mb-3 flex flex-col max-w-5xl max-xl:max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-4 space-y-6 ">
-            <h2 className="text-2xl font-bold text-center text-gray-800">Check Room Availability</h2>
+        <form className="mt-3 mb-3 flex flex-col max-w-5xl max-xl:max-w-2xl mx-auto 
+            bg-black/10 backdrop-blur-xm
+ 
+            shadow-sm shadow-[#0070ff] 
+            rounded-2xl p-3 space-y-6 
+            ring-1 ring-inset ring-purple-500/70">
+            <h2 className="text-2xl font-bold text-center text-white">Check Room Availability</h2>
 
             <div className="grid grid-cols-2 max-sm:grid-cols-1 max-xl:grid-cols-2 gap-4">
                 {/* Date */}
                 <div className="flex gap-1">
                     <div className="flex flex-col">
-                        <label htmlFor="date" className="text-gray-700 font-medium">Date</label>
+                        <label htmlFor="date" className="text-white font-medium">Date</label>
                         <input
                             type="date"
                             id="date"
-                            className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
                     <div className="flex flex-col">
-                        <label htmlFor="date" className="text-gray-700 font-medium">Date</label>
+                        <label htmlFor="date" className="text-white font-medium">Date</label>
                         <input
                             type="date"
                             id="date"
-                            className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
@@ -28,10 +33,10 @@ const RoomAvailabilityForm = () => {
 
                 {/* Time Slot */}
                 <div className="flex flex-col hidden">
-                    <label htmlFor="time" className="text-gray-700 font-medium">Time Slot</label>
+                    <label htmlFor="time" className="text-white font-medium">Time Slot</label>
                     <select
                         id="time"
-                        className="mt-1 p-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="mt-1 p-2 text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                         required
                     >
                         <option value="">Select Time</option>
@@ -44,12 +49,12 @@ const RoomAvailabilityForm = () => {
 
                 {/* Guest Count */}
                 <div className="flex flex-col">
-                    <label htmlFor="guests" className="text-gray-700 font-medium">Number of Guests</label>
+                    <label htmlFor="guests" className="text-white font-medium">Number of Guests</label>
                     <input
                         type="number"
                         id="guests"
                         min="1"
-                        className="text-black mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                         placeholder="e.g. 50"
                     />
                 </div>
