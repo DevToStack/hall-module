@@ -18,7 +18,7 @@ const HeroParticlesBackground = () => {
         },
         particles: {
           number: {
-            value: 30,
+            value: 45,
             density: {
               enable: true,
               area: 800,

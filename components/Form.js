@@ -1,31 +1,31 @@
 const RoomAvailabilityForm = () => {
     return (
-        <form className="mt-3 mb-3 flex flex-col max-w-5xl max-xl:max-w-2xl mx-auto 
-            bg-black/10 backdrop-blur-xm
+        <form className="mt-3 mb-3 flex flex-col max-w-5xl min-sm:min-w-xl mx-auto 
+            bg-black/20 backdrop-blur-xs
  
             shadow-sm shadow-[#0070ff] 
-            rounded-2xl p-3 space-y-6 
+            rounded-2xl p-4 space-y-6 
             ring-1 ring-inset ring-purple-500/70">
             <h2 className="text-2xl font-bold text-center text-white">Check Room Availability</h2>
 
-            <div className="grid grid-cols-2 max-sm:grid-cols-1 max-xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 {/* Date */}
-                <div className="flex gap-1">
-                    <div className="flex flex-col">
-                        <label htmlFor="date" className="text-white font-medium">Date</label>
+                <div className="flex gap-4">
+                    <div className="flex flex-grow flex-col">
+                        <label htmlFor="date" className="text-white font-medium">CheckIn</label>
                         <input
                             type="date"
                             id="date"
-                            className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
-                    <div className="flex flex-col">
-                        <label htmlFor="date" className="text-white font-medium">Date</label>
+                    <div className="flex flex-col flex-grow">
+                        <label htmlFor="date" className="text-white font-medium">CheckOut</label>
                         <input
                             type="date"
                             id="date"
-                            className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
@@ -64,15 +64,9 @@ const RoomAvailabilityForm = () => {
             <div className="flex flex-wrap justify-end gap-5 max-sm:justify-between max-xl:gap-10 ">
                 <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
+                    className="bg-blue-600 flex-grow hover:bg-blue-700 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
                 >
                     Check Availability
-                </button>
-                <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
-                >
-                    Book Room
                 </button>
                 
             </div>
