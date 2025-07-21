@@ -16,7 +16,7 @@ export default function HomePage() {
       <HeroSection/>
       <div className="w-full flex flex-col text-center">
         <h1 className="p-2 text-3xl">Gallery</h1>
-        <GallerySection />
+        <GallerySection/>
       </div>
 
       <HallFeatures/>
