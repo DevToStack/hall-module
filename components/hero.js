@@ -17,7 +17,7 @@ const HeroSection = () => {
             {/* Hero Content */}
             <div className="mt-30 relative z-10 text-center max-w-4xl">
                 <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-100 to-orange-400">
-                    Book Your Perfect Hall
+                    Book Your Perfect Apartment
                 </h1>
                 <p className="mt-4 text-lg sm:text-xl text-gray-300">
                     Whether it’s a wedding, party, or conference — find and book the ideal space instantly.

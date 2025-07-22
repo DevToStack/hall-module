@@ -45,7 +45,7 @@ const HallFeatures = () => {
     return (
         <section className="py-16 bg-gray-100">
             <div className="max-w-7xl mx-auto px-4 text-center">
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Why Choose Our Halls?</h2>
+                <h2 className="text-3xl font-bold mb-4 text-gray-800">Why Choose Our Apartment?</h2>
                 <p className="text-gray-600 mb-10">
                     Premium features that make your event smooth, elegant, and unforgettable.
                 </p>
