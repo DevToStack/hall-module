@@ -1,3 +1,7 @@
+import { useRouter } from 'next/navigation';
+
+
+
 const plans = [
     {
         title: "Basic Package",
@@ -38,6 +42,12 @@ const plans = [
 ];
 
 const PricingSection = () => {
+    const router = useRouter();
+
+
+    const handleBook = (plan) => {
+        router.push(`/payment?title=${encodeURIComponent(plan.title)}&price=${plan.price.replace(/[₹,]/g, '')}`);
+    };
     return (
         <section className="bg-white py-16" id="pricing">
             <div className="max-w-7xl mx-auto px-4 text-center">
@@ -60,9 +70,11 @@ const PricingSection = () => {
                                     <li key={i}>✓ {feature}</li>
                                 ))}
                             </ul>
-                            <button className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">
-                                Book Now
-                            </button>
+                            <button onClick={() => handleBook(plan)} className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">
+                            Book Now
+                        </button>
+
+
                         </div>
                     ))}
                 </div>
