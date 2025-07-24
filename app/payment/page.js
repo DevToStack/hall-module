@@ -1,13 +1,14 @@
 'use client';
+
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 
-export default function PaymentPage() {
-    const [loading, setLoading] = useState(false);
+function PaymentContent() {
     const searchParams = useSearchParams();
-
     const title = searchParams.get('title');
     const price = parseInt(searchParams.get('price'));
+
+    const [loading, setLoading] = useState(false);
 
     const loadRazorpayScript = () =>
         new Promise((resolve) => {
@@ -39,7 +40,6 @@ export default function PaymentPage() {
             description: title,
             order_id: order.id,
             handler: async function (response) {
-                // Replace with real values
                 const bookingRes = await fetch('/api/booking', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -73,9 +73,21 @@ export default function PaymentPage() {
         <div className="p-6 text-center">
             <h1 className="text-xl mb-2">Pay for {title}</h1>
             <p className="mb-4">Amount: ₹{price}</p>
-            <button onClick={handlePayment} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded">
+            <button
+                onClick={handlePayment}
+                disabled={loading}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
                 {loading ? 'Processing...' : 'Pay with Razorpay'}
             </button>
         </div>
+    );
+}
+
+export default function PaymentPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading payment details...</div>}>
+            <PaymentContent />
+        </Suspense>
     );
 }
