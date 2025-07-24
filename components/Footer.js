@@ -2,7 +2,7 @@ const Footer = () => {
     return (
         <footer className="bg-gray-900 text-white py-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-8">
 
                     {/* Branding */}
                     <div>
@@ -34,7 +34,7 @@ const Footer = () => {
                     {/* Social Media */}
                     <div>
                         <h3 className="text-lg font-semibold mb-3">Follow Us</h3>
-                        <div className="flex space-x-4">
+                        <div className="flex flex-col xl:flex-row space-x-4">
                             <a href="#" className="hover:text-blue-400 transition">Facebook</a>
                             <a href="#" className="hover:text-pink-400 transition">Instagram</a>
                             <a href="#" className="hover:text-blue-300 transition">Twitter</a>

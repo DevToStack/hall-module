@@ -12,6 +12,7 @@ import {
     faBuilding,
     faStar,
     faUserCog,
+    faUserPen,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -32,6 +33,7 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
     const tabs = [
         { id: "home", label: "Home", icon: faHome },
         { id: "book", label: "Book", icon: faBook },
+        { id: "support", label: "Support", icon: faUserPen },
         status === "authenticated"
             ? { id: "profile", label: "Profile", icon: faUser }
             : { id: "login", label: "Login", icon: faUser },
@@ -63,9 +65,9 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                         <h1 className="text-white text-2xl font-extrabold tracking-tight">MyHall</h1>
                     </div>
 
-                    <div className="flex gap-6">
+                    <div className="flex gap-6 max-sm:gap-2">
                         {tabs.map((tab) => {
-                            const isActive = activeTab === tab.id;
+                            const isActive = activeTab === tab.id;                       
                             return (
                                 <button
                                     key={tab.id}
@@ -79,7 +81,7 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                                     <span className="hidden sm:inline font-semibold">{tab.label}</span>
                                 </button>
                             );
-                        })}
+                        })}                       
                     </div>
                 </div>
             </nav>
