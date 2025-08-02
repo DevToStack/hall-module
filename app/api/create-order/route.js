@@ -13,9 +13,11 @@ export async function POST(req) {
         const body = await req.json();
         const amount = Number(body.amount); // Ensure it's a number
 
-        if (!amount || amount <= 0) {
-            return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+        const ALLOWED_AMOUNTS = [6900, 10000, 18000];
+        if (!ALLOWED_AMOUNTS.includes(amount)) {
+            return res.status(400).json({ message: 'Invalid amount' });
         }
+
 
         const order = await razorpay.orders.create({
             amount: amount * 100, // Razorpay expects amount in paise

@@ -1,8 +1,6 @@
-// components/NavBar.jsx
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
     faBook,
@@ -13,28 +11,56 @@ import {
     faStar,
     faUserCog,
     faUserPen,
+    faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { data: session, status } = useSession();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const router = useRouter();
+
+    // Prefetch critical pages & check token
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsAuthenticated(!!token);
+
+        router.prefetch("/signin");
+        router.prefetch("/profile");
+        router.prefetch("/");
+    }, []);
 
     const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
+    // O(1) route lookup
+    const tabRouteMap = {
+        login: "/signin",
+        profile: "/profile",
+        home: "/",
+    };
+
     const handleTabClick = (tabId) => {
-        if (tabId === "book") onBookClick?.();
-        else if (tabId === "login") router.push("/auth");
-        else if (tabId === "profile") router.push("/profile");
         setActiveTab(tabId);
+
+        if (tabId === "book") {
+            onBookClick?.();
+            return;
+        }
+
+        const route = tabRouteMap[tabId] || "/";
+        router.push(route);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
+        router.push("/");
     };
 
     const tabs = [
         { id: "home", label: "Home", icon: faHome },
         { id: "book", label: "Book", icon: faBook },
-        { id: "support", label: "Support", icon: faUserPen },
-        status === "authenticated"
+        isAuthenticated
             ? { id: "profile", label: "Profile", icon: faUser }
             : { id: "login", label: "Login", icon: faUser },
     ];
@@ -53,10 +79,10 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
             <nav className="fixed top-0 left-0 w-full z-50 bg-black border-b border-white/20 shadow-lg">
                 <div className="w-full mx-auto px-4 py-3 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        {/* Hamburger for small screens */}
+                        {/* Hamburger */}
                         <div
                             onClick={toggleSidebar}
-                            className="flex flex-col justify-center gap-[5px] cursor-pointer group lg:hidden"
+                            className="flex flex-col justify-center gap-[5px] cursor-pointer group"
                         >
                             <span className="w-7 h-[3px] bg-white rounded-full group-hover:scale-x-125 transition-transform duration-300"></span>
                             <span className="w-5 h-[3px] bg-white rounded-full group-hover:scale-x-110 transition-transform duration-300"></span>
@@ -67,7 +93,7 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
 
                     <div className="flex gap-6 max-sm:gap-2">
                         {tabs.map((tab) => {
-                            const isActive = activeTab === tab.id;                       
+                            const isActive = activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
@@ -81,22 +107,22 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                                     <span className="hidden sm:inline font-semibold">{tab.label}</span>
                                 </button>
                             );
-                        })}                       
+                        })}
                     </div>
                 </div>
             </nav>
 
-            {/* Sidebar (conditional for screen size) */}
+            {/* Sidebar */}
             <div
                 className={`fixed top-0 left-0 h-full bg-black text-white z-50 shadow transition-transform duration-300
-          w-80 lg:w-90 lg:shadow-white rounded-r-xl p-3
-          ${sidebarOpen ? "translate-x-0 shadow-white" : "-translate-x-full"} lg:translate-x-0`}
+                w-80 lg:w-90 lg:shadow-white rounded-r-xl p-3
+                ${sidebarOpen ? "translate-x-0 shadow-white" : "-translate-x-full"}`}
             >
                 <div className="flex justify-between items-center p-4">
                     <h2 className="text-2xl font-extrabold">MyHall</h2>
                     <button
                         onClick={toggleSidebar}
-                        className="text-3xl focus:outline-none lg:hidden"
+                        className="text-3xl focus:outline-none"
                     >
                         &times;
                     </button>
@@ -113,8 +139,17 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                         </li>
                     ))}
                 </ul>
-            </div>
 
+                {isAuthenticated && (
+                    <button
+                        onClick={handleLogout}
+                        className="mt-4 bg-red-500 hover:bg-red-600 text-white w-full py-2 rounded-lg flex items-center justify-center gap-2"
+                    >
+                        <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
+                        Log Out
+                    </button>
+                )}
+            </div>
         </>
     );
 }

@@ -23,9 +23,9 @@ const HeroSection = () => {
                     Whether it’s a wedding, party, or conference — find and book the ideal space instantly.
                 </p>
                 <div className="mt-6 flex justify-center gap-4 flex-wrap">
-                    <button onClick={() => setOpenModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
+                    <Link href="#pricing" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
                         Book Room
-                    </button>
+                    </Link>
                     <button className="border border-green-400 text-green-400 hover:bg-green-600 hover:text-white font-semibold py-3 px-6 rounded-xl transition duration-300 bg-white/10 backdrop-blur-sm">
                         Learn More
                     </button>

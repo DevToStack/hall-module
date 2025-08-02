@@ -1,30 +1,43 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SessionProvider } from 'next-auth/react';
 import NavBar from './NavBar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BookingModal from './BookingForm';
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState('');
   const [openModal, setOpenModal] = useState(false);
+
   const showNavBar = pathname === '/';
+
+  useEffect(() => {
+    // Set activeTab based on the current path
+    if (pathname === '/') {
+      setActiveTab('home');
+    } else {
+      setActiveTab('');
+    }
+  }, [pathname]);
 
   const handleCloseBooking = () => {
     setOpenModal(false);
   };
+
   return (
-    <SessionProvider>
+    <>
       {showNavBar && (
-        <NavBar activeTab={activeTab} setActiveTab={setActiveTab} onBookClick={() => setOpenModal(true)} />
-        
+        <NavBar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onBookClick={() => setOpenModal(true)}
+        />
       )}
       {showNavBar && (
-      <BookingModal isOpen={openModal} onClose={handleCloseBooking} />
+        <BookingModal isOpen={openModal} onClose={handleCloseBooking} />
       )}
       {children}
-    </SessionProvider>
+    </>
   );
 }

@@ -1,11 +1,28 @@
-import { useSession } from 'next-auth/react';
+"use client";
+
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const BookingModal = ({ isOpen, onClose }) => {
-    const { data: session, status } = useSession();
-    if (!isOpen) return null;
+    const [user, setUser] = useState({ name: "", email: "" });
 
-    const userName = session?.user?.name || "Guest";
-    const userEmail = session?.user?.email || "";
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setUser({
+                    name: decoded.name || "",
+                    email: decoded.email || "",
+                });
+                console.log(decoded.name);
+            } catch (err) {
+                console.error("Invalid token");
+            }
+        }
+    }, []);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -22,80 +39,72 @@ const BookingModal = ({ isOpen, onClose }) => {
                     Book a Hall
                 </h2>
 
-                {status === "loading" ? (
-                    <p className="text-center text-gray-500">Loading session...</p>
-                ) : (
-                    <>
-                        <p className="text-center text-gray-600 mb-4">Hello, {userName}</p>
+                <p className="text-center text-gray-600 mb-4">Hello, {user.name}</p>
 
-                        <form className="space-y-4">
-                            {/* Name */}
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    defaultValue={userName}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Your Name"
-                                    required
-                                />
-                            </div>
+                <form className="space-y-4">
+                    {/* Name */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+                        <input
+                            type="text"
+                            defaultValue={user.name}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Your Name"
+                            required
+                        />
+                    </div>
 
-                            {/* Email */}
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-1">Email Address</label>
-                                <input
-                                    type="email"
-                                    defaultValue={userEmail}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="you@example.com"
-                                    required
-                                />
-                            </div>
+                    {/* Email */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">Email Address</label>
+                        <input
+                            type="email"
+                            defaultValue={user.email}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="you@example.com"
+                            required
+                        />
+                    </div>
 
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-1">Start Date</label>
-                                    <input
-                                        type="date"
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-1">End Date</label>
-                                    <input
-                                        type="date"
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-1">Start Date</label>
+                            <input
+                                type="date"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-1">End Date</label>
+                            <input
+                                type="date"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                required
+                            />
+                        </div>
+                    </div>
 
-                           
+                    {/* Guest Count */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">Guest Count</label>
+                        <input
+                            type="number"
+                            min="1"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="e.g. 100"
+                        />
+                    </div>
 
-                            {/* Guest Count */}
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-1">Guest Count</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="e.g. 100"
-                                />
-                            </div>
-
-                            {/* Submit */}
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Submit Booking
-                            </button>
-                        </form>
-                    </>
-                )}
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition"
+                    >
+                        Submit Booking
+                    </button>
+                </form>
             </div>
         </div>
     );
