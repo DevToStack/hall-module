@@ -1,4 +1,5 @@
 'use client';
+<<<<<<< HEAD
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -20,6 +21,13 @@ const packages = {
 };
 
 export default function PaymentContent() {
+=======
+
+import { useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+
+function PaymentContent() {
+>>>>>>> 1adb8947cc908265eb6041bc85f350d50f5176f9
     const searchParams = useSearchParams();
     const title = searchParams.get('title');
     const packageInfo = packages[title];
@@ -40,6 +48,8 @@ export default function PaymentContent() {
     const totalPrice = packageInfo
         ? packageInfo.basePrice + cleaningFee + packageInfo.basePrice * tax - discount
         : 0;
+
+    const [loading, setLoading] = useState(false);
 
     const loadRazorpayScript = () =>
         new Promise((resolve) => {
@@ -70,8 +80,32 @@ export default function PaymentContent() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to create order');
 
+<<<<<<< HEAD
             const ok = await loadRazorpayScript();
             if (!ok) throw new Error('Razorpay SDK failed to load');
+=======
+        const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            amount: order.amount,
+            currency: 'INR',
+            name: 'Booking Payment',
+            description: title,
+            order_id: order.id,
+            handler: async function (response) {
+                const bookingRes = await fetch('/api/booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: 1,
+                        apartment_id: 1,
+                        start_date: '2025-07-25',
+                        end_date: '2025-07-26',
+                        price,
+                        package_title: title,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                    }),
+                });
+>>>>>>> 1adb8947cc908265eb6041bc85f350d50f5176f9
 
             const options = {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -119,6 +153,7 @@ export default function PaymentContent() {
     };
 
     return (
+<<<<<<< HEAD
         <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 z-0 opacity-20 bg-[url('/payment-bg.jpg')] bg-cover bg-center blur-sm" />
 
@@ -202,6 +237,26 @@ export default function PaymentContent() {
                     </>
                 )}
             </div>
+=======
+        <div className="p-6 text-center">
+            <h1 className="text-xl mb-2">Pay for {title}</h1>
+            <p className="mb-4">Amount: ₹{price}</p>
+            <button
+                onClick={handlePayment}
+                disabled={loading}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+                {loading ? 'Processing...' : 'Pay with Razorpay'}
+            </button>
+>>>>>>> 1adb8947cc908265eb6041bc85f350d50f5176f9
         </div>
+    );
+}
+
+export default function PaymentPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading payment details...</div>}>
+            <PaymentContent />
+        </Suspense>
     );
 }
