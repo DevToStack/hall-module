@@ -3,38 +3,41 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const plans = [
+const apartmentPlans = [
     {
-        title: 'Basic Package',
-        price: '₹5,000',
+        title: '1 BHK Comfort',
+        price: '₹3,000',
         features: [
-            '👥 Up to 50 guests',
-            '⏰ 4 hours booking',
-            '🎈 Basic decoration',
-            '🔊 Standard lighting & sound',
+            '🛏️ 1 Bedroom',
+            '🛁 1 Bathroom',
+            '🧑‍🤝‍🧑 Up to 2 guests',
+            '🍽️ Kitchen Access',
+            '📶 Free Wi-Fi',
         ],
     },
     {
-        title: 'Standard Package',
+        title: '2 BHK Deluxe',
+        price: '₹6,500',
+        features: [
+            '🛏️ 2 Bedrooms',
+            '🛁 2 Bathrooms',
+            '🧑‍🤝‍🧑 Up to 4 guests',
+            '🍳 Full Kitchen',
+            '📺 Smart TV + Wi-Fi',
+            '🅿️ Free Parking',
+        ],
+    },
+    {
+        title: '3 BHK Premium',
         price: '₹10,000',
         features: [
-            '👥 Up to 150 guests',
-            '⏰ 8 hours booking',
-            '🎨 Theme decoration',
-            '❄️ AC & Sound System',
-            '🅿️ Parking included',
-        ],
-    },
-    {
-        title: 'Premium Package',
-        price: '₹18,000',
-        features: [
-            '👥 Unlimited guests',
-            '🕛 Full day booking',
-            '💎 Premium decoration',
-            '🎧 DJ, Lights & Projector',
-            '🍽️ Catering support',
-            '🚗 Private parking',
+            '🛏️ 3 Bedrooms',
+            '🛁 3 Bathrooms',
+            '🧑‍🤝‍🧑 Up to 6 guests',
+            '🏖️ Balcony View',
+            '🧼 Daily Cleaning',
+            '📶 High-Speed Wi-Fi',
+            '🅿️ Private Parking',
         ],
     },
 ];
@@ -42,6 +45,8 @@ const plans = [
 export default function PricingSection() {
     const router = useRouter();
     const [selectedPlan, setSelectedPlan] = useState(null);
+    const [formError, setFormError] = useState('');
+
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -53,107 +58,144 @@ export default function PricingSection() {
     const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token');
 
     useEffect(() => {
-        const fetchUser = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
 
-            try {
-                const res = await fetch('/api/profile', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setFormData((prev) => ({
-                        ...prev,
-                        username: data.user.name || '',
-                        email: data.user.email || '',
-                    }));
-                }
-            } catch (err) {
-                console.error('Failed to load user info:', err);
-            }
-        };
-
-        fetchUser();
+        fetch('/api/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setFormData((prev) => ({
+                    ...prev,
+                    username: data.user.name || '',
+                    email: data.user.email || '',
+                }));
+            })
+            .catch(() => { });
     }, []);
-
 
     const handleBook = async (plan) => {
         if (!isLoggedIn) {
-            alert('Please login first to proceed with booking.');
+            alert('Please login first.');
             router.push('/login');
             return;
         }
 
-        setSelectedPlan(plan); // open modal
-
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/profile', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const res = await fetch('/api/next-available-date', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apartment_id:
+                        plan.title.includes('1 BHK') ? 1 :
+                            plan.title.includes('2 BHK') ? 2 :
+                                plan.title.includes('3 BHK') ? 3 : null
+                })
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setFormData({
-                    username: data.user.name || '',
-                    email: data.user.email || '',
-                    checkin: '',
-                    checkout: '',
-                    package: plan.title,
-                });
-            } else {
-                console.error('Failed to fetch user data');
-            }
+            const { availableFrom, availableUntil } = await res.json();
+
+            setSelectedPlan(plan);
+            setFormData((prev) => ({
+                ...prev,
+                package: plan.title,
+                checkin: availableFrom,
+                checkout: availableUntil,
+            }));
         } catch (err) {
-            console.error('Error loading user data:', err);
+            alert('Failed to fetch available dates.');
         }
     };
+      
     
 
     const handleChange = (e) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
-
-    const handleSubmit = (e) => {
+    const handleCloseModal = () => {
+        setSelectedPlan(null);
+        setFormError('');
+        setFormData((prev) => ({
+            ...prev,
+            checkin: '',
+            checkout: '',
+            package: '',
+        }));
+    };
+    
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setFormError(''); // Reset previous errors
+
         const { username, email, checkin, checkout, package: selectedPackage } = formData;
 
         if (!username || !email || !checkin || !checkout || !selectedPackage) {
-            alert('Please fill all fields.');
+            setFormError('Please fill all fields.');
             return;
         }
 
-        const query = new URLSearchParams({
-            name: username,
-            email,
-            checkin,
-            checkout,
-            title: selectedPackage,
-        }).toString();
+        const checkinDate = new Date(checkin);
+        const checkoutDate = new Date(checkout);
 
-        router.push(`/payment?${query}`);
+        if (checkoutDate <= checkinDate) {
+            setFormError('Checkout date must be after checkin date.');
+            return;
+        }
+
+        try {
+            const apartmentId =
+                selectedPackage.includes('1 BHK') ? 1 :
+                    selectedPackage.includes('2 BHK') ? 2 :
+                        selectedPackage.includes('3 BHK') ? 3 : null;
+
+            if (!apartmentId) {
+                setFormError('Invalid apartment selection.');
+                return;
+            }
+
+            const res = await fetch('/api/check-availability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apartment_id: apartmentId, checkin, checkout }),
+            });
+
+            const data = await res.json();
+
+            if (!data.available) {
+                setFormError(data.message || 'Apartment is not available for selected dates.');
+                return;
+            }
+
+            const query = new URLSearchParams({
+                name: username,
+                email,
+                checkin,
+                checkout,
+                title: selectedPackage,
+            }).toString();
+
+            router.push(`/payment?${query}`);
+        } catch (error) {
+            console.error('Error checking availability:', error);
+            setFormError('Server error. Please try again later.');
+        }
     };
+    
+    
 
     return (
         <section className="bg-white py-16" id="pricing">
             <div className="max-w-6xl mx-auto px-4 text-center">
-                <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Pricing Packages</h2>
-                <p className="text-gray-500 mb-12">
-                    Choose the perfect plan for your celebration or event.
-                </p>
+                <h2 className="text-4xl font-bold text-gray-800 mb-4">Apartment Plans</h2>
+                <p className="text-gray-500 mb-12">Choose the perfect apartment for your stay.</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {plans.map((plan, idx) => (
+                    {apartmentPlans.map((plan, idx) => (
                         <div
                             key={idx}
-                            className={`rounded-3xl border p-6 shadow-xl transition-all duration-300 transform hover:scale-[1.03] flex flex-col justify-between
-              ${plan.title === 'Standard Package'
+                            className={`rounded-3xl border p-6 shadow-xl transition-all transform hover:scale-[1.03] flex flex-col justify-between
+              ${plan.title === '2 BHK Deluxe'
                                     ? 'border-blue-600 bg-gradient-to-br from-blue-50 via-white to-blue-100'
                                     : 'border-gray-200 bg-gray-50'
                                 }`}
@@ -179,13 +221,12 @@ export default function PricingSection() {
                 </div>
             </div>
 
-            {/* Booking Form Modal */}
             {selectedPlan && (
                 <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
                     <div className="bg-white w-full max-w-lg p-6 rounded-2xl shadow-2xl relative">
                         <button
                             className="absolute top-3 right-3 text-gray-600 hover:text-black text-2xl"
-                            onClick={() => setSelectedPlan(null)}
+                            onClick={handleCloseModal}
                         >
                             ×
                         </button>
@@ -232,22 +273,11 @@ export default function PricingSection() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <p className="text-gray-700 font-medium">Select Package:</p>
-                                {plans.map((plan) => (
-                                    <label key={plan.title} className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            name="package"
-                                            value={plan.title}
-                                            checked={formData.package === plan.title}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                        {plan.title}
-                                    </label>
-                                ))}
-                            </div>
+                            <input
+                                type="hidden"
+                                name="package"
+                                value={formData.package}
+                            />
 
                             <button
                                 type="submit"
@@ -256,9 +286,16 @@ export default function PricingSection() {
                                 Proceed to Payment
                             </button>
                         </form>
+                        {formError && (
+                            <p className="text-red-600 text-sm text-center font-medium mt-5">{formError}</p>
+                        )}
                     </div>
+                    
                 </div>
+                
             )}
+            
+
         </section>
     );
 }

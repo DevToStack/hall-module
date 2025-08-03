@@ -1,52 +1,73 @@
+'use client';
+import { useState } from 'react';
+
 const RoomAvailabilityForm = () => {
+    const [checkin, setCheckin] = useState('');
+    const [checkout, setCheckout] = useState('');
+    const [availability, setAvailability] = useState(null);
+
+    const handleCheckAvailability = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+            const res = await fetch('/api/check-availability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, 
+                },
+                body: JSON.stringify({
+                    apartment_id: 1,
+                    checkin,
+                    checkout,
+                }),
+            });
+
+            const data = await res.json();
+            setAvailability(data);
+        } catch (err) {
+            setAvailability({ available: false, message: 'Server error. Please try again.' });
+        }
+    };
+
     return (
-        <form className="mt-3 mb-3 flex flex-col max-w-5xl min-sm:min-w-xl mx-auto 
+        <form
+            onSubmit={handleCheckAvailability}
+            className="mt-3 mb-3 flex flex-col max-w-5xl min-sm:min-w-xl mx-auto 
             bg-black/20 backdrop-blur-xs
- 
             shadow-sm shadow-[#0070ff] 
             rounded-2xl p-4 space-y-6 
-            ring-1 ring-inset ring-purple-500/70">
+            ring-1 ring-inset ring-purple-500/70"
+        >
             <h2 className="text-2xl font-bold text-center text-white">Check Room Availability</h2>
 
             <div className="grid grid-cols-1 gap-4">
                 {/* Date */}
                 <div className="flex gap-4">
                     <div className="flex flex-grow flex-col">
-                        <label htmlFor="date" className="text-white font-medium">CheckIn</label>
+                        <label htmlFor="checkin" className="text-white font-medium">CheckIn</label>
                         <input
                             type="date"
-                            id="date"
+                            id="checkin"
+                            value={checkin}
+                            onChange={(e) => setCheckin(e.target.value)}
                             className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
                     <div className="flex flex-col flex-grow">
-                        <label htmlFor="date" className="text-white font-medium">CheckOut</label>
+                        <label htmlFor="checkout" className="text-white font-medium">CheckOut</label>
                         <input
                             type="date"
-                            id="date"
+                            id="checkout"
+                            value={checkout}
+                            onChange={(e) => setCheckout(e.target.value)}
                             className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             required
                         />
                     </div>
                 </div>
-
-                {/* Time Slot */}
-                <div className="flex flex-col hidden">
-                    <label htmlFor="time" className="text-white font-medium">Time Slot</label>
-                    <select
-                        id="time"
-                        className="mt-1 p-2 text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        required
-                    >
-                        <option value="">Select Time</option>
-                        <option value="morning">Morning (8AM - 12PM)</option>
-                        <option value="afternoon">Afternoon (1PM - 5PM)</option>
-                        <option value="evening">Evening (6PM - 10PM)</option>
-                        <option value="full-day">Full Day</option>
-                    </select>
-                </div>
-
                 {/* Guest Count */}
                 <div className="flex flex-col">
                     <label htmlFor="guests" className="text-white font-medium">Number of Guests</label>
@@ -68,11 +89,16 @@ const RoomAvailabilityForm = () => {
                 >
                     Check Availability
                 </button>
-                
             </div>
+
+            {/* Availability Response */}
+            {availability && (
+                <p className={`text-center font-medium text-lg ${availability.available ? 'text-green-400' : 'text-red-400'}`}>
+                    {availability.message}
+                </p>
+            )}
         </form>
     );
 };
 
 export default RoomAvailabilityForm;
-  
