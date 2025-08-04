@@ -3,12 +3,11 @@
 import { usePathname } from 'next/navigation';
 import NavBar from './NavBar';
 import { useState, useEffect } from 'react';
-import BookingModal from './BookingForm';
+
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('');
-  const [openModal, setOpenModal] = useState(false);
 
   const showNavBar = pathname === '/';
 
@@ -21,9 +20,6 @@ export default function ClientLayout({ children }) {
     }
   }, [pathname]);
 
-  const handleCloseBooking = () => {
-    setOpenModal(false);
-  };
 
   return (
     <>
