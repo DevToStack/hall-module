@@ -1,11 +1,7 @@
-import Link from 'next/link';
+
 import HeroParticlesBackground from './particals';
 import RoomAvailabilityForm from './Form';
-import { useState } from "react";
-import BookingModal from './BookingForm';
-
 const HeroSection = () => {
-    const [openModal, setOpenModal] = useState(false);
     return (
         <section className="flex flex-col items-bottom relative bg-black w-full min-h-[100vh] overflow-hidden flex items-center justify-center px-4 py-16 sm:px-8 lg:px-24 text-white bg-dark-gradient">
 
@@ -23,9 +19,9 @@ const HeroSection = () => {
                     Whether it’s a wedding, party, or conference — find and book the ideal space instantly.
                 </p>
                 <div className="mt-6 flex justify-center gap-4 flex-wrap">
-                    <Link href="#pricing" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
+                    <a href="#" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
                         Book Room
-                    </Link>
+                    </a>
                     <button className="border border-green-400 text-green-400 hover:bg-green-600 hover:text-white font-semibold py-3 px-6 rounded-xl transition duration-300 bg-white/10 backdrop-blur-sm">
                         Learn More
                     </button>
@@ -34,7 +30,6 @@ const HeroSection = () => {
             <div className='bottom-5 mt-20'>
                 <RoomAvailabilityForm />
             </div>
-            <BookingModal isOpen={openModal} onClose={() => setOpenModal(false)} />
         </section>
     );
 };
