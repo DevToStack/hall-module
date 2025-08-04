@@ -1,8 +1,6 @@
 'use client';
-import { useRef } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import BookingCalendar from './bookingCalender';
 const apartmentPlans = [

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import {useRef, useState } from 'react';
 
 export default function OtpForm() {
     const searchParams = useSearchParams();
