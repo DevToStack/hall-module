@@ -2,7 +2,7 @@
 import { query } from '@/lib/mysql-wrapper';
 import { generateToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req) {
     try {

@@ -1,5 +1,5 @@
 import { query } from '@/lib/mysql-wrapper';
-import bcrypt from 'bcrypt';
+import bcrypt from "bcryptjs";
 import { generateToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
 

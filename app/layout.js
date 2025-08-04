@@ -19,7 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Hall Booking App",
   description: "Book your hall easily and quickly",
-};
+  icons: {
+    icon: '/favicon.ico', // ✅ this will now correctly point to the public folder
+  },
+}
 
 // ✅ Correct structure for RootLayout
 export default function RootLayout({ children }) {

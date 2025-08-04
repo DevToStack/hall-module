@@ -16,7 +16,7 @@ const HeroSection = () => {
                     Book Your Perfect Apartment
                 </h1>
                 <p className="mt-4 text-lg sm:text-xl text-gray-300">
-                    Whether it’s a wedding, party, or conference — find and book the ideal space instantly.
+                    Whether it&apos;s a wedding, party, or conference — find and book the ideal space instantly.
                 </p>
                 <div className="mt-6 flex justify-center gap-4 flex-wrap">
                     <a href="#" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
