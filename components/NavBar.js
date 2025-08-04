@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
+export default function NavBar({ activeTab, setActiveTab }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const router = useRouter();
@@ -37,15 +37,13 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
         login: "/signin",
         profile: "/profile",
         home: "/",
+        book: "/terms",
     };
 
     const handleTabClick = (tabId) => {
         setActiveTab(tabId);
 
-        if (tabId === "book") {
-            onBookClick?.();
-            return;
-        }
+        
 
         const route = tabRouteMap[tabId] || "/";
         router.push(route);
@@ -111,11 +109,9 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                     </div>
                 </div>
             </nav>
-
-            {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 h-full bg-black text-white z-50 shadow transition-transform duration-300
-                w-80 lg:w-90 lg:shadow-white rounded-r-xl p-3
+                className={`fixed top-0 left-0 h-full bg-black text-white z-50 shadow-sm transition-transform duration-300
+                w-80 lg:w-90 lg:shadow-white p-3
                 ${sidebarOpen ? "translate-x-0 shadow-white" : "-translate-x-full"}`}
             >
                 <div className="flex justify-between items-center p-4">
@@ -149,6 +145,7 @@ export default function NavBar({ activeTab, setActiveTab, onBookClick }) {
                         Log Out
                     </button>
                 )}
+
             </div>
         </>
     );

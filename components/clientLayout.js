@@ -31,11 +31,8 @@ export default function ClientLayout({ children }) {
         <NavBar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onBookClick={() => setOpenModal(true)}
+          
         />
-      )}
-      {showNavBar && (
-        <BookingModal isOpen={openModal} onClose={handleCloseBooking} />
       )}
       {children}
     </>

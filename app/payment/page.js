@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Loader2, XCircle, CheckCircle2, CalendarDays, Users, ShieldCheck } from 'lucide-react';
+import GallerySection from '@/components/galery1';
 
 const packages = {
     '1 BHK Comfort': {
@@ -119,9 +120,9 @@ function PaymentComponent() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-            <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl max-w-xl w-full border border-white/20 shadow-2xl">
+            <div className="bg-white/10 backdrop-blur-xl p-8 rounded-xl w-full border border-white/20 shadow-2xl m-1">
                 <h1 className="text-3xl font-bold mb-4 text-center">{title}</h1>
-
+                <GallerySection/>
                 <div className="flex justify-between text-sm text-white/70 mb-4">
                     <span className="flex items-center gap-2"><CalendarDays className="w-4 h-4" /> {checkin} → {checkout}</span>
                     <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {packageInfo.guests} guests</span>

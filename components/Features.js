@@ -1,67 +1,79 @@
+'use client';
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faBuilding,
-    faMicrophone,
-    faCar,
+    faCouch,
+    faWifi,
     faUtensils,
-    faGifts,
+    faCar,
+    faFan,
     faClock,
 } from "@fortawesome/free-solid-svg-icons";
 
 const features = [
     {
-        title: "Spacious Halls",
-        description: "Well-ventilated and spacious halls to accommodate large gatherings.",
-        icon: faBuilding,
+        title: "Fully Furnished",
+        description: "Enjoy modern furniture, cozy beds, and stylish interiors for a home-like stay.",
+        icon: faCouch,
     },
     {
-        title: "Modern Facilities",
-        description: "Air conditioning, projectors, sound systems, and lighting for all events.",
-        icon: faMicrophone,
+        title: "High-Speed Wi-Fi",
+        description: "Stay connected with fast and reliable internet in every corner of your apartment.",
+        icon: faWifi,
     },
     {
-        title: "Ample Parking",
-        description: "Secure and spacious parking for all guests.",
-        icon: faCar,
-    },
-    {
-        title: "Catering Services",
-        description: "On-demand catering with customizable menu options.",
+        title: "Equipped Kitchen",
+        description: "Cook meals your way with access to a refrigerator, stove, microwave, and utensils.",
         icon: faUtensils,
     },
     {
-        title: "Decoration Support",
-        description: "Themed decorations and floral arrangements available.",
-        icon: faGifts,
+        title: "Private Parking",
+        description: "Secure, hassle-free parking spaces available for all our guests.",
+        icon: faCar,
     },
     {
-        title: "24/7 Availability",
-        description: "Book and use our facilities any time of the day or night.",
+        title: "Air Conditioning",
+        description: "All rooms are air-conditioned for your comfort in any season.",
+        icon: faFan,
+    },
+    {
+        title: "24/7 Access",
+        description: "Flexible check-in/check-out with round-the-clock property access.",
         icon: faClock,
     },
 ];
 
-const HallFeatures = () => {
+const ApartmentFeatures = () => {
     return (
-        <section className="py-16 bg-gray-100">
+        <section
+            className="py-16 bg-gray-100"
+            aria-labelledby="features-heading"
+            role="region"
+        >
             <div className="max-w-7xl mx-auto px-4 text-center">
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Why Choose Our Apartment?</h2>
-                <p className="text-gray-600 mb-10">
-                    Premium features that make your event smooth, elegant, and unforgettable.
+                <h2
+                    id="features-heading"
+                    className="text-3xl sm:text-4xl font-extrabold mb-4 text-gray-800"
+                >
+                    Why Stay in Our Apartments?
+                </h2>
+                <p className="text-gray-600 mb-12 text-base sm:text-lg max-w-2xl mx-auto">
+                    Designed for comfort, convenience, and flexibility — explore the features that make our apartments feel like home.
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
                     {features.map((feature, index) => (
-                        <div
+                        <article
                             key={index}
-                            className="bg-white rounded-xl shadow-md p-6 text-left hover:shadow-lg transition duration-300"
+                            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition duration-300"
+                            aria-label={feature.title}
                         >
                             <div className="text-blue-600 text-4xl mb-4">
-                                <FontAwesomeIcon icon={feature.icon} />
+                                <FontAwesomeIcon icon={feature.icon} aria-hidden="true" />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2 text-gray-800">{feature.title}</h3>
-                            <p className="text-gray-600">{feature.description}</p>
-                        </div>
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                            <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                        </article>
                     ))}
                 </div>
             </div>
@@ -69,4 +81,4 @@ const HallFeatures = () => {
     );
 };
 
-export default HallFeatures;
+export default ApartmentFeatures;

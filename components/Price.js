@@ -1,8 +1,10 @@
 'use client';
-
+import { useRef } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import BookingCalendar from './bookingCalender';
 const apartmentPlans = [
     {
         title: '1 BHK Comfort',
@@ -46,7 +48,7 @@ export default function PricingSection() {
     const router = useRouter();
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [formError, setFormError] = useState('');
-
+    const [disabledRanges, setDisabledRanges] = useState([]);
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -83,30 +85,27 @@ export default function PricingSection() {
         }
 
         try {
-            const res = await fetch('/api/next-available-date', {
+            const res = await fetch('/api/booked-dates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    apartment_id:
-                        plan.title.includes('1 BHK') ? 1 :
-                            plan.title.includes('2 BHK') ? 2 :
-                                plan.title.includes('3 BHK') ? 3 : null
-                })
+                body: JSON.stringify({ apartment_id: 1 }),
             });
 
-            const { availableFrom, availableUntil } = await res.json();
+            const { bookings } = await res.json();
 
-            setSelectedPlan(plan);
-            setFormData((prev) => ({
-                ...prev,
-                package: plan.title,
-                checkin: availableFrom,
-                checkout: availableUntil,
+            const blocked = bookings.map(({ start_date, end_date }) => ({
+                from: new Date(start_date),
+                to: new Date(end_date),
             }));
+
+            setDisabledRanges(blocked);
+            setSelectedPlan(plan);
+            setFormData((prev) => ({ ...prev, package: plan.title }));
         } catch (err) {
-            alert('Failed to fetch available dates.');
+            alert('Failed to fetch booked dates.');
         }
     };
+      
       
     
 
@@ -223,7 +222,7 @@ export default function PricingSection() {
 
             {selectedPlan && (
                 <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
-                    <div className="bg-white w-full max-w-lg p-6 rounded-2xl shadow-2xl relative">
+                    <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl relative">
                         <button
                             className="absolute top-3 right-3 text-gray-600 hover:text-black text-2xl"
                             onClick={handleCloseModal}
@@ -254,23 +253,13 @@ export default function PricingSection() {
                                 required
                             />
 
-                            <div className="flex gap-4">
-                                <input
-                                    type="date"
-                                    name="checkin"
-                                    value={formData.checkin}
-                                    onChange={handleChange}
-                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg"
-                                    required
+                            <div className="flex w-full justify-between items-center">
+                                <BookingCalendar
+                                    formData={formData}
+                                    setFormData={setFormData}
+                                    disabledRanges={disabledRanges}
                                 />
-                                <input
-                                    type="date"
-                                    name="checkout"
-                                    value={formData.checkout}
-                                    onChange={handleChange}
-                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg"
-                                    required
-                                />
+
                             </div>
 
                             <input
