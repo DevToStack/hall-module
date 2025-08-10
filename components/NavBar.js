@@ -10,8 +10,11 @@ import {
     faBuilding,
     faStar,
     faUserCog,
-    faUserPen,
-    faRightFromBracket,
+    faShield,
+    faCircleInfo,
+    faPeopleGroup,
+    faInfo,
+    faBookJournalWhills,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -30,7 +33,12 @@ export default function NavBar({ activeTab, setActiveTab }) {
         router.prefetch("/");
     }, []);
 
-    const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+    const toggleSidebar = () => {
+        requestAnimationFrame(() => {
+            setSidebarOpen(prev => !prev);
+        });
+    };
+      
 
     // O(1) route lookup
     const tabRouteMap = {
@@ -49,73 +57,80 @@ export default function NavBar({ activeTab, setActiveTab }) {
         router.push(route);
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
-        router.push("/");
-    };
-
     const tabs = [
-        { id: "home", label: "Home", icon: faHome },
-        { id: "book", label: "Book", icon: faBook },
         isAuthenticated
-            ? { id: "profile", label: "Profile", icon: faUser }
-            : { id: "login", label: "Login", icon: faUser },
+            ? { id: "profile", label: "Dashboard" }
+            : { id: "home", label: "Home" },
+        { id:"learn", label: "How It Works" },
+        { id:"choice", label: "Why Chose Us" },
+        { id:"contact", label: "Contact Us" },
+        { id:"about", label: "About Us" },
+        { id:"review", label: "Reviews" },
+        { id: "book", label: "Privacy Policy" },
+
     ];
 
     const sidebarMenu = [
-        { icon: faHome, label: "Home" },
-        { icon: faCalendarAlt, label: "Bookings" },
-        { icon: faBuilding, label: "Halls" },
+        { icon: faUserCog, label: "Dashboard" },  
+        { icon: faBookJournalWhills, label: "How It Works" },
+        { icon: faStar, label: "Why Chose Us" },
+        { icon: faBuilding, label: "Contact Us" },
+        { icon: faPeopleGroup, label: "About Us" },
         { icon: faStar, label: "Reviews" },
-        { icon: faUserCog, label: "Account" },
+        { icon: faShield, label: "Privacy Policy" },
+
     ];
 
     return (
         <>
             {/* Top Nav */}
-            <nav className="fixed top-0 left-0 w-full z-50 bg-black border-b border-white/20 shadow-lg">
-                <div className="w-full mx-auto px-4 py-3 flex justify-between items-center">
+            <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#1E675E] via-gray-500 to-indigo-900 border-b border-white/20 shadow-lg">
+                <div className="w-full max-w-[1500px] mx-auto px-3 py-2 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {/* Hamburger */}
                         <div
                             onClick={toggleSidebar}
-                            className="flex flex-col justify-center gap-[5px] cursor-pointer group"
+                            className="flex flex-col justify-center gap-[5px] cursor-pointer group min-lg:hidden"
                         >
                             <span className="w-7 h-[3px] bg-white rounded-full group-hover:scale-x-125 transition-transform duration-300"></span>
                             <span className="w-5 h-[3px] bg-white rounded-full group-hover:scale-x-110 transition-transform duration-300"></span>
                             <span className="w-6 h-[3px] bg-white rounded-full group-hover:scale-x-125 transition-transform duration-300"></span>
                         </div>
-                        <h1 className="text-white text-2xl font-extrabold tracking-tight">MyHall</h1>
+                        <h1 className="text-white text-2xl font-bold tracking-tight">Rooms4u</h1>
                     </div>
 
-                    <div className="flex gap-6 max-sm:gap-2">
+                    <div className="flex gap-4 max-lg:hidden">
                         {tabs.map((tab) => {
                             const isActive = activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabClick(tab.id)}
-                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${isActive
-                                            ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg scale-105"
-                                            : "text-white/80 hover:bg-white/10 hover:text-white"
+                                    className={`flex items-center transition-all duration-300 ${isActive
+                                        ? "text-green-300 underline"
+                                            : "text-white hover:text-green-300"
                                         }`}
                                 >
-                                    <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
-                                    <span className="hidden sm:inline font-semibold">{tab.label}</span>
+                                    
+                                    <span className="text-sm">{tab.label}</span>
                                 </button>
                             );
                         })}
                     </div>
+
+                    <div className="flex gap-3 min-lg:text-base sm:text-sm">
+                        <button onClick={() => router.push('/register')} className="rounded-full px-5 max-sm:px-2 py-2 max-sm:py-1 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10" >Sign Up</button>
+                        <button onClick={()=>router.push('/signin')} className="rounded-full px-5 max-sm:px-2 py-2 max-sm:py-1 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10">Login</button>
+                    </div>
                 </div>
             </nav>
             <div
-                className={`fixed top-0 left-0 h-full bg-black text-white z-50 shadow-sm transition-transform duration-300
-                w-80 lg:w-90 lg:shadow-white p-3
-                ${sidebarOpen ? "translate-x-0 shadow-white" : "-translate-x-full"}`}
+                className={`fixed top-0 left-0 h-full bg-gradient-to-r from-[#1E675E] to-gray-700 text-white z-50 transition-transform duration-500
+                w-80 lg:w-90 p-3
+                ${sidebarOpen ? "translate-x-0 shadow-white" : "-translate-x-full duration-500"}`}
             >
-                <div className="flex justify-between items-center p-4">
-                    <h2 className="text-2xl font-extrabold">MyHall</h2>
+                <div className="max-w-70 flex justify-between items-center p-1">
+                    <h2 className="text-2xl font-extrabold">Rooms4u</h2>
                     <button
                         onClick={toggleSidebar}
                         className="text-3xl focus:outline-none"
@@ -128,24 +143,13 @@ export default function NavBar({ activeTab, setActiveTab }) {
                     {sidebarMenu.map((item, idx) => (
                         <li
                             key={idx}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-700 cursor-pointer bg-white/20 rounded-lg"
+                            className="flex items-center gap-3 p-3 hover:bg-white/30 cursor-pointer bg-white/20 rounded-lg"
                         >
-                            <FontAwesomeIcon icon={item.icon} />
+                            <FontAwesomeIcon icon={item.icon} className="mr-2 ml-2"/>
                             <span className="font-medium">{item.label}</span>
                         </li>
                     ))}
                 </ul>
-
-                {isAuthenticated && (
-                    <button
-                        onClick={handleLogout}
-                        className="mt-4 bg-red-500 hover:bg-red-600 text-white w-full py-2 rounded-lg flex items-center justify-center gap-2"
-                    >
-                        <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
-                        Log Out
-                    </button>
-                )}
-
             </div>
         </>
     );

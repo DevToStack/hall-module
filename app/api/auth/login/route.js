@@ -3,6 +3,7 @@ import { query } from '@/lib/mysql-wrapper';
 import { generateToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { logActivity } from '@/lib/logActivity';
 
 export async function POST(req) {
     try {
@@ -15,7 +16,7 @@ export async function POST(req) {
         const users = await query(`SELECT * FROM users WHERE email = ?`, [email.toLowerCase().trim()]);
 
         if (!users.length) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return NextResponse.json({ error: 'user is not registerd' }, { status: 404 });
         }
 
         const user = users[0];
@@ -31,7 +32,7 @@ export async function POST(req) {
             email: user.email,
             role: user.role,
         });
-
+        await logActivity(user.id, 'Logged in successfully');
         return NextResponse.json({ success: true, token });
     } catch (err) {
         console.error('Login Error:', err);

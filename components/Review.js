@@ -121,7 +121,7 @@ const ReviewSection = () => {
     };
 
     return (
-        <section className="max-h-[1500px] w-full px-4 py-12 bg-gradient-to-br from-black via-zinc-900 to-black">
+        <section className="max-h-[1500px] w-full px-4 py-12 bg-black">
             <h2 className="text-4xl font-bold text-white text-center mb-12">What Guests Are Saying</h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_600px] gap-8 max-w-8xl mx-auto">
@@ -134,7 +134,7 @@ const ReviewSection = () => {
                             reviews.map((review) => (
                                 <div
                                     key={review.id}
-                                    className="bg-white/5 border border-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-lg text-white"
+                                    className="bg-gradient-to-br from-zinc-800 via-black/20 to-zinc-900 border border-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-lg text-white"
                                 >
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
@@ -167,7 +167,7 @@ const ReviewSection = () => {
                 <div className="w-full lg:sticky lg:top-24">
                     <form
                         onSubmit={handleSubmit}
-                        className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl px-5 py-8 shadow-2xl space-y-6 transition-all duration-300"
+                        className="bg-gradient-to-br from-zinc-800 via-black to-zinc-900 border border-white/10 backdrop-blur-md rounded-2xl px-5 py-8 shadow-2xl space-y-6 transition-all duration-300"
                     >
                         <h3 className="text-2xl font-semibold text-white">Leave a Review</h3>
 

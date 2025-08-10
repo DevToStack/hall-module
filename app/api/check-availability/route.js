@@ -1,12 +1,9 @@
-// app/api/check-availability/route.js
-
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db'; // adjust this to your actual db utility
+import { query } from '@/lib/db';
 
 export async function POST(req) {
     try {
-        const body = await req.json();
-        const { apartment_id, checkin, checkout } = body;
+        const { apartment_id, checkin, checkout } = await req.json();
 
         if (!apartment_id || !checkin || !checkout) {
             return NextResponse.json(
@@ -15,10 +12,17 @@ export async function POST(req) {
             );
         }
 
-        // Convert to date objects for validation
+        // Convert to date objects
         const checkinDate = new Date(checkin);
         const checkoutDate = new Date(checkout);
 
+        // Strip time from all dates
+        checkinDate.setHours(0, 0, 0, 0);
+        checkoutDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Validate date formats
         if (isNaN(checkinDate.getTime()) || isNaN(checkoutDate.getTime())) {
             return NextResponse.json(
                 { available: false, message: 'Invalid date format.' },
@@ -26,6 +30,15 @@ export async function POST(req) {
             );
         }
 
+        // Ensure check-in is in the future (or same day if allowed)
+        if (checkinDate <= today) {
+            return NextResponse.json(
+                { available: false, message: "The check-in date must be today or a future date." },
+                { status: 400 }
+            );
+        }
+
+        // Ensure check-out is after check-in
         if (checkinDate >= checkoutDate) {
             return NextResponse.json(
                 { available: false, message: 'Check-out date must be after check-in date.' },
@@ -33,7 +46,7 @@ export async function POST(req) {
             );
         }
 
-        // Proceed with availability check
+        // Check overlapping bookings
         const results = await query(
             `
             SELECT * FROM bookings

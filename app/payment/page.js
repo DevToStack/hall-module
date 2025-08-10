@@ -97,9 +97,9 @@ function PaymentComponent() {
                     router.push('/profile');
                 },
                 prefill: {
-                    name: 'Guest',
-                    email: 'guest@example.com',
-                    contact: '9876543210',
+                    name: 'Rabi',
+                    email: 'rabimohammed740@gmail.com',
+                    contact: '8310658595',
                 },
                 theme: {
                     color: '#0d9488',

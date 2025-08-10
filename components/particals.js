@@ -13,25 +13,25 @@ const HeroParticlesBackground = () => {
         },
         background: {
           color: {
-            value: 'transparent',
+            value: 'green',
           },
         },
         particles: {
           number: {
-            value: 40,
+            value: 30,
             density: {
               enable: true,
               area: 800,
             },
           },
           color: {
-            value: ['#192949', '#c2e6ff', '#fc466b'], // varied theme tones
+            value: ['#ffffff'], // varied theme tones
           },
           shape: {
-            type: ['circle', 'triangle', 'edge'], // multiple shapes
+            type: ['circle'], // multiple shapes
           },
           opacity: {
-            value: 0.6,
+            value: 0.5,
             random: true,
             anim: {
               enable: true,
@@ -46,10 +46,10 @@ const HeroParticlesBackground = () => {
           },
           move: {
             enable: true,
-            speed: 1.7,
+            speed: 2,
             direction: 'none',
-            random: true,
-            straight: false,
+            random: false,
+            straight: true,
             outModes: {
               default: 'out',
             },
@@ -57,17 +57,9 @@ const HeroParticlesBackground = () => {
           links: {
             enable: true,
             distance:300,
-            color: '#0070ff',
+            color: '#ffffff',
             opacity: 0.6,
             width: 2,
-          },
-          rotate: {
-            value: { min: 0, max: 360 },
-            direction: "random",
-            animation: {
-              enable: true,
-              speed: 9,
-            },
           },
           wobble: {
             enable: true,

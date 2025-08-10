@@ -1,36 +1,15 @@
-import { query } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { verifyOTP } from "@/utils/otp"; 
 
 export async function POST(req) {
-    try {
-        const { email, otp } = await req.json();
-        const sanitizedEmail = email?.trim().toLowerCase();
-        const sanitizedOtp = otp?.trim();
-
-        if (!sanitizedEmail || !/\S+@\S+\.\S+/.test(sanitizedEmail)) {
-            return NextResponse.json({ success: false, message: 'Invalid email' }, { status: 400 });
-        }
-
-        if (!sanitizedOtp || sanitizedOtp.length !== 6 || !/^\d{6}$/.test(sanitizedOtp)) {
-            return NextResponse.json({ success: false, message: 'Invalid OTP format' }, { status: 400 });
-        }
-
-        // Check if OTP exists and is not expired
-        const [match] = await query(
-            'SELECT * FROM otps WHERE email = ? AND otp = ? AND expires_at > NOW()',
-            [sanitizedEmail, sanitizedOtp]
-        );
-
-        if (!match) {
-            return NextResponse.json({ success: false, message: 'Invalid or expired OTP' }, { status: 400 });
-        }
-
-        // Delete OTP after successful match
-        await query('DELETE FROM otps WHERE email = ?', [sanitizedEmail]);
-
-        return NextResponse.json({ success: true });
-    } catch (err) {
-        console.error('OTP verification error:', err);
-        return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+    const { email, purpose, otp } = await req.json();
+    if (!email || !purpose || !otp) {
+        return Response.json({ error: 'Missing fields' }, { status: 400 });
     }
+
+    const valid = await verifyOTP(email, purpose, otp);
+    if (!valid) {
+        return Response.json({ error: 'Invalid OTP' }, { status: 400 });
+    }
+
+    return Response.json({ success: true });
 }

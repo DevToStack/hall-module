@@ -1,182 +1,129 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function OtpForm() {
-    const searchParams = useSearchParams();
+export default function OtpVerificationPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const email = searchParams.get('email');
+    const purpose = searchParams.get('purpose') || '';
 
-    const [email, setEmail] = useState('');
-    const [mode, setMode] = useState('register');
-    const [otpDigits, setOtpDigits] = useState(Array(6).fill(''));
+    const [otp, setOtp] = useState('');
+    const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+    const sentOnce = useRef(false);
 
-    const inputRefs = useRef([...Array(6)].map(() => React.createRef()));
-
-    const [name, setName] = useState('');
-    const [password, setPassword] = useState('');
-
-    // ✅ safely extract query params on client only
+    // Send OTP automatically on first load
     useEffect(() => {
-        if (searchParams) {
-            setEmail(searchParams.get('email') || '');
-            setMode(searchParams.get('mode') || 'register');
+        if (email && purpose && !sentOnce.current) {
+            sendOtp();
+            sentOnce.current = true;
         }
+    }, [email, purpose]);
 
-        // Only access storage in client environment
-        if (typeof window !== 'undefined') {
-            setName(localStorage.getItem('pending_name') || '');
-            setPassword(localStorage.getItem('pending_password') || sessionStorage.getItem('pending_password') || '');
+    // Countdown for resend
+    useEffect(() => {
+        if (resendTimer > 0) {
+            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+            return () => clearTimeout(timer);
         }
-    }, [searchParams]);
+    }, [resendTimer]);
 
-    const handleChange = (e, index) => {
-        const value = e.target.value.replace(/\D/g, '').charAt(0);
-        const updated = [...otpDigits];
-        updated[index] = value;
-        setOtpDigits(updated);
-        if (value && index < 5) {
-            inputRefs.current[index + 1]?.current?.focus();
-        }
-    };
-
-    const handleKeyDown = (e, index) => {
-        if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-            inputRefs.current[index - 1]?.current?.focus();
-        }
-    };
-
-    const handleVerify = async (e) => {
-        e.preventDefault();
-        const otp = otpDigits.join('');
-
-        if (otp.length !== 6) {
-            alert('Please enter all 6 digits.');
-            return;
-        }
-
+    const sendOtp = async () => {
+        setMessage('');
         setLoading(true);
-
-        try {
-            const otpRes = await fetch('/api/auth/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp }),
-            });
-
-            const otpData = await otpRes.json();
-
-            if (!otpRes.ok || !otpData.success) {
-                alert(otpData.message || 'OTP verification failed.');
-                return;
-            }
-
-            if (mode === 'register') {
-                const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password }),
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.token) {
-                    localStorage.removeItem('pending_name');
-                    localStorage.removeItem('pending_password');
-                    localStorage.setItem('token', data.token);
-                    router.push('/');
-                } else {
-                    alert(data.error || 'Registration failed.');
-                }
-            } else if (mode === 'login') {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, otp }),
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.token) {
-                    sessionStorage.removeItem('pending_password');
-                    localStorage.setItem('token', data.token);
-                    router.push('/profile');
-                } else {
-                    alert(data.error || 'Login failed.');
-                }
-            }
-        } catch (err) {
-            console.error('OTP verification error:', err);
-            alert('Something went wrong. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleResend = async () => {
         try {
             const res = await fetch('/api/auth/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email, purpose }),
             });
-
+            const data = await res.json();
             if (res.ok) {
-                alert('OTP resent successfully.');
+                setMessage('OTP sent to your email.');
+                setResendTimer(30);
             } else {
-                const err = await res.json();
-                alert(err.message || 'Failed to resend OTP.');
+                setMessage(data.error || 'Failed to send OTP.');
             }
-        } catch (err) {
-            alert('Resend failed. Please try again.');
+        } catch {
+            setMessage('Server error while sending OTP.');
         }
+        setLoading(false);
+    };
+
+    const verifyOtp = async (e) => {
+        e.preventDefault();
+        setMessage('');
+        setLoading(true);
+        try {
+            const res = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp, purpose }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setMessage('OTP verified successfully.');
+                if (purpose === 'registration') router.push('/');
+                else if (purpose === 'login') router.push('/signin');
+                else if (purpose === 'forgot-password') router.push(`/reset-password?email=${email}`);
+                else router.push('/');
+            } else {
+                setMessage(data.error || 'Invalid OTP.');
+            }
+        } catch {
+            setMessage('Server error while verifying OTP.');
+        }
+        setLoading(false);
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-                <h1 className="text-2xl font-bold text-center mb-6">Verify OTP</h1>
-                <p className="text-sm text-gray-600 text-center mb-4">
-                    We&apos;ve sent an OTP to <span className="font-medium">{email}</span>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold mb-4 text-center">Verify OTP</h2>
+                <p className="text-center text-gray-600 mb-4">
+                    Enter the OTP sent to <strong>{email}</strong>
                 </p>
 
-                <form onSubmit={handleVerify} className="space-y-6">
-                    <div className="flex justify-between gap-2">
-                        {otpDigits.map((digit, index) => (
-                            <input
-                                key={index}
-                                type="text"
-                                inputMode="numeric"
-                                maxLength={1}
-                                value={digit}
-                                onChange={(e) => handleChange(e, index)}
-                                onKeyDown={(e) => handleKeyDown(e, index)}
-                                ref={inputRefs.current[index]}
-                                className="w-12 h-12 text-center text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        ))}
+                {message && (
+                    <div className="mb-4 p-3 text-sm rounded bg-gray-100 text-gray-800">
+                        {message}
                     </div>
+                )}
+
+                <form onSubmit={verifyOtp} className="space-y-4">
+                    <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder="Enter OTP"
+                        maxLength={6}
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                        required
+                    />
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                     >
-                        {loading
-                            ? 'Verifying...'
-                            : mode === 'login'
-                                ? 'Login'
-                                : 'Complete Registration'}
+                        {loading ? 'Verifying...' : 'Verify OTP'}
                     </button>
                 </form>
 
-                <p className="mt-4 text-center text-sm text-gray-500">
-                    Didn&apos;t receive the OTP?{' '}
-                    <button onClick={handleResend} className="text-blue-600 hover:underline">
-                        Resend
+                <div className="text-center mt-4">
+                    <button
+                        onClick={sendOtp}
+                        disabled={resendTimer > 0 || loading}
+                        className="text-blue-600 hover:underline disabled:opacity-50"
+                    >
+                        {resendTimer > 0
+                            ? `Resend OTP in ${resendTimer}s`
+                            : 'Resend OTP'}
                     </button>
-                </p>
+                </div>
             </div>
         </div>
     );

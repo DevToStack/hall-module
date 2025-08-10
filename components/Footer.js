@@ -6,7 +6,7 @@ const Footer = () => {
 
                     {/* Branding */}
                     <div>
-                        <h2 className="text-2xl font-bold text-white mb-2">MyHall</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">Rooms4u</h2>
                         <p className="text-gray-400">Your trusted place for seamless hall booking and event management.</p>
                     </div>
 

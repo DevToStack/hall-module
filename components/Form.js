@@ -34,48 +34,56 @@ const RoomAvailabilityForm = () => {
     return (
         <form
             onSubmit={handleCheckAvailability}
-            className="mt-3 mb-3 flex flex-col max-w-5xl min-sm:min-w-xl mx-auto 
-            bg-black/20 backdrop-blur-xs
-            shadow-sm shadow-[#0070ff] 
-            rounded-2xl p-4 space-y-6 
-            ring-1 ring-inset ring-purple-500/70"
+            className="mt-3 mb-3 flex flex-col max-w-5xl min-sm:min-w-xl mx-auto
+    bg-gradient-to-br from-zinc-800 via-black/40 to-zinc-900 backdrop-blur-xs
+    rounded-3xl p-4 space-y-6 
+    border border-white/20"
         >
-            <h2 className="text-2xl font-bold text-center text-white">Check Room Availability</h2>
+            <h2 className="text-2xl font-bold text-center text-gray-200">
+                Check Room Availability
+            </h2>
 
             <div className="grid grid-cols-1 gap-4">
                 {/* Date */}
                 <div className="flex gap-4">
                     <div className="flex flex-grow flex-col">
-                        <label htmlFor="checkin" className="text-white font-medium">CheckIn</label>
+                        <label htmlFor="checkin" className="text-gray-200 font-medium">
+                            Check-In
+                        </label>
                         <input
                             type="date"
                             id="checkin"
                             value={checkin}
                             onChange={(e) => setCheckin(e.target.value)}
-                            className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full text-white placeholder-gray-400 bg-transparent mt-1 p-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
                             required
                         />
                     </div>
                     <div className="flex flex-col flex-grow">
-                        <label htmlFor="checkout" className="text-white font-medium">CheckOut</label>
+                        <label htmlFor="checkout" className="text-gray-200 font-medium">
+                            Check-Out
+                        </label>
                         <input
                             type="date"
                             id="checkout"
                             value={checkout}
                             onChange={(e) => setCheckout(e.target.value)}
-                            className="w-full text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full text-white placeholder-gray-400 bg-transparent mt-1 p-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
                             required
                         />
                     </div>
                 </div>
+
                 {/* Guest Count */}
                 <div className="flex flex-col">
-                    <label htmlFor="guests" className="text-white font-medium">Number of Guests</label>
+                    <label htmlFor="guests" className="text-gray-200 font-medium">
+                        Number of Guests
+                    </label>
                     <input
                         type="number"
                         id="guests"
                         min="1"
-                        className="text-white mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="text-white placeholder-gray-400 bg-transparent mt-1 p-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 shadow shadow-white/20"
                         placeholder="e.g. 50"
                     />
                 </div>
@@ -85,7 +93,7 @@ const RoomAvailabilityForm = () => {
             <div className="flex flex-wrap justify-end gap-5 max-sm:justify-between max-xl:gap-10 ">
                 <button
                     type="submit"
-                    className="bg-blue-600 flex-grow hover:bg-blue-700 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
+                    className="bg-black border border-white/40 flex-grow hover:bg-gradient-to-br from-zinc-800 via-black/20 to-zinc-900 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
                 >
                     Check Availability
                 </button>
@@ -93,11 +101,15 @@ const RoomAvailabilityForm = () => {
 
             {/* Availability Response */}
             {availability && (
-                <p className={`text-center font-medium text-lg ${availability.available ? 'text-green-400' : 'text-red-400'}`}>
+                <p
+                    className={`text-center p-2 font-medium text-md ${availability.available ? 'text-green-400' : 'text-red-400'
+                        }`}
+                >
                     {availability.message}
                 </p>
             )}
         </form>
+
     );
 };
 

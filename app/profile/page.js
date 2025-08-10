@@ -12,10 +12,19 @@ import {
     faBars,
     faXmark,
     faDoorOpen,
-    faRightFromBracket
+    faRightFromBracket,
+    faBuilding,
+    faLocationDot,
+    faCalendarDays,
+    faClock,
+    faIndianRupeeSign,
     
 } from '@fortawesome/free-solid-svg-icons';
 import EditProfileForm from '@/components/EditProfile';
+import Link from 'next/link';
+import BookingSection from '@/components/bookingsSection';
+import PaymentsSection from '@/components/paymentBlock';
+import TimeAgo from '@/components/TimeAgo';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },
@@ -31,10 +40,8 @@ export default function ProfileDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const router = useRouter();
     const devices = [];
-    const activity = [
-        { message: "Logged in from Chrome", date: "2025-08-01T12:00:00Z" },
-        { message: "Booked Apartment A101", date: "2025-08-02T15:45:00Z" },
-      ];
+    const [bookings, setBookings] = useState([]);
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) return router.push('/signin');
@@ -44,14 +51,22 @@ export default function ProfileDashboard() {
         })
             .then(res => res.json())
             .then(data => {
-                if (data.user) setProfile(data);
-                else router.push('/signin');
+                if (data.user) {
+                    setProfile(data);
+                    setBookings(data.bookings); // ⬅️ Update here
+                } else router.push('/signin');
             });
     }, [router]);
 
     if (!profile) return <div className="h-screen flex items-center justify-center text-gray-500">Loading...</div>;
 
-    const { user, bookings } = profile;
+    const { user, activity } = profile;
+    function getDaysUntil(dateStr) {
+        const today = new Date();
+        const target = new Date(dateStr);
+        const diffTime = target.getTime() - today.getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
 
     const Sidebar = (
         <aside className="w-80 p-6 space-y-6 bg-white/10 text-white backdrop-blur-md h-full">
@@ -188,54 +203,97 @@ export default function ProfileDashboard() {
                         </p>
 
                         {/* Stats */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Total Bookings</p>
-                                <p className="text-3xl font-bold text-white">{bookings.length}</p>
-                            </div>
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Upcoming Bookings</p>
-                                <p className="text-2xl font-semibold text-white">
-                                    {bookings.filter(b => new Date(b.check_in) > new Date()).length}
-                                </p>
-                            </div>
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Last Booking</p>
-                                <p className="text-md text-white">
-                                    {bookings.length > 0
-                                        ? new Date(bookings[bookings.length - 1].created_at).toLocaleDateString()
-                                        : 'N/A'}
-                                </p>
-                            </div>
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Devices Logged In</p>
-                                <p className="text-2xl font-semibold text-white">{devices?.length || 1}</p>
-                            </div>
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Role</p>
-                                <p className="text-2xl font-semibold capitalize text-white">{user.role}</p>
-                            </div>
-                            <div className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                <p className="text-lg">Member Since</p>
-                                <p className="text-md text-white">
-                                    {new Date(user.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
+                        <div className="flex flex-wrap gap-6 max-sm:gap-3">
+                            {[
+                                {
+                                    title: 'Total Bookings',
+                                    value: bookings.length,
+                                },
+                                {
+                                    title: 'Upcoming Bookings',
+                                    value: bookings.filter(b => new Date(b.start_date) > new Date()).length,
+                                },
+                                {
+                                    title: 'Last Booking',
+                                    value:
+                                        bookings.length > 0
+                                            ? new Date(bookings[0].created_at).toLocaleDateString()
+                                            : 'N/A',
+                                },
+                                {
+                                    title: 'Devices Logged In',
+                                    value: devices?.length || 1,
+                                },
+                                {
+                                    title: 'Role',
+                                    value: user.role,
+                                },
+                                {
+                                    title: 'Member Since',
+                                    value: new Date(user.created_at).toLocaleDateString(),
+                                },
+                            ].map((card, index) => (
+                                <div
+                                    key={index}
+                                    className="bg-white/10 p-5 rounded-xl shadow hover:shadow-lg transition-all
+                 flex-grow sm:basis-[23%] md:basis-[31%] lg:basis-[23%] xl:basis-[23%]"
+                                >
+                                    <p className="max-sm:text-sm text-lg text-gray-300">{card.title}</p>
+                                    <p className="max-sm:text-lg text-2xl font-bold text-white capitalize">{card.value}</p>
+                                </div>
+                            ))}
                         </div>
+
+
+
+                        {bookings.filter(b => b.status === 'confirmed' && getDaysUntil(b.start_date) > 0 && getDaysUntil(b.start_date) <= 5).length > 0 && (
+                            <div className="mt-10">
+                                <h2 className="text-xl font-bold mb-4 text-white">⏳ Upcoming Check-ins (Next 5 Days)</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                    {bookings
+                                        .filter(b => b.status === 'confirmed' && getDaysUntil(b.start_date) > 0 && getDaysUntil(b.start_date) <= 5)
+                                        .slice(0, 3)
+                                        .map(b => (
+                                            <div key={b.id} className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
+                                                <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                                                    <FontAwesomeIcon icon={faBuilding} className="text-blue-300" />
+                                                    {b.apartment_title}
+                                                </h3>
+                                                <p className="text-blue-300 text-sm mb-1 flex items-center gap-2">
+                                                    <FontAwesomeIcon icon={faLocationDot} />
+                                                    {b.apartment_location}
+                                                </p>
+                                                <p className="text-gray-300 text-sm mb-1 flex items-center gap-2">
+                                                    <FontAwesomeIcon icon={faCalendarDays} />
+                                                    {b.start_date} → {b.end_date}
+                                                </p>
+                                                <p className="text-yellow-400 text-sm mb-1 flex items-center gap-2">
+                                                    <FontAwesomeIcon icon={faClock} />
+                                                    {getDaysUntil(b.start_date)} day(s) until check-in
+                                                </p>
+                                                <p className="text-sm text-white flex items-center gap-2">
+                                                    <FontAwesomeIcon icon={faIndianRupeeSign} />
+                                                    {b.amount} • via <strong>{b.method}</strong>
+                                                </p>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Quick Actions */}
                         <div className="mt-10">
                             <h2 className="text-xl font-bold mb-4 text-white">Quick Actions</h2>
                             <div className="flex flex-wrap gap-4">
-                                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl">
+                                <Link href={'/#pricing'} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl">
                                     Book Apartment
-                                </button>
-                                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">
+                                </Link>
+                                <Link href={'#booking'} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">
                                     View Booking History
-                                </button>
-                                <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-xl">
+                                </Link>
+                                <Link href={''} className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-xl">
                                     Edit Profile
-                                </button>
+                                </Link>
                             </div>
                         </div>
 
@@ -243,7 +301,7 @@ export default function ProfileDashboard() {
                         <div className="bg-white/10 p-6 rounded-xl shadow mt-10">
                             <h3 className="text-xl font-semibold mb-2 text-white">Welcome, {user.name.split(' ')[0]} 👋</h3>
                             <p className="text-gray-300 text-sm">
-                                Here’s what you can do next:
+                                Here's what you can do next:
                             </p>
                             <ul className="list-disc list-inside text-gray-400 text-sm mt-2">
                                 <li>Check your upcoming apartment bookings</li>
@@ -254,17 +312,18 @@ export default function ProfileDashboard() {
 
                         {/* Recent Activity */}
                         {activity && activity.length > 0 && (
-                            <div className="mt-10">
+                            <div className="mt-10 mb-10">
                                 <h2 className="text-xl font-bold mb-4 text-white">Recent Activity</h2>
                                 <div className="space-y-2">
                                     {activity.map((item, i) => (
                                         <div key={i} className="bg-white/10 p-3 rounded-lg text-sm text-gray-200">
                                             {item.message} —{' '}
                                             <span className="text-gray-400">
-                                                {new Date(item.date).toLocaleString()}
+                                                <TimeAgo datetime={item.date}/>
                                             </span>
                                         </div>
                                     ))}
+
                                 </div>
                             </div>
                         )}
@@ -281,72 +340,12 @@ export default function ProfileDashboard() {
                     </section>
                 )}
 
-
                 {active === 'bookings' && (
-                    <section className="pb-16">
-                        <h2 className="text-3xl font-extrabold mb-8 text-white">Your Apartment Bookings</h2>
-
-                        {bookings.length === 0 ? (
-                            <div className="text-center text-gray-400">
-                                <img
-                                    src="/no-bookings.svg"
-                                    alt="No bookings"
-                                    className="mx-auto w-48 opacity-40 mb-4"
-                                />
-                                <p className="text-lg">You haven’t made any bookings yet.</p>
-                                <p className="text-sm">Start exploring apartments to find your next stay!</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                                {bookings.map((b) => (
-                                    <div
-                                        key={b.id}
-                                        className="relative group bg-gradient-to-br from-white/10 to-white/5 p-6 rounded-2xl border border-white/20 backdrop-blur-md shadow-xl hover:scale-[1.015] transition-transform duration-300"
-                                    >
-                                        {/* Badge */}
-                                        <div className="absolute top-4 right-4 px-3 py-1 text-sm font-medium rounded-full bg-blue-600 text-white shadow">
-                                            {b.status === 'confirmed' ? '✅ Confirmed' : '⏳ Pending'}
-                                        </div>
-
-                                        {/* Title */}
-                                        <h3 className="text-2xl font-bold text-white mb-2">
-                                            🏢 {b.apartment_title}
-                                        </h3>
-
-                                        {/* Location */}
-                                        <p className="text-sm text-blue-200 mb-2">📍 {b.apartment_location}</p>
-
-                                        {/* Dates */}
-                                        <div className="flex items-center text-sm text-gray-300 mb-2">
-                                            📅 <span className="ml-1">{b.start_date} → {b.end_date}</span>
-                                        </div>
-
-                                        {/* Amount & Payment */}
-                                        <div className="mt-4 text-sm text-gray-300">
-                                            <p>💳 ₹{b.amount}</p>
-                                            <p>
-                                                Payment: <span className="text-white font-semibold">{b.payment_status}</span> via <span className="font-semibold">{b.method}</span>
-                                            </p>
-                                        </div>
-
-                                        {/* Optional Footer */}
-                                        <div className="mt-4">
-                                            <button className="px-4 py-1 mt-2 text-sm rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                                                View Details
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
+                    <BookingSection bookings={bookings} setBookings={setBookings} />
                 )}
 
                 {active === 'payments' && (
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4">Payments</h2>
-                        <p className="text-gray-300">(This section is under construction...)</p>
-                    </section>
+                    <PaymentsSection/>
                 )}
 
                 {active === 'settings' && (

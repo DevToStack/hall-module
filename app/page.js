@@ -38,8 +38,9 @@ export default function HomePage() {
         <main className="flex flex-col min-h-screen items-center justify-center">
           <div className="w-full flex flex-col">
             <HeroSection />
-            <Overview />
-            <div className='text-center bg-blue-100 rounded-4xl m-10 max-sm:m-1 max-lg:rounded-lg max-lg:m-2'>
+            <div className='bg-blue-50'><Overview /></div>
+            
+            <div className='text-center bg-gray-300 rounded-3xl m-10 max-sm:m-1 max-lg:rounded-lg max-lg:m-2'>
               <h1 className="p-2 text-5xl mt-4">Gallery</h1>
               <GallerySection />
             </div>

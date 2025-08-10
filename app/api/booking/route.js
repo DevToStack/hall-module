@@ -1,6 +1,14 @@
+// app/api/booking/route.js
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import pool from '@/lib/db';
+import { logActivity } from '@/lib/logActivity';
+import Razorpay from 'razorpay';
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const SECRET = process.env.JWT_SECRET;
 
@@ -8,7 +16,7 @@ export async function POST(request) {
     let connection;
 
     try {
-        // ✅ Extract and verify JWT from headers
+        // ✅ Extract and verify JWT
         const authHeader = request.headers.get('authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,34 +26,30 @@ export async function POST(request) {
         let decoded;
         try {
             decoded = jwt.verify(token, SECRET);
-        } catch (err) {
+        } catch {
             return NextResponse.json({ error: 'Invalid token' }, { status: 403 });
         }
 
-        const user_id = decoded.id; // Secure user ID from JWT
+        const user_id = decoded.id;
 
-        // ✅ Get JSON body
-        const body = await request.json();
+        // ✅ Get data from request body
         const {
             apartment_id = 1,
             start_date,
             end_date,
             price,
-            package_title,
-            razorpay_payment_id,
-        } = body;
+            razorpay_payment_id
+        } = await request.json();
 
-        // ✅ Validate required fields
         if (!start_date || !end_date || !price || !razorpay_payment_id) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // ✅ Get DB connection
         connection = await pool.getConnection();
 
-        // ✅ Step 1: Verify apartment exists
+        // ✅ Step 1: Check apartment
         const [apartments] = await connection.query(
-            `SELECT id FROM apartments WHERE id = ?`,
+            `SELECT title FROM apartments WHERE id = ?`,
             [apartment_id]
         );
 
@@ -53,7 +57,9 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid apartment ID' }, { status: 400 });
         }
 
-        // ✅ Step 2: Insert into bookings
+        const apartmentTitle = apartments[0].title;
+
+        // ✅ Step 2: Insert booking
         const [bookingResult] = await connection.query(
             `INSERT INTO bookings (user_id, apartment_id, start_date, end_date, status)
              VALUES (?, ?, ?, ?, ?)`,
@@ -62,18 +68,25 @@ export async function POST(request) {
 
         const bookingId = bookingResult.insertId;
 
-        // ✅ Step 3: Insert into payments
+        // ✅ Step 3: Fetch payment method from Razorpay
+        const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+        // ✅ Step 4: Insert payment record
         await connection.query(
             `INSERT INTO payments (booking_id, amount, status, method, razorpay_payment_id)
              VALUES (?, ?, 'paid', ?, ?)`,
-            [bookingId, price, package_title || 'manual', razorpay_payment_id]
+            [bookingId, price, payment.method, razorpay_payment_id]
         );
+
+        // ✅ Step 5: Log booking activity
+        const message = `Booked apartment "${apartmentTitle}" from ${start_date} to ${end_date}`;
+        await logActivity(user_id, message);
 
         return NextResponse.json({ message: 'Booking successful', bookingId }, { status: 201 });
 
-    } catch (error) {
-        console.error('❌ Booking error:', error);
-        return NextResponse.json({ error: error.message || 'Server error' }, { status: 500 });
+    } catch (err) {
+        console.error('❌ Booking error:', err);
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
 
     } finally {
         if (connection) connection.release();

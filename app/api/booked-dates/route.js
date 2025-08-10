@@ -9,7 +9,7 @@ export async function POST(req) {
         if (!apartment_id) {
             return NextResponse.json({ error: 'Missing apartment ID' }, { status: 400 });
         }
-
+        
         const bookings = await query(
             `SELECT start_date, end_date FROM bookings WHERE apartment_id = ?`,
             [apartment_id]

@@ -3,7 +3,7 @@ import HeroParticlesBackground from './particals';
 import RoomAvailabilityForm from './Form';
 const HeroSection = () => {
     return (
-        <section className="flex flex-col items-bottom relative bg-black w-full min-h-[100vh] overflow-hidden flex items-center justify-center px-4 py-16 sm:px-8 lg:px-24 text-white bg-dark-gradient">
+        <section className="flex flex-col items-bottom relative bg-black w-full min-h-[100vh] overflow-hidden flex items-center justify-center px-4 py-16 sm:px-8 lg:px-24 text-white ">
 
 
             <div className='absolute w-full h-full'>

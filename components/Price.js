@@ -2,45 +2,58 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import 'react-day-picker/dist/style.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faBed,
+    faBath,
+    faUsers,
+    faUtensils,
+    faWifi,
+    faTv,
+    faParking,
+    faBroom,
+    faUmbrellaBeach
+} from '@fortawesome/free-solid-svg-icons';
 import BookingCalendar from './bookingCalender';
 const apartmentPlans = [
     {
         title: '1 BHK Comfort',
         price: '₹3,000',
         features: [
-            '🛏️ 1 Bedroom',
-            '🛁 1 Bathroom',
-            '🧑‍🤝‍🧑 Up to 2 guests',
-            '🍽️ Kitchen Access',
-            '📶 Free Wi-Fi',
+            { icon: faBed, text: '1 Bedroom' },
+            { icon: faBath, text: '1 Bathroom' },
+            { icon: faUsers, text: 'Up to 2 guests' },
+            { icon: faUtensils, text: 'Kitchen Access' },
+            { icon: faWifi, text: 'Free Wi-Fi' },
         ],
     },
     {
         title: '2 BHK Deluxe',
         price: '₹6,500',
         features: [
-            '🛏️ 2 Bedrooms',
-            '🛁 2 Bathrooms',
-            '🧑‍🤝‍🧑 Up to 4 guests',
-            '🍳 Full Kitchen',
-            '📺 Smart TV + Wi-Fi',
-            '🅿️ Free Parking',
+            { icon: faBed, text: '2 Bedrooms' },
+            { icon: faBath, text: '2 Bathrooms' },
+            { icon: faUsers, text: 'Up to 4 guests' },
+            { icon: faUtensils, text: 'Full Kitchen' },
+            { icon: faTv, text: 'Smart TV + Wi-Fi' },
+            { icon: faParking, text: 'Free Parking' },
         ],
     },
     {
         title: '3 BHK Premium',
         price: '₹10,000',
         features: [
-            '🛏️ 3 Bedrooms',
-            '🛁 3 Bathrooms',
-            '🧑‍🤝‍🧑 Up to 6 guests',
-            '🏖️ Balcony View',
-            '🧼 Daily Cleaning',
-            '📶 High-Speed Wi-Fi',
-            '🅿️ Private Parking',
+            { icon: faBed, text: '3 Bedrooms' },
+            { icon: faBath, text: '3 Bathrooms' },
+            { icon: faUsers, text: 'Up to 6 guests' },
+            { icon: faUmbrellaBeach, text: 'Balcony View' },
+            { icon: faBroom, text: 'Daily Cleaning' },
+            { icon: faWifi, text: 'High-Speed Wi-Fi' },
+            { icon: faParking, text: 'Private Parking' },
         ],
     },
 ];
+
 
 export default function PricingSection() {
     const router = useRouter();
@@ -182,107 +195,114 @@ export default function PricingSection() {
     
 
     return (
-        <section className="bg-white py-16" id="pricing">
+        <section className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-16" id="pricing">
             <div className="max-w-6xl mx-auto px-4 text-center">
-                <h2 className="text-4xl font-bold text-gray-800 mb-4">Apartment Plans</h2>
-                <p className="text-gray-500 mb-12">Choose the perfect apartment for your stay.</p>
+                <h2 className="text-4xl font-bold text-white mb-4">Apartment Plans</h2>
+                <p className="text-gray-400 mb-12">Choose the perfect apartment for your stay.</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {apartmentPlans.map((plan, idx) => (
-                        <div
-                            key={idx}
-                            className={`rounded-3xl border p-6 shadow-xl transition-all transform hover:scale-[1.03] flex flex-col justify-between
-              ${plan.title === '2 BHK Deluxe'
-                                    ? 'border-blue-600 bg-gradient-to-br from-blue-50 via-white to-blue-100'
-                                    : 'border-gray-200 bg-gray-50'
-                                }`}
-                        >
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-1">{plan.title}</h3>
-                                <p className="text-3xl font-extrabold text-blue-600 mb-4">{plan.price}</p>
-                                <ul className="text-gray-700 space-y-3 text-left font-medium mb-6">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-2">{feature}</li>
-                                    ))}
-                                </ul>
-                            </div>
+                    {apartmentPlans.map((plan, idx) => {
+                        const gradients = [
+                            'from-teal-100 to-sky-200',     // 1 BHK
+                            'from-yellow-100 to-amber-200', // 2 BHK
+                            'from-purple-100 to-pink-200'   // 3 BHK
+                        ];
 
-                            <button
-                                onClick={() => handleBook(plan)}
-                                className="mt-auto w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition duration-200"
+                        return (
+                            <div
+                                key={idx}
+                                className={`rounded-2xl p-6 shadow-lg transition-all transform hover:scale-[1.02] flex flex-col justify-between 
+              bg-gradient-to-br ${gradients[idx]} text-gray-800`}
                             >
-                                Book Now
-                            </button>
-                        </div>
-                    ))}
+                                <div>
+                                    <h3 className="text-2xl font-bold mb-1">{plan.title}</h3>
+                                    <p className="text-3xl font-extrabold mb-4">{plan.price}</p>
+                                    <ul className="space-y-3 text-left font-medium mb-6">
+                                        {plan.features.map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-3">
+                                                <FontAwesomeIcon icon={feature.icon} className="w-5 h-5 text-gray-700" />
+                                                <span>{feature.text}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <button
+                                    onClick={() => handleBook(plan)}
+                                    className="mt-auto w-full bg-gray-800 text-white font-semibold py-2.5 rounded-xl hover:bg-gray-900 transition duration-200"
+                                >
+                                    Book Now
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
-            </div>
+                {selectedPlan && (
+                    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
+                        <div className="bg-white w-full max-w-md max-sm:w-sm p-6 rounded-2xl shadow-2xl relative">
+                            <button
+                                className="absolute top-3 right-6 text-gray-600 hover:text-black text-2xl"
+                                onClick={handleCloseModal}
+                            >
+                                ×
+                            </button>
 
-            {selectedPlan && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
-                    <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl relative">
-                        <button
-                            className="absolute top-3 right-3 text-gray-600 hover:text-black text-2xl"
-                            onClick={handleCloseModal}
-                        >
-                            ×
-                        </button>
+                            <h3 className="text-xl font-bold mb-4 text-gray-800">Book: {selectedPlan.title}</h3>
 
-                        <h3 className="text-xl font-bold mb-4 text-gray-800">Book: {selectedPlan.title}</h3>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <input
-                                type="text"
-                                name="username"
-                                placeholder="Your Name"
-                                value={formData.username}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            />
-
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="Email Address"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            />
-
-                            <div className="flex w-full justify-between items-center">
-                                <BookingCalendar
-                                    formData={formData}
-                                    setFormData={setFormData}
-                                    disabledRanges={disabledRanges}
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <input
+                                    type="text"
+                                    name="username"
+                                    placeholder="Your Name"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    required
                                 />
 
-                            </div>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email Address"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    required
+                                />
 
-                            <input
-                                type="hidden"
-                                name="package"
-                                value={formData.package}
-                            />
+                                <div className="flex w-full justify-between items-center">
+                                    <BookingCalendar
+                                        formData={formData}
+                                        setFormData={setFormData}
+                                        disabledRanges={disabledRanges}
+                                    />
 
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Proceed to Payment
-                            </button>
-                        </form>
-                        {formError && (
-                            <p className="text-red-600 text-sm text-center font-medium mt-5">{formError}</p>
-                        )}
+                                </div>
+
+                                <input
+                                    type="hidden"
+                                    name="package"
+                                    value={formData.package}
+                                />
+
+                                <button
+                                    type="submit"
+                                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                                >
+                                    Proceed to Payment
+                                </button>
+                            </form>
+                            {formError && (
+                                <p className="text-red-600 text-sm text-center font-medium mt-5">{formError}</p>
+                            )}
+                        </div>
+
                     </div>
-                    
-                </div>
-                
-            )}
-            
 
+                )}
+            </div>
         </section>
+
+
     );
 }

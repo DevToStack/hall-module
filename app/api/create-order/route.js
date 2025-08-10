@@ -23,7 +23,6 @@ export async function POST(req) {
             currency: "INR",
             receipt: `receipt_${Date.now()}`,
         });
-
         return NextResponse.json({ order });
     } catch (err) {
         console.error("Razorpay Order Error:", err);
