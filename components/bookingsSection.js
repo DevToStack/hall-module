@@ -164,7 +164,7 @@ export default function BookingSection({ bookings, setBookings }) {
             ) : bookings.length === 0 ? (
                 <div className="text-center text-gray-400">
                     <img src="/no-bookings.svg" alt="No bookings" className="mx-auto w-48 opacity-40 mb-4" />
-                    <p className="text-lg">You haven't made any bookings yet.</p>
+                    <p className="text-lg">You have not made any bookings yet.</p>
                     <p className="text-sm">Start exploring apartments to find your next stay!</p>
                 </div>
             ) : (

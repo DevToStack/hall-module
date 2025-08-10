@@ -199,7 +199,7 @@ export default function ProfileDashboard() {
                     <section>
                         <h1 className="text-3xl font-bold mb-4">Dashboard Overview</h1>
                         <p className="text-gray-300 mb-6 text-lg">
-                            You're logged in as <span className="font-bold text-white">{user.name}</span>.
+                            You are logged in as <span className="font-bold text-white">{user.name}</span>.
                         </p>
 
                         {/* Stats */}
@@ -301,7 +301,7 @@ export default function ProfileDashboard() {
                         <div className="bg-white/10 p-6 rounded-xl shadow mt-10">
                             <h3 className="text-xl font-semibold mb-2 text-white">Welcome, {user.name.split(' ')[0]} 👋</h3>
                             <p className="text-gray-300 text-sm">
-                                Here's what you can do next:
+                                Here is what you can do next:
                             </p>
                             <ul className="list-disc list-inside text-gray-400 text-sm mt-2">
                                 <li>Check your upcoming apartment bookings</li>
@@ -331,7 +331,7 @@ export default function ProfileDashboard() {
                         {/* Empty state message if no bookings */}
                         {bookings.length === 0 && (
                             <div className="mt-6 text-center text-gray-400">
-                                You haven't made any bookings yet.{' '}
+                                You havenot made any bookings yet.{' '}
                                 <a href="/apartments" className="text-blue-500 underline">
                                     Browse now
                                 </a>
