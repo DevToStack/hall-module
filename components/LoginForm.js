@@ -38,7 +38,7 @@ export default function LoginForm() {
         setLoading(true);
 
         try {
-            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/login`, {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password }),
                 headers: { 'Content-Type': 'application/json' },

@@ -38,7 +38,7 @@ const ReviewSection = () => {
     // Fetch all reviews from database
     const fetchReviews = async () => {
         try {
-            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/reviews`);
+            const res = await fetch('/api/reviews');
             const data = await res.json();
 
             if (res.ok) {
@@ -91,7 +91,7 @@ const ReviewSection = () => {
         }
 
         try {
-            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/reviews`, {
+            const res = await fetch("/api/reviews", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
