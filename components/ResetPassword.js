@@ -62,7 +62,7 @@ const ForgotPasswordPage = ()=> {
         setMessage('');       // Call parent function to resend OTP
         setTimer(60);      // Reset countdown to 60 seconds
         try {
-            const res = await fetch('/api/auth/send-reset', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/send-reset`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
@@ -88,7 +88,7 @@ const ForgotPasswordPage = ()=> {
         setMessage('');
 
         try {
-            const res = await fetch('/api/auth/reset-password', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email,otp:otp.join(""), newPassword }),

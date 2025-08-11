@@ -17,7 +17,7 @@ function EditProfileForm({ currentUser }) {
         try {
             const token = localStorage.getItem('token');
 
-            const res = await fetch('/api/profile/edit', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/profile/edit`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

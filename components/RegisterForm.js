@@ -64,14 +64,14 @@ export default function RegisterForm() {
         setMessage('');
 
         try {
-            const requser = await fetch('/api/user',{
+            const requser = await fetch(`${process.env.NEXTAUTH_URL }/api/user`,{
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email}),
             });
             const data = await requser.json();
             if(requser.ok){
-                const res = await fetch('/api/auth/send-otp', {
+                const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, purpose: 'registration' }),
@@ -106,7 +106,7 @@ export default function RegisterForm() {
         setMessage('');
 
         try {
-            const res = await fetch('/api/auth/register', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

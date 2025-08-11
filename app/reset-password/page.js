@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
         setMessage('');
 
         try {
-            const res = await fetch('/api/auth/send-reset', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/send-reset`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
         setMessage('');
 
         try {
-            const res = await fetch('/api/auth/reset-password', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp, newPassword }),

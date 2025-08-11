@@ -21,7 +21,7 @@ export default function PaymentsSection() {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        fetch('/api/payment', {
+        fetch(`${process.env.NEXTAUTH_URL }/api/payment`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

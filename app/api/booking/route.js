@@ -69,7 +69,7 @@ export async function POST(request) {
         const bookingId = bookingResult.insertId;
 
         // ✅ Step 3: Fetch payment method from Razorpay
-        const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        const payment = await razorpay.payments.fetch(`${process.env.NEXTAUTH_URL }/${razorpay_payment_id}`);
 
         // ✅ Step 4: Insert payment record
         await connection.query(

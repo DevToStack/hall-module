@@ -46,7 +46,7 @@ export default function ProfileDashboard() {
         const token = localStorage.getItem('token');
         if (!token) return router.push('/signin');
 
-        fetch('/api/profile', {
+        fetch(`${process.env.NEXTAUTH_URL}/api/profile`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then(res => res.json())

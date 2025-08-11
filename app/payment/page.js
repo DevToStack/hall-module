@@ -55,7 +55,7 @@ function PaymentComponent() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/create-order', {
+            const res = await fetch(`${ process.env.NEXTAUTH_URL }/api/create-order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ function PaymentComponent() {
                 description: title,
                 order_id: data.order.id,
                 handler: async (response) => {
-                    await fetch('/api/booking', {
+                    await fetch(`${process.env.NEXTAUTH_URL}/api/booking`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

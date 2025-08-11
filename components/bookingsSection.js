@@ -23,7 +23,7 @@ export default function BookingSection({ bookings, setBookings }) {
         if (!token) return alert('Unauthorized');
 
         try {
-            const res = await fetch('/api/delete-booking', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/delete-booking`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ export default function BookingSection({ bookings, setBookings }) {
     const cancelBooking = async () => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('/api/cancel-booking', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/cancel-booking`, {
                 method: 'POST',
                 body: JSON.stringify({ booking_id: selectedBooking.id }),
                 headers: {

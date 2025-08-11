@@ -11,7 +11,7 @@ const RoomAvailabilityForm = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
         try {
-            const res = await fetch('/api/check-availability', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/check-availability`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -76,7 +76,7 @@ export default function PricingSection() {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        fetch('/api/profile', {
+        fetch(`${process.env.NEXTAUTH_URL }/api/profile`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
@@ -103,7 +103,7 @@ export default function PricingSection() {
         }
 
         try {
-            const res = await fetch('/api/booked-dates', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/booked-dates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ apartment_id: 1 }),
@@ -171,7 +171,7 @@ export default function PricingSection() {
                 return;
             }
 
-            const res = await fetch('/api/check-availability', {
+            const res = await fetch(`${process.env.NEXTAUTH_URL }/api/check-availability`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ apartment_id: apartmentId, checkin, checkout }),
