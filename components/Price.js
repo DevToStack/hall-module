@@ -71,6 +71,8 @@ export default function PricingSection() {
     const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token');
 
     useEffect(() => {
+        if (typeof window === "undefined") return; // ✅ prevent SSR crash
+
         const token = localStorage.getItem('token');
         if (!token) return;
 
@@ -79,14 +81,19 @@ export default function PricingSection() {
         })
             .then((res) => res.json())
             .then((data) => {
-                setFormData((prev) => ({
-                    ...prev,
-                    username: data.user.name || '',
-                    email: data.user.email || '',
-                }));
+                if (data?.user) {
+                    setFormData((prev) => ({
+                        ...prev,
+                        username: data.user.name || '',
+                        email: data.user.email || '',
+                    }));
+                }
             })
-            .catch(() => { });
+            .catch((err) => {
+                console.error("Profile fetch failed:", err);
+            });
     }, []);
+    
 
     const handleBook = async (plan) => {
         if (!isLoggedIn) {

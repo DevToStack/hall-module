@@ -52,7 +52,7 @@ export default function ProfileDashboard() {
             .then(res => res.json())
             .then(data => {
                 if (data.user) {
-                    setProfile(data);
+                    setProfile(data.name);
                     setBookings(data.bookings); // ⬅️ Update here
                 } else router.push('/signin');
             });
