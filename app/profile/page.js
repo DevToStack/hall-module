@@ -52,7 +52,7 @@ export default function ProfileDashboard() {
             .then(res => res.json())
             .then(data => {
                 if (data.user) {
-                    setProfile(data.name);
+                    setProfile(data);
                     setBookings(data.bookings); // ⬅️ Update here
                 } else router.push('/signin');
             });
@@ -61,6 +61,7 @@ export default function ProfileDashboard() {
     if (!profile) return <div className="h-screen flex items-center justify-center text-gray-500">Loading...</div>;
 
     const { user, activity } = profile;
+
     function getDaysUntil(dateStr) {
         const today = new Date();
         const target = new Date(dateStr);
