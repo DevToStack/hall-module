@@ -29,7 +29,6 @@ export default function PaymentsSection() {
             .then((res) => res.json())
             .then((data) => {
                 setPayments(data.payments || []);
-                console.log(data);
                 setLoading(false);
             });
     }, []);

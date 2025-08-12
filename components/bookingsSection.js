@@ -198,7 +198,7 @@ export default function BookingSection({ bookings, setBookings }) {
                                             {status.charAt(0).toUpperCase() + status.slice(1)}
                                         </div>
                                         
-                                        <h3 className="text-2xl font-bold text-white mb-2">
+                                        <h3 className="text-2xl font-bold text-white mb-2 mt-6">
                                             <FontAwesomeIcon icon={faBuilding} className="mr-2" />
                                             {b.apartment_title}
                                         </h3>
