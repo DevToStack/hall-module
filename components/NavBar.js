@@ -17,6 +17,7 @@ import {
     faBookJournalWhills,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 
 export default function NavBar({ activeTab, setActiveTab }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,13 +72,13 @@ export default function NavBar({ activeTab, setActiveTab }) {
     ];
 
     const sidebarMenu = [
-        { icon: faUserCog, label: "Dashboard" },  
-        { icon: faBookJournalWhills, label: "How It Works" },
-        { icon: faStar, label: "Why Chose Us" },
-        { icon: faBuilding, label: "Contact Us" },
-        { icon: faPeopleGroup, label: "About Us" },
-        { icon: faStar, label: "Reviews" },
-        { icon: faShield, label: "Privacy Policy" },
+        {href:'/profile', icon: faUserCog, label: "Dashboard" },  
+        {href:'/#', icon: faBookJournalWhills, label: "How It Works" },
+        {href:'/#features', icon: faStar, label: "Why Chose Us" },
+        {href:'/#', icon: faBuilding, label: "Contact Us" },
+        {href:'/#', icon: faPeopleGroup, label: "About Us" },
+        { href:'/#reviews', icon: faStar, label: "Reviews" },
+        {href:'/terms', icon: faShield, label: "Privacy Policy" },
 
     ];
 
@@ -141,13 +142,12 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                 <ul className="mt-1 space-y-2 p-2">
                     {sidebarMenu.map((item, idx) => (
-                        <li
-                            key={idx}
-                            className="flex items-center gap-3 p-3 hover:bg-white/30 cursor-pointer bg-white/20 rounded-lg"
-                        >
-                            <FontAwesomeIcon icon={item.icon} className="mr-2 ml-2"/>
-                            <span className="font-medium">{item.label}</span>
-                        </li>
+                        <li key={idx} className="p-3 rounded-lg bg-white/20 hover:bg-white/30">
+                            <Link href={item.href} className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
+                                <FontAwesomeIcon icon={item.icon} className="mr-2 ml-2" />
+                                <span className="font-medium">{item.label}</span>
+                            </Link>
+                      </li>
                     ))}
                 </ul>
             </div>

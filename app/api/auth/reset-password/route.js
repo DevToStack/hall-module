@@ -10,7 +10,6 @@ export async function POST(req) {
         if (!email || !otp || !newPassword) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
-        console.log(otp.length,otp)
         // Check OTP
         const resetData = await query(
             "SELECT * FROM password_resets WHERE email = ? AND otp = ?",

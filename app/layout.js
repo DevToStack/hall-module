@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 // ✅ Required export for metadata
 export const metadata = {
-  title: "Hall Booking App",
-  description: "Book your hall easily and quickly",
+  title: "Rooms4u",
+  description: "Book your apartment easily and quickly",
   icons: {
     icon: '/favicon.ico', // ✅ this will now correctly point to the public folder
   },

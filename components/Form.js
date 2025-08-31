@@ -93,7 +93,8 @@ const RoomAvailabilityForm = () => {
             <div className="flex flex-wrap justify-end gap-5 max-sm:justify-between max-xl:gap-10 ">
                 <button
                     type="submit"
-                    className="bg-black border border-white/40 flex-grow hover:bg-gradient-to-br from-zinc-800 via-black/20 to-zinc-900 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
+                    className="bg-black border border-white/40 
+                    flex-grow hover:bg-gradient-to-br from-zinc-800 via-black/20 to-zinc-900 text-white font-semibold px-2 py-3 rounded-xl transition duration-300"
                 >
                     Check Availability
                 </button>

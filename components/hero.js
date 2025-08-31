@@ -19,7 +19,7 @@ const HeroSection = () => {
                     Find and book the ideal space instantly.
                 </p>
                 <div className="mt-6 flex justify-center gap-4 flex-wrap">
-                    <a href="#" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
+                    <a href="#pricing" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition duration-300">
                         Book Room
                     </a>
                     <button className="border border-green-400 text-green-400 hover:bg-green-600 hover:text-white font-semibold py-3 px-6 rounded-xl transition duration-300 bg-white/10 backdrop-blur-sm">
