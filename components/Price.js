@@ -97,8 +97,7 @@ export default function PricingSection() {
 
     const handleBook = async (plan) => {
         if (!isLoggedIn) {
-            alert('Please login first.');
-            router.push('/login');
+            router.push('/signin');
             return;
         }
 

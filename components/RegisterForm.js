@@ -17,8 +17,17 @@ export default function RegisterForm() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
+    const [timer, setTimer] = useState(0);
 
     const otpRefs = useRef([]);
+    // Countdown effect
+    useEffect(() => {
+        if (timer <= 0) return;
+        const interval = setInterval(() => {
+            setTimer((t) => t - 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [timer]);
 
     useEffect(() => {
         if (step === 2 && otpRefs.current[0]) {
@@ -62,7 +71,7 @@ export default function RegisterForm() {
         }
         setLoading(true);
         setMessage('');
-
+        setTimer(60);
         try {
             const requser = await fetch('/api/user',{
                 method: 'POST',
@@ -187,30 +196,48 @@ export default function RegisterForm() {
                 )}
 
                 {step === 2 &&(
-                    <form onSubmit={handleRegister} className="space-y-4">
-                        <div className="flex justify-between gap-2">
-                            {otp.map((digit, i) => (
-                                <input
-                                    key={i}
-                                    ref={(el) => otpRefs.current[i] = el}
-                                    type="text"
-                                    maxLength="1"
-                                    className="w-12 h-12 max-sm:w-10 max-sm:h-10 text-center text-lg font-bold border rounded-lg outline-none focus:border-blue-500"
-                                    value={digit}
-                                    onChange={(e) => handleOtpChange(e.target.value, i)}
-                                    onKeyDown={(e) => handleOtpKeyDown(e, i)}
-                                />
-                            ))}
-                        </div>
+                    <div>
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            <div className="flex justify-between gap-2">
+                                {otp.map((digit, i) => (
+                                    <input
+                                        key={i}
+                                        ref={(el) => otpRefs.current[i] = el}
+                                        type="text"
+                                        maxLength="1"
+                                        className="w-12 h-12 max-sm:w-10 max-sm:h-10 text-center text-lg font-bold border rounded-lg outline-none focus:border-blue-500"
+                                        value={digit}
+                                        onChange={(e) => handleOtpChange(e.target.value, i)}
+                                        onKeyDown={(e) => handleOtpKeyDown(e, i)}
+                                    />
+                                ))}
+                            </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg flex items-center justify-center"
-                        >
-                            Register
-                        </button>
-                    </form>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg flex items-center justify-center"
+                            >
+                                Register
+                            </button>
+                        </form>
+                        <div className="text-center mt-3">
+                            {timer > 0 ? (
+                                <span className="text-gray-500">
+                                    Resend OTP in {timer}s
+                                </span>
+                            ) : (
+                                <button
+                                    className="text-blue-600 hover:underline"
+                                    onClick={handleSendOtp}
+                                >
+                                    Resend OTP
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    
+                    
                 )}
 
 
