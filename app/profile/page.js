@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -31,7 +31,6 @@ const navItems = [
     { id: 'bookings', label: 'Bookings', icon: faCalendar },
     { id: 'payments', label: 'Payments', icon: faCreditCard },
     { id: 'settings', label: 'Settings', icon: faGears },
-    { id: 'danger', label: 'Danger Zone', icon: faTrash },
 ];
 
 export default function ProfileDashboard() {
@@ -42,21 +41,32 @@ export default function ProfileDashboard() {
     const devices = [];
     const [bookings, setBookings] = useState([]);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) return router.push('/signin');
+    const fetchProfile = useCallback(async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            router.push("/signin");
+            return;
+        }
 
-        fetch('/api/profile', {
+        const res = await fetch("/api/profile", {
             headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.user) {
-                    setProfile(data);
-                    setBookings(data.bookings); // ⬅️ Update here
-                } else router.push('/signin');
-            });
+            cache: "no-store", // ✅ ensures fresh data
+        });
+
+        const data = await res.json();
+
+        if (data.user) {
+            setProfile(data);
+            setBookings(data.bookings || []);
+        } else {
+            router.push("/signin");
+        }
     }, [router]);
+
+    // Fetch on mount
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
 
     if (!profile) return <div className="h-screen flex items-center justify-center text-gray-500">Loading...</div>;
 
@@ -70,7 +80,7 @@ export default function ProfileDashboard() {
     }
 
     const Sidebar = (
-        <aside className="w-80 p-6 space-y-6 bg-white/10 text-white backdrop-blur-md h-full">
+        <aside className="w-80 p-6 space-y-6 text-white bg-white/10 backdrop-blur-md h-full">
             <div className="flex items-center justify-between md:block">
                 <h2 className="text-2xl font-bold tracking-wide">Welcome</h2>
                 <button
@@ -98,7 +108,7 @@ export default function ProfileDashboard() {
                             setActive(id);
                             setSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition duration-300 ${active === id ? 'bg-white text-black' : 'hover:bg-white/10'
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition duration-300 border border-gray-100/10 ${active === id ? 'bg-white text-black' : 'hover:bg-white/10'
                             }`}
                     >
                         <FontAwesomeIcon icon={icon} className="w-5 h-5" />
@@ -117,7 +127,7 @@ export default function ProfileDashboard() {
                     <span className='ml-3'>Logout</span>
                 </button>
                 <h3 className='mt-3 font-bold'>Quick Links</h3>
-                <button className='w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/10'
+                <button className='w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-gray-100/10 hover:bg-white/10'
                     onClick={() => {
                         router.push('/');
                     }}>
@@ -222,25 +232,17 @@ export default function ProfileDashboard() {
                                             : 'N/A',
                                 },
                                 {
-                                    title: 'Devices Logged In',
-                                    value: devices?.length || 1,
-                                },
-                                {
-                                    title: 'Role',
-                                    value: user.role,
-                                },
-                                {
                                     title: 'Member Since',
                                     value: new Date(user.created_at).toLocaleDateString(),
                                 },
                             ].map((card, index) => (
                                 <div
                                     key={index}
-                                    className="bg-white/10 p-5 rounded-xl shadow hover:shadow-lg transition-all
+                                    className="bg-gray-100/5 border border-white/10 p-5 rounded-xl shadow hover:shadow-lg transition-all
                  flex-grow sm:basis-[23%] md:basis-[31%] lg:basis-[23%] xl:basis-[23%]"
                                 >
-                                    <p className="max-sm:text-sm text-lg text-gray-300">{card.title}</p>
-                                    <p className="max-sm:text-lg text-2xl font-bold text-white capitalize">{card.value}</p>
+                                    <p className="max-sm:text-sm text-lg text-center text-gray-300">{card.title}</p>
+                                    <p className="max-sm:text-lg text-2xl text-center font-bold text-white capitalize">{card.value}</p>
                                 </div>
                             ))}
                         </div>
@@ -299,7 +301,7 @@ export default function ProfileDashboard() {
                         </div>
 
                         {/* Welcome Card */}
-                        <div className="bg-white/10 p-6 rounded-xl shadow mt-10">
+                        <div className="bg-gray-100/5 border border-white/10 p-6 rounded-xl shadow mt-10">
                             <h3 className="text-xl font-semibold mb-2 text-white">Welcome, {user.name.split(' ')[0]} 👋</h3>
                             <p className="text-gray-300 text-sm">
                                 Here is what you can do next:
@@ -317,7 +319,7 @@ export default function ProfileDashboard() {
                                 <h2 className="text-xl font-bold mb-4 text-white">Recent Activity</h2>
                                 <div className="space-y-2">
                                     {activity.map((item, i) => (
-                                        <div key={i} className="bg-white/10 p-3 rounded-lg text-sm text-gray-200">
+                                        <div key={i} className="bg-gray-100/5 border border-white/10 p-3 rounded-lg text-sm text-gray-200">
                                             {item.message} —{' '}
                                             <span className="text-gray-400">
                                                 <TimeAgo datetime={item.date}/>
@@ -352,17 +354,7 @@ export default function ProfileDashboard() {
                 {active === 'settings' && (
                     <section>
                         <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
-                        <EditProfileForm currentUser={user} />
-                    </section>
-                )}
-
-
-                {active === 'danger' && (
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-red-400">Danger Zone</h2>
-                        <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
-                            Delete My Account
-                        </button>
+                        <EditProfileForm currentUser={user} onUpdate={fetchProfile} />
                     </section>
                 )}
             </main>

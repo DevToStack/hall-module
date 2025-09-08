@@ -27,6 +27,7 @@
     "react": "^19.0.0",
     "react-day-picker": "^9.8.1",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.6.0",
     "react-slick": "^0.30.3",
     "react-tsparticles": "^2.12.2",
     "slick-carousel": "^1.8.1",

@@ -19,7 +19,7 @@ export async function GET(req) {
 
         // Fetch user profile
         const [user] = await query(
-            'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+            'SELECT id, name, email,alternate_phone,alternate_email,phone_number, created_at FROM users WHERE id = ?',
             [decoded.id]
         );
 

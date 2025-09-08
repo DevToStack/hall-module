@@ -3,6 +3,7 @@ import "./globals.css";
 import ClientLayout from "@/components/clientLayout";
 import PageWrapper from "@/components/pageWrapper";
 import Head from 'next/head';
+import { Toaster } from "react-hot-toast";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -51,7 +52,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <PageWrapper><ClientLayout>{children}</ClientLayout></PageWrapper>
-        
+        <Toaster position="bottom-right" reverseOrder={false} />
       </body>
     </html>
   );

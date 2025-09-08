@@ -47,7 +47,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
                 })
                 .catch(() => router.push("/signin"));
         } else {
-            router.push("/signin");
+            setProfile(null)
         }
     }, [router]);
 
@@ -97,7 +97,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
     return (
         <>
             {/* Top Nav */}
-            <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#1E675E] via-gray-500 to-indigo-900 border-b border-white/20 shadow-lg">
+            <nav className="fixed top-0 left-0 w-full z-50 bg-black border-b border-white/20 shadow-lg">
                 <div className="w-full max-w-[1500px] mx-auto px-3 py-2 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {/* Hamburger */}
@@ -121,7 +121,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
                                     onClick={() => handleTabClick(tab.id)}
                                     className={`flex items-center transition-all duration-300 ${isActive
                                         ? "text-green-300 underline"
-                                        : "text-white hover:text-green-300"
+                                        : "text-white hover:text-green-300 cursor-pointer"
                                         }`}
                                 >
                                     <span className="text-sm">{tab.label}</span>
@@ -130,36 +130,30 @@ export default function NavBar({ activeTab, setActiveTab }) {
                         })}
                     </div>
 
-                    {!isAuthenticated && (
+                    {!profile && (
                         <div className="flex gap-3">
                             <button
                                 onClick={() => router.push('/register')}
-                                className="rounded-full px-5 py-2 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10"
+                                className="rounded-full px-5 py-2 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10 cursor-pointer"
                             >
                                 Sign Up
                             </button>
                             <button
                                 onClick={() => router.push('/signin')}
-                                className="rounded-full px-5 py-2 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10"
+                                className="rounded-full px-5 py-2 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10 cursor-pointer"
                             >
                                 Login
                             </button>
                         </div>
                     )}
 
-                    {isAuthenticated && profile && (
-                        <div className="text-whhite flex items-center gap-2 bg-white/20 p-2 rounded-full" onClick={() => router.push("/profile") }>
-                            <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center text-xl font-bold text-whhite">
+                    {profile && (
+                        <div className="text-gray-100 flex items-center rounded-full sm:pr-2 bg-white/20 gap-2 cursor-pointer" onClick={() => router.push("/profile") }>
+                            <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-xl font-bold p-5">
                                 {profile?.name?.charAt(0)}
                             </div>
-                            <div>
-                                <p
-                                    className="text-lg font-semibold truncate max-w-[100px] text-whhite min-lg:max-w-full"
-                                    title={profile?.name}
-                                >
-                                    {profile?.name}
-                                </p>
-
+                            <div className="max-sm:hidden">
+                                {profile?.name}
                             </div>
                         </div>
                     )}
@@ -168,7 +162,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 h-full bg-gradient-to-r from-[#1E675E] to-gray-700 text-white z-50 transition-transform duration-500
+                className={`fixed top-0 left-0 h-full bg-black text-white z-50 transition-transform duration-500
                 w-80 p-3
                 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
@@ -181,8 +175,8 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                 <ul className="mt-1 space-y-2 p-2">
                     {sidebarMenu.map((item, idx) => (
-                        <li key={idx} className="p-3 rounded-lg bg-white/20 hover:bg-white/30">
-                            <Link href={item.href} className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
+                        <li key={idx} className="p-3 rounded-lg bg-gray-100/20 hover:bg-gray-100/40">
+                            <Link href={item.href} className="flex items-center gap-3 cursor-pointer" onClick={() => setSidebarOpen(false)}>
                                 <FontAwesomeIcon icon={item.icon} className="mr-2 ml-2" />
                                 <span className="font-medium">{item.label}</span>
                             </Link>

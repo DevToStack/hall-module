@@ -17,46 +17,62 @@ export async function PATCH(req) {
         }
 
         const body = await req.json();
-        const { name, email, phone } = body;
+        // ✅ match frontend field names (snake_case)
+        const { name, alternate_email, alternate_phone } = body;
 
-        // Basic validation example
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+        // Validation
+        if (alternate_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alternate_email)) {
+            return NextResponse.json({ error: 'Invalid alternate email format' }, { status: 400 });
         }
 
-        if (phone && !/^\+?\d{7,15}$/.test(phone)) {
-            return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
+        if (alternate_phone && !/^\+?\d{7,15}$/.test(alternate_phone)) {
+            return NextResponse.json({ error: 'Invalid alternate phone number format' }, { status: 400 });
+        }
+
+        // Fetch current user info
+        const currentUserRows = await query(
+            'SELECT name, alternate_email, alternate_phone FROM users WHERE id = ?',
+            [decoded.id]
+        );
+        const currentUser = currentUserRows[0];
+        if (!currentUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
         // Build update query dynamically
         const updates = [];
         const params = [];
 
-        if (name) {
+        if (name && name.trim() !== currentUser.name) {
             updates.push('name = ?');
             params.push(name.trim());
         }
-        if (email) {
-            updates.push('email = ?');
-            params.push(email.trim().toLowerCase());
+        if (alternate_email && alternate_email.trim().toLowerCase() !== currentUser.alternate_email) {
+            updates.push('alternate_email = ?');
+            params.push(alternate_email.trim().toLowerCase());
         }
-        if (phone) {
-            updates.push('phone = ?');
-            params.push(phone.trim());
+        if (alternate_phone && alternate_phone.trim() !== currentUser.alternate_phone) {
+            updates.push('alternate_phone = ?');
+            params.push(alternate_phone.trim());
         }
 
         if (updates.length === 0) {
-            return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            return NextResponse.json({ error: 'No changes detected' }, { status: 400 });
         }
 
         params.push(decoded.id); // user id for WHERE clause
-
         const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+        const result = await query(sql, params);
 
-        await query(sql, params);
+        if (result.affectedRows === 0) {
+            return NextResponse.json({ error: 'No changes detected' }, { status: 400 });
+        }
 
-        // Optionally, fetch updated user info and return
-        const updatedUsers = await query('SELECT id, name, email FROM users WHERE id = ?', [decoded.id]);
+        // Fetch updated user info
+        const updatedUsers = await query(
+            'SELECT id, name, email, phone_number, alternate_email, alternate_phone FROM users WHERE id = ?',
+            [decoded.id]
+        );
         const updatedUser = updatedUsers[0];
 
         return NextResponse.json({ success: true, user: updatedUser });
