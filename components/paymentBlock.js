@@ -18,20 +18,38 @@ export default function PaymentsSection() {
 
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
+        const fetchPayments = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setLoading(false); // nothing to load
+                return;
+            }
 
-        fetch('/api/payment', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-            .then((res) => res.json())
-            .then((data) => {
+            try {
+                const res = await fetch("/api/payment", {
+                    headers: { Authorization: `Bearer ${token}` },
+                    cache: "no-store",
+                });
+
+                if (res.status === 401) {
+                    // ❌ invalid/expired token
+                    localStorage.removeItem("token");
+                    window.location.href = "/signin"; // redirect to login
+                    return;
+                }
+
+                const data = await res.json();
                 setPayments(data.payments || []);
+            } catch (err) {
+                console.error("Failed to fetch payments:", err);
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchPayments();
     }, []);
+      
 
     const categorize = (status) =>
         payments.filter((p) => p.payment_status === status);

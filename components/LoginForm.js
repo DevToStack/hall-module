@@ -38,25 +38,32 @@ export default function LoginForm() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
                 body: JSON.stringify({ email, password }),
-                headers: { 'Content-Type': 'application/json' },
+                headers: { "Content-Type": "application/json" },
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                localStorage.setItem('token', data.token);
-                router.push('/');
+                // ✅ Successful login → store token
+                localStorage.setItem("token", data.token);
+                router.push("/");
+            } else if (res.status === 401) {
+                // ❌ Wrong email/password
+                setError("Incorrect email or password. Try again or register.");
             } else {
-                setError(data.error || 'Incorrect email or password. Try again or register.');
+                // Other errors
+                setError(data.error || "Login failed. Please try again.");
             }
-        } catch {
-            setError('Server error. Please try again later.');
+        } catch (err) {
+            console.error("Login error:", err);
+            setError("Server error. Please try again later.");
         } finally {
             setLoading(false);
         }
+          
     };
 
     return (

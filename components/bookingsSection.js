@@ -32,6 +32,10 @@ export default function BookingSection({ bookings, setBookings }) {
                 body: JSON.stringify({ booking_id: id }),
             });
 
+            if(res.status === 401){
+                localStorage.removeItem('token');
+            }
+
             const data = await res.json();
             if (res.ok) {
                 alert('Booking deleted successfully!');
@@ -57,7 +61,11 @@ export default function BookingSection({ bookings, setBookings }) {
                     'Content-Type': 'application/json',
                 },
             });
-
+            if (res.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = "/signin"; // redirect to login
+                return;
+            }
             if (res.ok) {
                 alert('Booking cancelled successfully');
 

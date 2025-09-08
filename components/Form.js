@@ -9,7 +9,7 @@ const RoomAvailabilityForm = () => {
     const handleCheckAvailability = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token) window.location.href = "/signin";
         try {
             const res = await fetch('/api/check-availability', {
                 method: 'POST',
@@ -23,7 +23,11 @@ const RoomAvailabilityForm = () => {
                     checkout,
                 }),
             });
-
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                window.location.href = "/signin"; // redirect to login
+                return;
+            }
             const data = await res.json();
             setAvailability(data);
         } catch (err) {

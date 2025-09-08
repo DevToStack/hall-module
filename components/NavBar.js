@@ -32,24 +32,49 @@ export default function NavBar({ activeTab, setActiveTab }) {
         router.prefetch("/signin");
         router.prefetch("/profile");
 
-        if (token) {
-            fetch("/api/profile", {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.user) {
-                        setProfile(data.user); // ✅ only store the user object
-                        console.log("Profile loaded:", data.user);
-                    } else {
-                        router.push("/signin");
-                    }
-                })
-                .catch(() => router.push("/signin"));
-        } else {
-            setProfile(null)
+        if (!token) {
+            setProfile(null);
+            return;
         }
+
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("/api/profile", {
+                    headers: { Authorization: `Bearer ${token}` },
+                    cache: "no-store",
+                });
+
+                if (res.status === 401) {
+                    // ❌ token expired or invalid
+                    localStorage.removeItem("token");
+                    setIsAuthenticated(false);
+                    setProfile(null);
+                    router.push("/signin");
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.user) {
+                    setProfile(data.user); // ✅ store only user object
+                    console.log("Profile loaded:", data.user);
+                } else {
+                    // fallback for unexpected responses
+                    localStorage.removeItem("token");
+                    setIsAuthenticated(false);
+                    router.push("/signin");
+                }
+            } catch (err) {
+                console.error("Profile fetch failed:", err);
+                localStorage.removeItem("token");
+                setIsAuthenticated(false);
+                router.push("/signin");
+            }
+        };
+
+        fetchProfile();
     }, [router]);
+      
 
     const toggleSidebar = () => {
         setSidebarOpen(prev => !prev);

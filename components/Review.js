@@ -104,6 +104,10 @@ const ReviewSection = () => {
                 }),
             });
 
+            if(res.status === 401){
+                localStorage.removeItem('token');
+            }
+
             const data = await res.json();
 
             if (res.ok) {
