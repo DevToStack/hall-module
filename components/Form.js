@@ -8,26 +8,27 @@ const RoomAvailabilityForm = () => {
 
     const handleCheckAvailability = async (e) => {
         e.preventDefault();
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = "/signin";
+
         try {
             const res = await fetch('/api/check-availability', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`, 
                 },
+                credentials: 'include', // ✅ ensures cookies are sent
                 body: JSON.stringify({
                     apartment_id: 1,
                     checkin,
                     checkout,
                 }),
             });
+
             if (res.status === 401) {
-                localStorage.removeItem("token");
-                window.location.href = "/signin"; // redirect to login
+                // Token is missing/expired/invalid on the server
+                window.location.href = "/signin";
                 return;
             }
+
             const data = await res.json();
             setAvailability(data);
         } catch (err) {
@@ -48,7 +49,6 @@ const RoomAvailabilityForm = () => {
             </h2>
 
             <div className="grid grid-cols-1 gap-4">
-                {/* Date */}
                 <div className="flex gap-4">
                     <div className="flex flex-grow flex-col">
                         <label htmlFor="checkin" className="text-gray-200 font-medium">
@@ -78,7 +78,6 @@ const RoomAvailabilityForm = () => {
                     </div>
                 </div>
 
-                {/* Guest Count */}
                 <div className="flex flex-col">
                     <label htmlFor="guests" className="text-gray-200 font-medium">
                         Number of Guests
@@ -93,7 +92,6 @@ const RoomAvailabilityForm = () => {
                 </div>
             </div>
 
-            {/* Submit Button */}
             <div className="flex flex-wrap justify-end gap-5 max-sm:justify-between max-xl:gap-10 ">
                 <button
                     type="submit"
@@ -104,7 +102,6 @@ const RoomAvailabilityForm = () => {
                 </button>
             </div>
 
-            {/* Availability Response */}
             {availability && (
                 <p
                     className={`text-center p-2 font-medium text-md ${availability.available ? 'text-green-400' : 'text-red-400'
@@ -114,7 +111,6 @@ const RoomAvailabilityForm = () => {
                 </p>
             )}
         </form>
-
     );
 };
 

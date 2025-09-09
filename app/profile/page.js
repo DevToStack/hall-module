@@ -4,21 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faHome,
-    faCreditCard,
-    faGears,
-    faTrash,
-    faCalendar,
-    faBars,
-    faXmark,
-    faDoorOpen,
-    faRightFromBracket,
-    faBuilding,
-    faLocationDot,
-    faCalendarDays,
-    faClock,
-    faIndianRupeeSign,
-    
+    faHome, faCreditCard, faGears, faCalendar, faBars, faXmark, faRightFromBracket,
+    faBuilding, faLocationDot, faCalendarDays, faClock, faIndianRupeeSign
 } from '@fortawesome/free-solid-svg-icons';
 import EditProfileForm from '@/components/EditProfile';
 import Link from 'next/link';
@@ -38,32 +25,30 @@ export default function ProfileDashboard() {
     const [profile, setProfile] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const router = useRouter();
-    const devices = [];
     const [bookings, setBookings] = useState([]);
 
     const fetchProfile = useCallback(async () => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            router.push("/signin");
-            return;
-        }
+        try {
+            // ✅ No Authorization header needed; cookie is sent automatically
+            const res = await fetch('/api/profile', { cache: 'no-store' });
+            if (!res.ok) {
+                router.push('/signin'); // redirect if unauthorized
+                return;
+            }
 
-        const res = await fetch("/api/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-            cache: "no-store", // ✅ ensures fresh data
-        });
-
-        const data = await res.json();
-
-        if (data.user) {
-            setProfile(data);
-            setBookings(data.bookings || []);
-        } else {
-            router.push("/signin");
+            const data = await res.json();
+            if (data.user) {
+                setProfile(data);
+                setBookings(data.bookings || []);
+            } else {
+                router.push('/signin');
+            }
+        } catch (err) {
+            console.error('Profile fetch error:', err);
+            router.push('/signin');
         }
     }, [router]);
 
-    // Fetch on mount
     useEffect(() => {
         fetchProfile();
     }, [fetchProfile]);
@@ -78,6 +63,17 @@ export default function ProfileDashboard() {
         const diffTime = target.getTime() - today.getTime();
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
+
+    const handleLogout = async () => {
+        try {
+            // Call logout API to clear cookie
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            router.push('/signin');
+        }
+    };
 
     const Sidebar = (
         <aside className="w-80 p-6 space-y-6 text-white bg-white/10 backdrop-blur-md h-full">
@@ -115,7 +111,7 @@ export default function ProfileDashboard() {
                         <span>{label}</span>
                     </button>
                 ))}
-                
+
                 <button
                     onClick={() => {
                         localStorage.removeItem('token');
@@ -149,7 +145,7 @@ export default function ProfileDashboard() {
                     <FontAwesomeIcon icon={faBars} className="text-2xl text-center text-white pt-1" />
                 </button>
             </div>
-            
+
             {/* Desktop Sidebar */}
             <div className="hidden md:block h-full">{Sidebar}</div>
             {/* Mobile Sidebar (Slide-in) */}
@@ -322,7 +318,7 @@ export default function ProfileDashboard() {
                                         <div key={i} className="bg-gray-100/5 border border-white/10 p-3 rounded-lg text-sm text-gray-200">
                                             {item.message} —{' '}
                                             <span className="text-gray-400">
-                                                <TimeAgo datetime={item.date}/>
+                                                <TimeAgo datetime={item.date} />
                                             </span>
                                         </div>
                                     ))}
@@ -348,7 +344,7 @@ export default function ProfileDashboard() {
                 )}
 
                 {active === 'payments' && (
-                    <PaymentsSection/>
+                    <PaymentsSection />
                 )}
 
                 {active === 'settings' && (

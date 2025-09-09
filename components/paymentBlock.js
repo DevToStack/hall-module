@@ -16,25 +16,19 @@ export default function PaymentsSection() {
     const [loading, setLoading] = useState(true);
     const [selectedPayment, setSelectedPayment] = useState(null);
 
-
     useEffect(() => {
         const fetchPayments = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                setLoading(false); // nothing to load
-                return;
-            }
-
             try {
+                // ✅ fetch with credentials so browser sends HttpOnly cookie
                 const res = await fetch("/api/payment", {
-                    headers: { Authorization: `Bearer ${token}` },
+                    method: "GET",
+                    credentials: "include", // very important
                     cache: "no-store",
                 });
 
                 if (res.status === 401) {
-                    // ❌ invalid/expired token
-                    localStorage.removeItem("token");
-                    window.location.href = "/signin"; // redirect to login
+                    // ❌ unauthorized -> redirect
+                    window.location.href = "/signin";
                     return;
                 }
 
@@ -49,13 +43,12 @@ export default function PaymentsSection() {
 
         fetchPayments();
     }, []);
-      
 
     const categorize = (status) =>
         payments.filter((p) => p.payment_status === status);
 
     const Paid = categorize('paid');
-    const Pending = categorize('pending'); // Only if you have pending in DB
+    const Pending = categorize('pending');
     const Refunded = categorize('refunded');
 
     if (loading) return <p className="text-gray-400">Loading payment history...</p>;
@@ -110,8 +103,6 @@ export default function PaymentsSection() {
             </div>
         </div>
     );
-    
-    
 
     return (
         <section className="space-y-8 mb-10">
@@ -165,11 +156,12 @@ export default function PaymentsSection() {
             {payments.length === 0 && (
                 <p className="text-center text-gray-400">No payment records found.</p>
             )}
+
+            {/* Modal for See More */}
             {selectedPayment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="relative bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl rounded-2xl p-6 w-[90%] max-w-lg shadow-xl text-white">
 
-                        {/* Close Button */}
                         <button
                             onClick={() => setSelectedPayment(null)}
                             className="absolute top-4 right-4 text-white hover:text-red-400"
@@ -178,12 +170,8 @@ export default function PaymentsSection() {
                             ✖
                         </button>
 
-                        {/* Modal Header */}
-                        <h2 className="text-2xl font-bold mb-4">
-                            💳 Payment Info
-                        </h2>
+                        <h2 className="text-2xl font-bold mb-4">💳 Payment Info</h2>
 
-                        {/* Info Section */}
                         <div className="space-y-4 text-sm text-gray-200">
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Apartment</span>
@@ -202,17 +190,21 @@ export default function PaymentsSection() {
 
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Status</span>
-                                <span className={`capitalize font-semibold ${selectedPayment.payment_status === 'paid' ? 'text-green-400' :
-                                        selectedPayment.payment_status === 'refunded' ? 'text-blue-400' :
-                                            'text-yellow-400'
+                                <span className={`capitalize font-semibold ${selectedPayment.payment_status === 'paid'
+                                        ? 'text-green-400'
+                                        : selectedPayment.payment_status === 'refunded'
+                                            ? 'text-blue-400'
+                                            : 'text-yellow-400'
                                     }`}>
                                     {selectedPayment.payment_status}
                                 </span>
                             </div>
+
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Payment Date</span>
                                 <span>{new Date(selectedPayment.paid_at).toLocaleDateString()}</span>
                             </div>
+
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Start Date</span>
                                 <span>{new Date(selectedPayment.start_date).toLocaleDateString()}</span>
@@ -237,7 +229,6 @@ export default function PaymentsSection() {
                             )}
                         </div>
 
-                        {/* Modal Footer */}
                         <div className="mt-6 text-right">
                             <button
                                 onClick={() => setSelectedPayment(null)}
@@ -249,9 +240,6 @@ export default function PaymentsSection() {
                     </div>
                 </div>
             )}
-
-
         </section>
     );
-    
 }

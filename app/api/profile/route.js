@@ -1,33 +1,32 @@
 // app/api/profile/route.js
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@/lib/jwt';
 import { query } from '@/lib/db';
 
 export async function GET(req) {
     try {
-        const token = req.headers.get('authorization')?.split(' ')[1];
-
+        // ✅ Get token from cookies
+        const token = req.cookies.get('token')?.value;
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (!decoded?.id) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        // ✅ Verify token using custom helper
+        const { valid, decoded, error } = verifyToken(token);
+        if (!valid) {
+            return NextResponse.json({ error: error || 'Invalid or expired token' }, { status: 401 });
         }
 
-        // Fetch user profile
+        // ✅ Fetch user profile
         const [user] = await query(
-            'SELECT id, name, email,alternate_phone,alternate_email,phone_number, created_at FROM users WHERE id = ?',
+            'SELECT id, name, email, alternate_phone, alternate_email, phone_number, created_at FROM users WHERE id = ?',
             [decoded.id]
         );
-
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Fetch bookings (fixed: proper alias and column names)
+        // ✅ Fetch bookings
         const bookings = await query(`
             SELECT 
                 b.id,
@@ -47,16 +46,19 @@ export async function GET(req) {
             ORDER BY b.created_at DESC
         `, [decoded.id]);
 
-        // Fetch recent activity (fixed: removed spacing error in DATE_FORMAT)
-        const activity = await query(
-            `SELECT message, DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s') AS date FROM user_activity WHERE user_id = ? ORDER BY date DESC LIMIT 10`,
-            [decoded.id]
-        );
+        // ✅ Fetch recent activity
+        const activity = await query(`
+            SELECT message, DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s') AS date
+            FROM user_activity
+            WHERE user_id = ?
+            ORDER BY date DESC
+            LIMIT 10
+        `, [decoded.id]);
 
         return NextResponse.json({ user, bookings, activity }, { status: 200 });
 
     } catch (err) {
         console.error('❌ Profile route error:', err);
-        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 403 });
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }

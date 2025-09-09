@@ -1,33 +1,29 @@
 // app/api/booking/route.js
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import pool from '@/lib/db';
 import { logActivity } from '@/lib/logActivity';
 import Razorpay from 'razorpay';
+import { verifyToken } from '@/lib/jwt';
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const SECRET = process.env.JWT_SECRET;
-
 export async function POST(request) {
     let connection;
 
     try {
-        // ✅ Extract and verify JWT
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        // ✅ Get token from cookies (HttpOnly)
+        const cookieHeader = request.headers.get('cookie');
+        const token = cookieHeader
+            ?.split('; ')
+            .find((row) => row.startsWith('token='))
+            ?.split('=')[1];
 
-        const token = authHeader.split(' ')[1];
-        let decoded;
-        try {
-            decoded = jwt.verify(token, SECRET);
-        } catch {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 403 });
+        const { valid, decoded, error } = verifyToken(token);
+        if (!valid) {
+            return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
         }
 
         const user_id = decoded.id;
@@ -38,7 +34,7 @@ export async function POST(request) {
             start_date,
             end_date,
             price,
-            razorpay_payment_id
+            razorpay_payment_id,
         } = await request.json();
 
         if (!start_date || !end_date || !price || !razorpay_payment_id) {
@@ -82,12 +78,13 @@ export async function POST(request) {
         const message = `Booked apartment "${apartmentTitle}" from ${start_date} to ${end_date}`;
         await logActivity(user_id, message);
 
-        return NextResponse.json({ message: 'Booking successful', bookingId }, { status: 201 });
-
+        return NextResponse.json(
+            { message: 'Booking successful', bookingId },
+            { status: 201 }
+        );
     } catch (err) {
         console.error('❌ Booking error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
-
     } finally {
         if (connection) connection.release();
     }

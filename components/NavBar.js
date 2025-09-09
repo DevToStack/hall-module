@@ -3,82 +3,63 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-    faBook,
-    faHome,
-    faUser,
-    faCalendarAlt,
-    faBuilding,
-    faStar,
-    faUserCog,
-    faShield,
-    faCircleInfo,
-    faPeopleGroup,
-    faInfo,
     faBookJournalWhills,
+    faStar,
+    faBuilding,
+    faPeopleGroup,
+    faShield,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 
 export default function NavBar({ activeTab, setActiveTab }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [profile, setProfile] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        setIsAuthenticated(!!token);
-
         router.prefetch("/signin");
         router.prefetch("/profile");
-
-        if (!token) {
-            setProfile(null);
-            return;
-        }
 
         const fetchProfile = async () => {
             try {
                 const res = await fetch("/api/profile", {
-                    headers: { Authorization: `Bearer ${token}` },
+                    method: "GET",
+                    credentials: "include", // ✅ send HttpOnly cookies automatically
                     cache: "no-store",
                 });
 
                 if (res.status === 401) {
-                    // ❌ token expired or invalid
-                    localStorage.removeItem("token");
-                    setIsAuthenticated(false);
                     setProfile(null);
                     router.push("/signin");
                     return;
                 }
 
+                if (!res.ok) {
+                    console.error(`Profile fetch failed: ${res.status}`);
+                    setProfile(null);
+                    return;
+                }
+
                 const data = await res.json();
 
-                if (data.user) {
-                    setProfile(data.user); // ✅ store only user object
-                    console.log("Profile loaded:", data.user);
+                if (data?.user) {
+                    setProfile(data.user);
                 } else {
-                    // fallback for unexpected responses
-                    localStorage.removeItem("token");
-                    setIsAuthenticated(false);
+                    setProfile(null);
                     router.push("/signin");
                 }
             } catch (err) {
-                console.error("Profile fetch failed:", err);
-                localStorage.removeItem("token");
-                setIsAuthenticated(false);
+                console.error("Profile fetch error:", err);
+                setProfile(null);
                 router.push("/signin");
             }
         };
 
         fetchProfile();
     }, [router]);
-      
 
-    const toggleSidebar = () => {
-        setSidebarOpen(prev => !prev);
-    };
+    const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
     const tabRouteMap = {
         home: "/",
@@ -94,11 +75,9 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
     const handleTabClick = (tabId) => {
         setActiveTab(tabId);
-
         const route = tabRouteMap[tabId] || "/";
-        router.push(route); // works for both normal pages and hash routes
+        router.push(route);
     };
-    
 
     const tabs = [
         { id: "home", label: "Home" },
@@ -111,12 +90,12 @@ export default function NavBar({ activeTab, setActiveTab }) {
     ];
 
     const sidebarMenu = [
-        { href: '/#', icon: faBookJournalWhills, label: "How It Works" },
-        { href: '/#features', icon: faStar, label: "Why Choose Us" },
-        { href: '/#', icon: faBuilding, label: "Contact Us" },
-        { href: '/#', icon: faPeopleGroup, label: "About Us" },
-        { href: '/#reviews', icon: faStar, label: "Reviews" },
-        { href: '/terms', icon: faShield, label: "Privacy Policy" },
+        { href: "/#how-it-works", icon: faBookJournalWhills, label: "How It Works" },
+        { href: "/#features", icon: faStar, label: "Why Choose Us" },
+        { href: "/#contact", icon: faBuilding, label: "Contact Us" },
+        { href: "/#about", icon: faPeopleGroup, label: "About Us" },
+        { href: "/#reviews", icon: faStar, label: "Reviews" },
+        { href: "/terms", icon: faShield, label: "Privacy Policy" },
     ];
 
     return (
@@ -124,8 +103,8 @@ export default function NavBar({ activeTab, setActiveTab }) {
             {/* Top Nav */}
             <nav className="fixed top-0 left-0 w-full z-50 bg-black border-b border-white/20 shadow-lg">
                 <div className="w-full max-w-[1500px] mx-auto px-3 py-2 flex justify-between items-center">
+                    {/* Logo + Hamburger */}
                     <div className="flex items-center gap-3">
-                        {/* Hamburger */}
                         <div
                             onClick={toggleSidebar}
                             className="flex flex-col justify-center gap-[5px] cursor-pointer group lg:hidden"
@@ -137,6 +116,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
                         <h1 className="text-white text-2xl font-bold tracking-tight">Rooms4u</h1>
                     </div>
 
+                    {/* Tabs */}
                     <div className="flex gap-4 max-lg:hidden">
                         {tabs.map((tab) => {
                             const isActive = activeTab === tab.id;
@@ -144,9 +124,9 @@ export default function NavBar({ activeTab, setActiveTab }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabClick(tab.id)}
-                                    className={`flex items-center transition-all duration-300 ${isActive
+                                    className={`transition-all duration-300 ${isActive
                                         ? "text-green-300 underline"
-                                        : "text-white hover:text-green-300 cursor-pointer"
+                                        : "text-white hover:text-green-300"
                                         }`}
                                 >
                                     <span className="text-sm">{tab.label}</span>
@@ -155,31 +135,31 @@ export default function NavBar({ activeTab, setActiveTab }) {
                         })}
                     </div>
 
-                    {!profile && (
+                    {/* Auth Buttons */}
+                    {!profile ? (
                         <div className="flex gap-3">
                             <button
-                                onClick={() => router.push('/register')}
-                                className="rounded-full px-5 py-2 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10 cursor-pointer"
+                                onClick={() => router.push("/register")}
+                                className="rounded-full px-5 py-2 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10"
                             >
                                 Sign Up
                             </button>
                             <button
-                                onClick={() => router.push('/signin')}
-                                className="rounded-full px-5 py-2 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10 cursor-pointer"
+                                onClick={() => router.push("/signin")}
+                                className="rounded-full px-5 py-2 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10"
                             >
                                 Login
                             </button>
                         </div>
-                    )}
-
-                    {profile && (
-                        <div className="text-gray-100 flex items-center rounded-full sm:pr-2 bg-white/20 gap-2 cursor-pointer" onClick={() => router.push("/profile") }>
+                    ) : (
+                        <div
+                            className="text-gray-100 flex items-center rounded-full sm:pr-2 bg-white/20 gap-2 cursor-pointer"
+                            onClick={() => router.push("/profile")}
+                        >
                             <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-xl font-bold p-5">
                                 {profile?.name?.charAt(0)}
                             </div>
-                            <div className="max-sm:hidden">
-                                {profile?.name}
-                            </div>
+                            <div className="max-sm:hidden">{profile?.name}</div>
                         </div>
                     )}
                 </div>
@@ -200,8 +180,15 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                 <ul className="mt-1 space-y-2 p-2">
                     {sidebarMenu.map((item, idx) => (
-                        <li key={idx} className="p-3 rounded-lg bg-gray-100/20 hover:bg-gray-100/40">
-                            <Link href={item.href} className="flex items-center gap-3 cursor-pointer" onClick={() => setSidebarOpen(false)}>
+                        <li
+                            key={idx}
+                            className="p-3 rounded-lg bg-gray-100/20 hover:bg-gray-100/40"
+                        >
+                            <Link
+                                href={item.href}
+                                className="flex items-center gap-3 cursor-pointer"
+                                onClick={() => setSidebarOpen(false)}
+                            >
                                 <FontAwesomeIcon icon={item.icon} className="mr-2 ml-2" />
                                 <span className="font-medium">{item.label}</span>
                             </Link>

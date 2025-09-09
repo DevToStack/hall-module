@@ -7,7 +7,6 @@ import Toast from "@/components/toast";
 
 function EditProfileForm({ currentUser, onUpdate }) {
     const router = useRouter();
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     const [fields, setFields] = useState({
         name: currentUser?.name || "",
@@ -19,6 +18,7 @@ function EditProfileForm({ currentUser, onUpdate }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
     const handleChange = (key, value) => {
         setFields((prev) => ({ ...prev, [key]: value }));
     };
@@ -31,17 +31,23 @@ function EditProfileForm({ currentUser, onUpdate }) {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
+                credentials: "include", // ✅ send HttpOnly cookie
                 body: JSON.stringify({ [fieldKey]: fields[fieldKey] }),
             });
+
+            if (res.status === 401) {
+                // Cookie expired / invalid
+                router.push("/signin");
+                return;
+            }
 
             const data = await res.json();
             if (!res.ok) {
                 setError(data.error || "Failed to update profile");
             } else {
                 setSuccess("Profile updated successfully");
-                onUpdate()
+                onUpdate();
             }
         } catch {
             setError("Something went wrong");
@@ -93,14 +99,11 @@ function EditProfileForm({ currentUser, onUpdate }) {
                  transition-all duration-300"
                     >
                         <div className="flex justify-between items-start">
-                            {/* Left side: Label + Value */}
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                                         {item.label}
                                     </p>
-
-                                    {/* Actions (top-right) */}
                                     {item.editable && (
                                         <div className="flex gap-3 ml-2">
                                             {editing === item.key ? (
@@ -146,7 +149,6 @@ function EditProfileForm({ currentUser, onUpdate }) {
                                     )}
                                 </div>
 
-                                {/* Value or Input */}
                                 {editing === item.key && item.editable ? (
                                     <input
                                         type={item.key.includes("email") ? "email" : "text"}
@@ -166,12 +168,6 @@ function EditProfileForm({ currentUser, onUpdate }) {
                     </div>
                 ))}
             </div>
-
-
-
-
-
-
         </div>
     );
 }

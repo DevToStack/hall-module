@@ -1,27 +1,36 @@
+// app/api/reviews/route.js
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@/lib/jwt';
 
 export async function POST(req) {
     try {
-        const token = req.headers.get('authorization')?.split(' ')[1];
+        // ✅ Read token from cookies instead of headers
+        const token = req.cookies.get('token')?.value;
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // ✅ Verify token using custom helper
+        const { valid, decoded, error } = verifyToken(token);
+        if (!valid) {
+            return NextResponse.json({ error: error || 'Invalid or expired token' }, { status: 401 });
+        }
+
         const { rating, comment, apartment_id } = await req.json();
 
         if (!rating || !comment || !apartment_id) {
             return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         }
 
+        // ✅ Insert review
         await query(
             `INSERT INTO reviews (apartment_id, user_id, rating, comment) VALUES (?, ?, ?, ?)`,
             [apartment_id, decoded.id, rating, comment]
         );
 
         return NextResponse.json({ message: 'Review posted successfully' });
+
     } catch (err) {
         console.error('POST review error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -39,6 +48,7 @@ export async function GET() {
         `);
 
         return NextResponse.json({ reviews });
+
     } catch (err) {
         console.error('GET reviews error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

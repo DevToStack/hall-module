@@ -1,26 +1,35 @@
+// app/api/profile/route.js (PATCH)
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/mysql-wrapper';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@/lib/jwt';
+
+// ✅ cookie parser
+function parseCookies(cookieHeader) {
+    if (!cookieHeader) return {};
+    return Object.fromEntries(
+        cookieHeader.split(';').map(c => {
+            const [k, v] = c.trim().split('=');
+            return [k, decodeURIComponent(v)];
+        })
+    );
+}
 
 export async function PATCH(req) {
     try {
-        const token = req.headers.get('authorization')?.split(' ')[1];
-        if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        // 🔑 Extract token from HttpOnly cookie
+        const cookieHeader = req.headers.get('cookie');
+        const cookies = parseCookies(cookieHeader);
+        const token = cookies.token;
 
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        const { valid, decoded, error } = verifyToken(token);
+        if (!valid) {
+            return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
         }
 
         const body = await req.json();
-        // ✅ match frontend field names (snake_case)
         const { name, alternate_email, alternate_phone } = body;
 
-        // Validation
+        // ✅ Validation
         if (alternate_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alternate_email)) {
             return NextResponse.json({ error: 'Invalid alternate email format' }, { status: 400 });
         }
@@ -29,7 +38,7 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'Invalid alternate phone number format' }, { status: 400 });
         }
 
-        // Fetch current user info
+        // ✅ Fetch current user info
         const currentUserRows = await query(
             'SELECT name, alternate_email, alternate_phone FROM users WHERE id = ?',
             [decoded.id]
@@ -39,7 +48,7 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Build update query dynamically
+        // ✅ Build update query dynamically
         const updates = [];
         const params = [];
 
@@ -60,7 +69,7 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'No changes detected' }, { status: 400 });
         }
 
-        params.push(decoded.id); // user id for WHERE clause
+        params.push(decoded.id);
         const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
         const result = await query(sql, params);
 
@@ -68,7 +77,7 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'No changes detected' }, { status: 400 });
         }
 
-        // Fetch updated user info
+        // ✅ Fetch updated user info
         const updatedUsers = await query(
             'SELECT id, name, email, phone_number, alternate_email, alternate_phone FROM users WHERE id = ?',
             [decoded.id]
@@ -77,7 +86,7 @@ export async function PATCH(req) {
 
         return NextResponse.json({ success: true, user: updatedUser });
     } catch (err) {
-        console.error('Profile edit error:', err);
+        console.error('❌ Profile edit error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }

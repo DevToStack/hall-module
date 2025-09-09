@@ -10,7 +10,6 @@ import {
     faMapMarkerAlt,
     faCalendarAlt,
     faAngleLeft,
-    faBan,
     faTrash,
     faEllipsisH,
 } from '@fortawesome/free-solid-svg-icons';
@@ -18,28 +17,24 @@ import {
 export default function BookingSection({ bookings, setBookings }) {
     const [selectedBooking, setSelectedBooking] = useState(null);
 
-    const deleteBooking = async (id) =>{
-        const token = localStorage.getItem('token');
-        if (!token) return alert('Unauthorized');
-
+    // Delete booking
+    const deleteBooking = async (id) => {
         try {
             const res = await fetch('/api/delete-booking', {
                 method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ booking_id: id }),
+                credentials: 'include', // 🔥 send cookies
             });
 
-            if(res.status === 401){
-                localStorage.removeItem('token');
+            if (res.status === 401) {
+                window.location.href = "/signin";
+                return;
             }
 
             const data = await res.json();
             if (res.ok) {
                 alert('Booking deleted successfully!');
-                // ⚡ Update the state to remove it from the list
                 setBookings(prev => prev.filter(b => b.id !== id));
             } else {
                 alert(data.error || 'Failed to delete booking');
@@ -48,28 +43,25 @@ export default function BookingSection({ bookings, setBookings }) {
             console.error(err);
             alert('Something went wrong.');
         }
-    }
+    };
 
+    // Cancel booking
     const cancelBooking = async () => {
-        const token = localStorage.getItem('token');
         try {
             const res = await fetch('/api/cancel-booking', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ booking_id: selectedBooking.id }),
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                credentials: 'include', // 🔥 send cookies
             });
+
             if (res.status === 401) {
-                localStorage.removeItem('token');
-                window.location.href = "/signin"; // redirect to login
+                window.location.href = "/signin";
                 return;
             }
+
             if (res.ok) {
                 alert('Booking cancelled successfully');
-
-                // Update booking in the list
                 setBookings(prev =>
                     prev.map(b =>
                         b.id === selectedBooking.id
@@ -77,31 +69,26 @@ export default function BookingSection({ bookings, setBookings }) {
                             : b
                     )
                 );
-
                 setSelectedBooking(null);
             } else {
                 const error = await res.json();
                 alert(error.message || 'Failed to cancel booking');
             }
         } catch (err) {
+            console.error(err);
             alert('Something went wrong. Please try again.');
         }
     };
-    
+
     const getDaysUntilCheckin = (startDate) => {
         const today = new Date();
         const checkinDate = new Date(startDate);
-
-        // Clear time from both dates
         today.setHours(0, 0, 0, 0);
         checkinDate.setHours(0, 0, 0, 0);
-
         const diffTime = checkinDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
-
-        return diffDays;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
-      
+
     const handleBack = () => setSelectedBooking(null);
 
     const grouped = {
@@ -173,7 +160,7 @@ export default function BookingSection({ bookings, setBookings }) {
                 <div className="text-center text-gray-400">
                     <div>
                         <img src="/no_bookings.png" alt="No bookings" className="mx-auto w-48 opacity-80 mb-4" />
-                        <h1 className='text-white text-2xl'>Book Now</h1>
+                        <h1 className="text-white text-2xl">Book Now</h1>
                     </div>
                     <p className="text-lg">You have not made any bookings yet.</p>
                     <p className="text-sm">Start exploring apartments to find your next stay!</p>
@@ -188,12 +175,11 @@ export default function BookingSection({ bookings, setBookings }) {
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                                 {items.map((b) => (
-                                    
                                     <div
                                         key={b.id}
                                         className="relative bg-gradient-to-br from-white/10 to-white/5 p-6 rounded-2xl border border-white/20 backdrop-blur-md shadow-xl hover:scale-[1.015] transition-transform duration-300"
                                     >
-                                        {b.status == 'cancelled' && (
+                                        {b.status === 'cancelled' && (
                                             <button
                                                 onClick={() => deleteBooking(b.id)}
                                                 className="absolute bottom-4 right-4 bg-red-600 p-2 rounded-full text-xs flex items-center group transition-all duration-200"
@@ -208,7 +194,7 @@ export default function BookingSection({ bookings, setBookings }) {
                                         >
                                             {status.charAt(0).toUpperCase() + status.slice(1)}
                                         </div>
-                                        
+
                                         <h3 className="text-2xl font-bold text-white mb-2 mt-6">
                                             <FontAwesomeIcon icon={faBuilding} className="mr-2" />
                                             {b.apartment_title}

@@ -1,26 +1,38 @@
 // app/api/payments/route.js
-
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import pool from '@/lib/db';
+import { verifyToken } from '@/lib/jwt'; // ✅ use helper
 
-const SECRET = process.env.JWT_SECRET;
+// ✅ cookie parser
+function parseCookies(cookieHeader) {
+    if (!cookieHeader) return {};
+    return Object.fromEntries(
+        cookieHeader.split(';').map(c => {
+            const [k, v] = c.trim().split('=');
+            return [k, decodeURIComponent(v)];
+        })
+    );
+}
 
 export async function GET(req) {
     let connection;
     try {
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // 🔑 Extract token from HttpOnly cookie
+        const cookieHeader = req.headers.get('cookie');
+        const cookies = parseCookies(cookieHeader);
+        const token = cookies.token;
+
+        const { valid, decoded, error } = verifyToken(token);
+        if (!valid) {
+            return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
         }
 
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, SECRET);
         const userId = decoded.id;
 
         connection = await pool.getConnection();
 
-        const [payments] = await connection.query(`
+        const [payments] = await connection.query(
+            `
             SELECT 
                 p.id AS payment_id,
                 p.booking_id,
@@ -39,10 +51,11 @@ export async function GET(req) {
             JOIN apartments a ON b.apartment_id = a.id
             WHERE b.user_id = ?
             ORDER BY p.id DESC
-        `, [userId]);
+        `,
+            [userId]
+        );
 
         return NextResponse.json({ payments }, { status: 200 });
-
     } catch (err) {
         console.error('❌ Payment History Error:', err);
         return NextResponse.json({ error: 'Failed to fetch payment history' }, { status: 500 });

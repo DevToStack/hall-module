@@ -1,10 +1,8 @@
 'use client';
-
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 import { faStar as regularStar } from '@fortawesome/free-regular-svg-icons';
-import { jwtDecode } from "jwt-decode";
 
 function ReviewText({ text }) {
     const [expanded, setExpanded] = useState(false);
@@ -35,10 +33,10 @@ const ReviewSection = () => {
 
     const apartmentId = 1; // Make dynamic if needed
 
-    // Fetch all reviews from database
+    // Fetch all reviews
     const fetchReviews = async () => {
         try {
-            const res = await fetch('/api/reviews');
+            const res = await fetch('/api/reviews', { credentials: "include" });
             const data = await res.json();
 
             if (res.ok) {
@@ -57,20 +55,21 @@ const ReviewSection = () => {
         }
     };
 
-    // Load logged-in user
+    // ✅ Load logged-in user from /api/profile
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setUser({ name: decoded.name, id: decoded.id });
-            } catch (err) {
-                console.error("Invalid token");
-            }
-        }
+        fetch("/api/profile", { credentials: "include" })
+            .then(async (res) => {
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser({ name: data.user?.name, id: data.user?.id });
+                } else {
+                    setUser(null);
+                }
+            })
+            .catch(() => setUser(null));
     }, []);
 
-    // Fetch reviews on first render
+    // Fetch reviews on mount
     useEffect(() => {
         fetchReviews();
     }, []);
@@ -78,9 +77,7 @@ const ReviewSection = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const token = localStorage.getItem("token");
-
-        if (!token) {
+        if (!user) {
             alert("Please login to submit a review.");
             return;
         }
@@ -93,20 +90,14 @@ const ReviewSection = () => {
         try {
             const res = await fetch("/api/reviews", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json" },
+                credentials: "include", // ✅ send cookie
                 body: JSON.stringify({
                     apartment_id: apartmentId,
                     rating,
                     comment,
                 }),
             });
-
-            if(res.status === 401){
-                localStorage.removeItem('token');
-            }
 
             const data = await res.json();
 
@@ -126,7 +117,9 @@ const ReviewSection = () => {
 
     return (
         <section className="max-h-[1500px] w-full px-4 py-12 bg-black">
-            <h2 className="text-4xl font-bold text-white text-center mb-12">What Guests Are Saying</h2>
+            <h2 className="text-4xl font-bold text-white text-center mb-12">
+                What Guests Are Saying
+            </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_600px] gap-8 max-w-8xl mx-auto">
                 {/* Reviews List */}
@@ -159,7 +152,7 @@ const ReviewSection = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <ReviewText text={review.comment} />
                                 </div>
                             ))
