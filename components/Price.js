@@ -9,7 +9,39 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import BookingCalendar from './bookingCalender';
 
-const apartmentPlans = [/* ... same as before ... */];
+const apartmentPlans = [
+    {
+        title: '1 BHK Apartment',
+        price: '₹5,000 / month',
+        features: [
+            { icon: faBed, text: '1 Bedroom' },
+            { icon: faBath, text: '1 Bathroom' },
+            { icon: faUsers, text: '2 Guests' },
+            { icon: faWifi, text: 'Free WiFi' },
+        ],
+    },
+    {
+        title: '2 BHK Apartment',
+        price: '₹8,000 / month',
+        features: [
+            { icon: faBed, text: '2 Bedrooms' },
+            { icon: faBath, text: '2 Bathrooms' },
+            { icon: faUsers, text: '4 Guests' },
+            { icon: faParking, text: 'Parking' },
+        ],
+    },
+    {
+        title: '3 BHK Apartment',
+        price: '₹12,000 / month',
+        features: [
+            { icon: faBed, text: '3 Bedrooms' },
+            { icon: faBath, text: '3 Bathrooms' },
+            { icon: faUsers, text: '6 Guests' },
+            { icon: faUmbrellaBeach, text: 'Beach Access' },
+        ],
+    },
+];
+  
 
 export default function PricingSection() {
     const router = useRouter();
@@ -155,16 +187,15 @@ export default function PricingSection() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {apartmentPlans.map((plan, idx) => {
                         const gradients = [
-                            'from-teal-100 to-sky-200',     // 1 BHK
+                            'from-teal-100 to-sky-200', // 1 BHK
                             'from-yellow-100 to-amber-200', // 2 BHK
-                            'from-purple-100 to-pink-200'   // 3 BHK
+                            'from-purple-100 to-pink-200' // 3 BHK
                         ];
 
                         return (
                             <div
                                 key={idx}
-                                className={`rounded-2xl p-6 shadow-lg transition-all transform hover:scale-[1.02] flex flex-col justify-between 
-              bg-gradient-to-br ${gradients[idx]} text-gray-800`}
+                                className={`rounded-2xl p-6 shadow-lg transition-all transform hover:scale-[1.02] flex flex-col justify-between bg-gradient-to-br ${gradients[idx]} text-gray-800`}
                             >
                                 <div>
                                     <h3 className="text-2xl font-bold mb-1">{plan.title}</h3>
@@ -178,7 +209,6 @@ export default function PricingSection() {
                                         ))}
                                     </ul>
                                 </div>
-
                                 <button
                                     onClick={() => handleBook(plan)}
                                     className="mt-auto w-full bg-gray-800 text-white font-semibold py-2.5 rounded-xl hover:bg-gray-900 transition duration-200"
@@ -189,11 +219,14 @@ export default function PricingSection() {
                         );
                     })}
                 </div>
+
+                {/* Modal */}
                 {selectedPlan && (
                     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 px-4">
-                        <div className="bg-white w-full max-w-md max-sm:w-sm p-6 rounded-2xl shadow-2xl relative">
+                        <div className="bg-white w-full sm:max-w-md p-6 rounded-2xl shadow-2xl relative">
+                            {/* Close Button */}
                             <button
-                                className="absolute top-3 right-6 text-gray-600 hover:text-black text-2xl"
+                                className="absolute top-3 right-3 text-gray-600 hover:text-black text-2xl font-bold"
                                 onClick={handleCloseModal}
                             >
                                 ×
@@ -211,7 +244,6 @@ export default function PricingSection() {
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                                     required
                                 />
-
                                 <input
                                     type="email"
                                     name="email"
@@ -228,14 +260,9 @@ export default function PricingSection() {
                                         setFormData={setFormData}
                                         disabledRanges={disabledRanges}
                                     />
-
                                 </div>
 
-                                <input
-                                    type="hidden"
-                                    name="package"
-                                    value={formData.package}
-                                />
+                                <input type="hidden" name="package" value={formData.package} />
 
                                 <button
                                     type="submit"
@@ -244,15 +271,15 @@ export default function PricingSection() {
                                     Proceed to Payment
                                 </button>
                             </form>
+
                             {formError && (
                                 <p className="text-red-600 text-sm text-center font-medium mt-5">{formError}</p>
                             )}
                         </div>
-
                     </div>
-
                 )}
             </div>
         </section>
+
     );
 }
