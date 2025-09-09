@@ -17,6 +17,7 @@ export default function PaymentsSection() {
     const [selectedPayment, setSelectedPayment] = useState(null);
 
     useEffect(() => {
+        
         const fetchPayments = async () => {
             try {
                 // ✅ fetch with credentials so browser sends HttpOnly cookie
@@ -49,7 +50,7 @@ export default function PaymentsSection() {
 
     const Paid = categorize('paid');
     const Pending = categorize('pending');
-    const Refunded = categorize('refunded');
+    const Refunded = categorize('cancelled');
 
     if (loading) return <p className="text-gray-400">Loading payment history...</p>;
 
@@ -85,7 +86,7 @@ export default function PaymentsSection() {
                             Pending
                         </span>
                     )}
-                    {payment.payment_status === 'refunded' && (
+                    {payment.payment_status === 'cancelled' && (
                         <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full">
                             <FontAwesomeIcon icon={faRotateLeft} />
                             Refunded

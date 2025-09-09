@@ -66,14 +66,13 @@ export default function ProfileDashboard() {
 
     const handleLogout = async () => {
         try {
-            // Call logout API to clear cookie
-            await fetch('/api/auth/logout', { method: 'POST' });
-        } catch (err) {
-            console.error(err);
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
         } finally {
-            router.push('/signin');
+            router.push('/');
         }
     };
+    
+      
 
     const Sidebar = (
         <aside className="w-80 p-6 space-y-6 text-white bg-white/10 backdrop-blur-md h-full">
@@ -113,10 +112,7 @@ export default function ProfileDashboard() {
                 ))}
 
                 <button
-                    onClick={() => {
-                        localStorage.removeItem('token');
-                        router.push('/signin');
-                    }}
+                    onClick={()=>{handleLogout()}}
                     className="w-full text-left px-4 py-2 mt-6 rounded-lg bg-red-600 hover:bg-red-700 text-white"
                 >
                     <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
@@ -218,15 +214,16 @@ export default function ProfileDashboard() {
                                 },
                                 {
                                     title: 'Upcoming Bookings',
-                                    value: bookings.filter(b => new Date(b.start_date) > new Date()).length,
+                                    value: bookings.filter(b => new Date(b.start_date) > new Date() && b.status !== 'cancel').length,
                                 },
                                 {
                                     title: 'Last Booking',
                                     value:
-                                        bookings.length > 0
+                                        bookings.length > 0 && bookings[0].status !== 'cancel'
                                             ? new Date(bookings[0].created_at).toLocaleDateString()
                                             : 'N/A',
                                 },
+                                
                                 {
                                     title: 'Member Since',
                                     value: new Date(user.created_at).toLocaleDateString(),

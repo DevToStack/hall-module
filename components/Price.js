@@ -11,37 +11,42 @@ import BookingCalendar from './bookingCalender';
 
 const apartmentPlans = [
     {
-        title: '1 BHK Apartment',
-        price: '₹5,000 / month',
+        title: '1 BHK Comfort',
+        price: '₹3,000',
         features: [
             { icon: faBed, text: '1 Bedroom' },
             { icon: faBath, text: '1 Bathroom' },
-            { icon: faUsers, text: '2 Guests' },
-            { icon: faWifi, text: 'Free WiFi' },
+            { icon: faUsers, text: 'Up to 2 guests' },
+            { icon: faUtensils, text: 'Kitchen Access' },
+            { icon: faWifi, text: 'Free Wi-Fi' },
         ],
     },
     {
-        title: '2 BHK Apartment',
-        price: '₹8,000 / month',
+        title: '2 BHK Deluxe',
+        price: '₹6,500',
         features: [
             { icon: faBed, text: '2 Bedrooms' },
             { icon: faBath, text: '2 Bathrooms' },
-            { icon: faUsers, text: '4 Guests' },
-            { icon: faParking, text: 'Parking' },
+            { icon: faUsers, text: 'Up to 4 guests' },
+            { icon: faUtensils, text: 'Full Kitchen' },
+            { icon: faTv, text: 'Smart TV + Wi-Fi' },
+            { icon: faParking, text: 'Free Parking' },
         ],
     },
     {
-        title: '3 BHK Apartment',
-        price: '₹12,000 / month',
+        title: '3 BHK Premium',
+        price: '₹10,000',
         features: [
             { icon: faBed, text: '3 Bedrooms' },
             { icon: faBath, text: '3 Bathrooms' },
-            { icon: faUsers, text: '6 Guests' },
-            { icon: faUmbrellaBeach, text: 'Beach Access' },
+            { icon: faUsers, text: 'Up to 6 guests' },
+            { icon: faUmbrellaBeach, text: 'Balcony View' },
+            { icon: faBroom, text: 'Daily Cleaning' },
+            { icon: faWifi, text: 'High-Speed Wi-Fi' },
+            { icon: faParking, text: 'Private Parking' },
         ],
     },
 ];
-  
 
 export default function PricingSection() {
     const router = useRouter();

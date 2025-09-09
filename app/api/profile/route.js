@@ -45,6 +45,7 @@ export async function GET(req) {
             WHERE b.user_id = ?
             ORDER BY b.created_at DESC
         `, [decoded.id]);
+        
 
         // ✅ Fetch recent activity
         const activity = await query(`
