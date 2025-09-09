@@ -30,7 +30,10 @@ export default function ProfileDashboard() {
     const fetchProfile = useCallback(async () => {
         try {
             // ✅ No Authorization header needed; cookie is sent automatically
-            const res = await fetch('/api/profile', { cache: 'no-store' });
+            const res = await fetch('/api/profile', {
+                cache: 'no-store',
+                credentials: 'include',
+            });
             if (!res.ok) {
                 router.push('/signin'); // redirect if unauthorized
                 return;
@@ -66,14 +69,25 @@ export default function ProfileDashboard() {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+            const res = await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include', // send httpOnly cookie
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                console.error('Logout failed:', data);
+                return;
+            }
+            console.log('Logout success:', data);
+        } catch (err) {
+            console.error('Logout error:', err);
         } finally {
-            router.push('/');
+            router.push('/signin'); // redirect after logout
         }
     };
     
-      
-
+    
     const Sidebar = (
         <aside className="w-80 p-6 space-y-6 text-white bg-white/10 backdrop-blur-md h-full">
             <div className="flex items-center justify-between md:block">
@@ -112,7 +126,7 @@ export default function ProfileDashboard() {
                 ))}
 
                 <button
-                    onClick={()=>{handleLogout()}}
+                    onClick={handleLogout}
                     className="w-full text-left px-4 py-2 mt-6 rounded-lg bg-red-600 hover:bg-red-700 text-white"
                 >
                     <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
@@ -173,10 +187,7 @@ export default function ProfileDashboard() {
                             </button>
                         ))}
                         <button
-                            onClick={() => {
-                                localStorage.removeItem('token');
-                                router.push('/signin');
-                            }}
+                            onClick={handleLogout}
                             className="w-full text-left px-4 py-2 mt-6 rounded-lg bg-red-600 hover:bg-red-700 text-white"
                         >
                             <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
