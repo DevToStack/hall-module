@@ -127,7 +127,7 @@ export default function ProfileDashboard() {
 
                 <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 mt-6 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    className="w-full text-left px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
                 >
                     <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
                     <span className='ml-3'>Logout</span>
@@ -172,6 +172,15 @@ export default function ProfileDashboard() {
                         </button>
                     </div>
                     <nav className="pt-4 space-y-3">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-xl font-bold">
+                                {user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p className="text-lg font-semibold">{user.name}</p>
+                                
+                            </div>
+                        </div>
                         {navItems.map(({ id, label, icon }) => (
                             <button
                                 key={id}
@@ -179,7 +188,7 @@ export default function ProfileDashboard() {
                                     setActive(id);
                                     setSidebarOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition duration-300 ${active === id ? 'bg-white text-black' : 'hover:bg-white/10'
+                                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition duration-300 ${active === id ? 'bg-white text-black' : 'hover:bg-white/10 border border-gray-100/20'
                                     }`}
                             >
                                 <FontAwesomeIcon icon={icon} className="w-5 h-5" />
@@ -188,13 +197,13 @@ export default function ProfileDashboard() {
                         ))}
                         <button
                             onClick={handleLogout}
-                            className="w-full text-left px-4 py-2 mt-6 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                            className="w-full text-left px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
                         >
                             <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
                             <span className='ml-3'>Logout</span>
                         </button>
                         <h3 className='mt-3 font-bold'>Quick Links</h3>
-                        <button className='w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/10'
+                        <button className='w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-gray-100/20 hover:bg-white/10'
                             onClick={() => {
                                 router.push('/');
                             }}>
@@ -225,7 +234,7 @@ export default function ProfileDashboard() {
                                 },
                                 {
                                     title: 'Upcoming Bookings',
-                                    value: bookings.filter(b => new Date(b.start_date) > new Date() && b.status !== 'cancel').length,
+                                    value: bookings.filter(b => new Date(b.start_date) > new Date() && b.status === 'confirmed').length,
                                 },
                                 {
                                     title: 'Last Booking',
@@ -326,7 +335,7 @@ export default function ProfileDashboard() {
                                         <div key={i} className="bg-gray-100/5 border border-white/10 p-3 rounded-lg text-sm text-gray-200">
                                             {item.message} —{' '}
                                             <span className="text-gray-400">
-                                                <TimeAgo datetime={item.date} />
+                                                {item.time_ago}
                                             </span>
                                         </div>
                                     ))}

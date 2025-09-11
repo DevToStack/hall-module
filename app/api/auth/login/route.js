@@ -19,7 +19,7 @@ export async function POST(req) {
         );
 
         if (!users.length) {
-            return NextResponse.json({ error: 'User is not registered' }, { status: 404 });
+            return NextResponse.json({ error: 'Incorrect Email or Password' }, { status: 404 });
         }
 
         const user = users[0];
@@ -29,7 +29,7 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
         }
 
-        const token = generateToken({ id: user.id, email: user.email });
+        const token = generateToken({ id: user.id, email: user.email,role:user.role });
 
         // ✅ Create response once and set cookie
         const response = NextResponse.json({ success: true, message: "Login successful" });

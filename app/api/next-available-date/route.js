@@ -1,7 +1,7 @@
 // app/api/next-available-dates/route.js
 
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper';
 
 export async function POST(req) {
     try {

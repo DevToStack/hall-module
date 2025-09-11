@@ -1,7 +1,7 @@
 // app/api/profile/route.js
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
-import { query } from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper';
 
 export async function GET(req) {
     try {
@@ -49,12 +49,24 @@ export async function GET(req) {
 
         // ✅ Fetch recent activity
         const activity = await query(`
-            SELECT message, DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s') AS date
+            SELECT 
+                message,
+                DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s') AS formatted_date,
+                CASE
+                    WHEN TIMESTAMPDIFF(SECOND, date, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, date, NOW()), ' seconds ago')
+                    WHEN TIMESTAMPDIFF(MINUTE, date, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, date, NOW()), ' minutes ago')
+                    WHEN TIMESTAMPDIFF(HOUR, date, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, date, NOW()), ' hours ago')
+                    WHEN TIMESTAMPDIFF(DAY, date, NOW()) < 7 THEN CONCAT(TIMESTAMPDIFF(DAY, date, NOW()), ' days ago')
+                    WHEN TIMESTAMPDIFF(WEEK, date, NOW()) < 4 THEN CONCAT(TIMESTAMPDIFF(WEEK, date, NOW()), ' weeks ago')
+                    WHEN TIMESTAMPDIFF(MONTH, date, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, date, NOW()), ' months ago')
+                    ELSE CONCAT(TIMESTAMPDIFF(YEAR, date, NOW()), ' years ago')
+                END AS time_ago
             FROM user_activity
             WHERE user_id = ?
             ORDER BY date DESC
             LIMIT 10
         `, [decoded.id]);
+        
 
         return NextResponse.json({ user, bookings, activity }, { status: 200 });
 

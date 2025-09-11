@@ -1,6 +1,6 @@
 // app/api/auth/reset-password/route.js
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query } from '@/lib/mysql-wrapper';
 import bcrypt from "bcryptjs";
 
 export async function POST(req) {

@@ -1,6 +1,6 @@
 // app/api/reviews/user/route.js
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper';
 import { verifyToken } from '@/lib/jwt';
 
 export async function GET(req) {

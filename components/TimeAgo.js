@@ -6,7 +6,7 @@ function timeAgo(dateString) {
 
     const now = new Date();
     const diff = (now - date) / 1000; // seconds diff
-
+    console.log(now)
     const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
     const units = [

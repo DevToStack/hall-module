@@ -1,7 +1,8 @@
+// app/api/booking/delete/route.js
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper'; // ✅ use wrapper
 import { logActivity } from '@/lib/logActivity';
-import { verifyToken } from '@/lib/jwt'; // ✅ use your helper
+import { verifyToken } from '@/lib/jwt';
 
 // ✅ cookie parser
 function parseCookies(cookieHeader) {
@@ -15,8 +16,6 @@ function parseCookies(cookieHeader) {
 }
 
 export async function POST(req) {
-    let connection;
-
     try {
         // 🔑 Get token from HttpOnly cookie
         const cookieHeader = req.headers.get('cookie');
@@ -36,10 +35,8 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Missing booking_id' }, { status: 400 });
         }
 
-        connection = await pool.getConnection();
-
         // ✅ Verify booking exists and belongs to user
-        const [bookingRows] = await connection.query(
+        const bookingRows = await query(
             `
             SELECT b.id, a.title
             FROM bookings b
@@ -54,20 +51,21 @@ export async function POST(req) {
         }
 
         // ✅ Delete payments first (foreign key constraint)
-        await connection.query(`DELETE FROM payments WHERE booking_id = ?`, [booking_id]);
+        await query(`DELETE FROM payments WHERE booking_id = ?`, [booking_id]);
 
         // ✅ Delete booking
-        await connection.query(`DELETE FROM bookings WHERE id = ?`, [booking_id]);
+        await query(`DELETE FROM bookings WHERE id = ?`, [booking_id]);
 
         // ✅ Log activity
         const message = `Deleted booking for "${bookingRows[0].title}" (Booking ID: ${booking_id})`;
         await logActivity(userId, message);
 
-        return NextResponse.json({ message: 'Booking deleted successfully' }, { status: 200 });
+        return NextResponse.json(
+            { message: 'Booking deleted successfully' },
+            { status: 200 }
+        );
     } catch (err) {
         console.error('❌ Delete booking error:', err);
         return NextResponse.json({ error: 'Failed to delete booking' }, { status: 500 });
-    } finally {
-        if (connection) connection.release();
     }
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -30,6 +30,7 @@
     "react-hot-toast": "^2.6.0",
     "react-slick": "^0.30.3",
     "react-tsparticles": "^2.12.2",
+    "recharts": "^3.2.0",
     "slick-carousel": "^1.8.1",
     "tsparticles": "^3.8.1",
     "tsparticles-engine": "^2.12.0",

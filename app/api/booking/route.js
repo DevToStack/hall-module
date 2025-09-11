@@ -1,6 +1,6 @@
 // app/api/booking/route.js
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper'; // ✅ use wrapper
 import { logActivity } from '@/lib/logActivity';
 import Razorpay from 'razorpay';
 import { verifyToken } from '@/lib/jwt';
@@ -11,8 +11,6 @@ const razorpay = new Razorpay({
 });
 
 export async function POST(request) {
-    let connection;
-
     try {
         // ✅ Get token from cookies (HttpOnly)
         const cookieHeader = request.headers.get('cookie');
@@ -41,10 +39,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        connection = await pool.getConnection();
-
         // ✅ Step 1: Check apartment
-        const [apartments] = await connection.query(
+        const apartments = await query(
             `SELECT title FROM apartments WHERE id = ?`,
             [apartment_id]
         );
@@ -56,7 +52,7 @@ export async function POST(request) {
         const apartmentTitle = apartments[0].title;
 
         // ✅ Step 2: Insert booking
-        const [bookingResult] = await connection.query(
+        const bookingResult = await query(
             `INSERT INTO bookings (user_id, apartment_id, start_date, end_date, status)
              VALUES (?, ?, ?, ?, ?)`,
             [user_id, apartment_id, start_date, end_date, 'confirmed']
@@ -68,7 +64,7 @@ export async function POST(request) {
         const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
         // ✅ Step 4: Insert payment record
-        await connection.query(
+        await query(
             `INSERT INTO payments (booking_id, amount, status, method, razorpay_payment_id)
              VALUES (?, ?, 'paid', ?, ?)`,
             [bookingId, price, payment.method, razorpay_payment_id]
@@ -85,7 +81,5 @@ export async function POST(request) {
     } catch (err) {
         console.error('❌ Booking error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
-    } finally {
-        if (connection) connection.release();
     }
 }

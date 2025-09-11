@@ -1,6 +1,6 @@
 // app/api/auth/request-reset/route.js
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query } from '@/lib/mysql-wrapper';
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 

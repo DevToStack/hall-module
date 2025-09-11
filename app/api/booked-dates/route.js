@@ -1,6 +1,6 @@
 // app/api/booked-dates/route.js
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper';
 
 export async function POST(req) {
     try {
@@ -11,7 +11,7 @@ export async function POST(req) {
         }
         
         const bookings = await query(
-            `SELECT start_date, end_date FROM bookings WHERE apartment_id = ?`,
+            `SELECT start_date, end_date FROM bookings WHERE apartment_id = ? AND status='confirmed'`,
             [apartment_id]
         );
 

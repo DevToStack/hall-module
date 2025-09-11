@@ -1,9 +1,11 @@
+// app/api/booking/cancel/route.js
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
-import pool from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper'; // ✅ use wrapper
 import { logActivity } from '@/lib/logActivity';
-import { verifyToken } from '@/lib/jwt'; // 👈 use your helper
+import { verifyToken } from '@/lib/jwt';
 
+// ✅ Razorpay instance
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -21,15 +23,13 @@ function parseCookies(cookieHeader) {
 }
 
 export async function POST(request) {
-    let connection;
-
     try {
         // 🔑 Read token from HttpOnly cookie
         const cookieHeader = request.headers.get('cookie');
         const cookies = parseCookies(cookieHeader);
-        const token = cookies.token; // 👈 your cookie name set at login
+        const token = cookies.token;
 
-        // 🔑 Verify token using helper
+        // 🔑 Verify token
         const { valid, decoded, error } = verifyToken(token);
         if (!valid) {
             return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
@@ -43,10 +43,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing booking_id' }, { status: 400 });
         }
 
-        connection = await pool.getConnection();
-
         // 1️⃣ Validate Booking
-        const [bookingRows] = await connection.query(
+        const bookingRows = await query(
             `
             SELECT b.id, b.status AS booking_status, b.user_id, a.title AS apartment_title
             FROM bookings b
@@ -66,28 +64,21 @@ export async function POST(request) {
         }
 
         // 2️⃣ Fetch Payment
-        const [paymentRows] = await connection.query(
-            `
-            SELECT * FROM payments
-            WHERE booking_id = ? AND status = 'success'
-        `,
+        const paymentRows = await query(
+            `SELECT * FROM payments WHERE booking_id = ? AND status = 'success'`,
             [booking_id]
         );
-
         const payment = paymentRows[0];
 
         // 3️⃣ Cancel Booking
-        await connection.query(
-            `UPDATE bookings SET status = 'cancelled' WHERE id = ?`,
-            [booking_id]
-        );
+        await query(`UPDATE bookings SET status = 'cancelled' WHERE id = ?`, [booking_id]);
 
         let refundInfo = null;
 
         // 4️⃣ Refund if payment exists
         if (payment && payment.payment_id) {
             const refund = await razorpay.payments.refund(payment.payment_id, {
-                amount: payment.amount * 100, // paise
+                amount: payment.amount * 100, // convert to paise
             });
 
             refundInfo = {
@@ -95,7 +86,7 @@ export async function POST(request) {
                 refund_time: new Date(refund.created_at * 1000),
             };
 
-            await connection.query(
+            await query(
                 `
                 UPDATE payments
                 SET status = 'refunded',
@@ -107,7 +98,7 @@ export async function POST(request) {
             );
         } else {
             // If no successful payment, just mark as cancelled
-            await connection.query(
+            await query(
                 `UPDATE payments SET status = 'cancelled' WHERE booking_id = ?`,
                 [booking_id]
             );
@@ -127,7 +118,5 @@ export async function POST(request) {
     } catch (err) {
         console.error('❌ Cancel Booking Error:', err);
         return NextResponse.json({ error: 'Failed to cancel booking' }, { status: 500 });
-    } finally {
-        if (connection) connection.release();
     }
 }

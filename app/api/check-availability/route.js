@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query } from '@/lib/mysql-wrapper';
 
 export async function POST(req) {
     try {
@@ -55,7 +55,7 @@ export async function POST(req) {
                 (start_date <= ? AND end_date >= ?)
                 OR (start_date <= ? AND end_date >= ?)
                 OR (start_date >= ? AND end_date <= ?)
-              )
+              ) AND status='confirmed'
             `,
             [apartment_id, checkin, checkin, checkout, checkout, checkin, checkout]
         );

@@ -1,7 +1,7 @@
 // app/api/payments/route.js
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import { verifyToken } from '@/lib/jwt'; // ✅ use helper
+import { query } from '@/lib/mysql-wrapper'; // ✅ use wrapper
+import { verifyToken } from '@/lib/jwt';
 
 // ✅ cookie parser
 function parseCookies(cookieHeader) {
@@ -15,7 +15,6 @@ function parseCookies(cookieHeader) {
 }
 
 export async function GET(req) {
-    let connection;
     try {
         // 🔑 Extract token from HttpOnly cookie
         const cookieHeader = req.headers.get('cookie');
@@ -29,9 +28,8 @@ export async function GET(req) {
 
         const userId = decoded.id;
 
-        connection = await pool.getConnection();
-
-        const [payments] = await connection.query(
+        // ✅ Use wrapper for query
+        const payments = await query(
             `
             SELECT 
                 p.id AS payment_id,
@@ -59,7 +57,5 @@ export async function GET(req) {
     } catch (err) {
         console.error('❌ Payment History Error:', err);
         return NextResponse.json({ error: 'Failed to fetch payment history' }, { status: 500 });
-    } finally {
-        if (connection) connection.release();
     }
 }

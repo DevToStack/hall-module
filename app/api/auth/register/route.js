@@ -43,11 +43,12 @@ export async function POST(req) {
 
         // Hash password
         const hash = await bcrypt.hash(password, 10);
-
+        const adminEmails = ["rabimohammed740@gmail.com", "superadmin@site.com"]; // <--- put allowed admin emails here
+        const role = adminEmails.includes(email) ? "admin" : "guest";
         // Insert user
         const result = await query(
-            `INSERT INTO users (name, email, phone_number, password) VALUES (?, ?, ?, ?)`,
-            [name, email, phone, hash]
+            `INSERT INTO users (name, email, phone_number, password,role) VALUES (?, ?, ?, ?,?)`,
+            [name, email, phone, hash,role]
         );
 
         // Remove OTP so it can't be reused
