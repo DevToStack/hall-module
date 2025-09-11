@@ -17,39 +17,74 @@ function getGrouping(type, column = "created_at") {
     }
 }
 
-// ✅ fill missing slots with 0
+// ✅ Generic function to fill missing time slots with 0
 function fillMissingData(raw, range, interval) {
     const now = new Date();
     const filled = [];
 
-    if (range === "day") {
-        for (let h = 0; h < 24; h++) {
-            const found = raw.find(r => Number(r.label) === h);
-            filled.push({ label: `${h}:00`, value: found ? Number(found.value) : 0 });
+    // Generate all expected labels
+    const labels = (() => {
+        switch (range) {
+            case "day":
+                // 0–23 hours
+                return Array.from({ length: interval }, (_, i) => i);
+            case "week":
+                // Last 7 days (most recent last)
+                return Array.from({ length: interval }, (_, i) => {
+                    const d = new Date(now);
+                    d.setDate(now.getDate() - (interval - 1 - i));
+                    return d.toISOString().split("T")[0];
+                });
+            case "month":
+                // Dates of this month (up to `interval`)
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const total = Math.min(interval, daysInMonth);
+                return Array.from({ length: total }, (_, i) => {
+                    const day = i + 1;
+                    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                });
+            case "year":
+                // 1–12 months
+                return Array.from({ length: interval }, (_, i) => i + 1);
+            default:
+                return [];
         }
-    } else if (range === "week") {
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(now.getDate() - i);
-            const label = d.toISOString().split("T")[0];
-            const found = raw.find(r => r.label === label);
-            filled.push({ label, value: found ? Number(found.value) : 0 });
-        }
-    } else if (range === "month") {
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        for (let d = 1; d <= daysInMonth; d++) {
-            const label = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            const found = raw.find(r => r.label === label);
-            filled.push({ label, value: found ? Number(found.value) : 0 });
-        }
-    } else if (range === "year") {
-        for (let m = 1; m <= 12; m++) {
-            const found = raw.find(r => Number(r.label) === m);
-            filled.push({ label: `M${m}`, value: found ? Number(found.value) : 0 });
-        }
+    })();
+
+    // Fill with either actual values or 0
+    for (const label of labels) {
+        const found = raw.find(r => String(r.label) === String(label));
+        filled.push({
+            label: range === "day"
+                ? `${label}:00`
+                : range === "year"
+                    ? `M${label}`
+                    : label,
+            value: found ? Number(found.value) : 0,
+        });
     }
 
     return filled;
+}
+
+// helper: build SQL date filter per range
+function getDateFilter(range, column = "created_at") {
+    switch (range) {
+        case "day":
+            // today (use CURDATE() — server DB timezone)
+            return `DATE(${column}) = CURDATE()`;
+        case "week":
+            // last 7 days including today
+            return `${column} >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)`;
+        case "month":
+            // current month
+            return `MONTH(${column}) = MONTH(CURDATE()) AND YEAR(${column}) = YEAR(CURDATE())`;
+        case "year":
+            // current year
+            return `YEAR(${column}) = YEAR(CURDATE())`;
+        default:
+            return `DATE(${column}) = CURDATE()`;
+    }
 }
 
 export async function GET(req) {
@@ -72,45 +107,52 @@ export async function GET(req) {
         // ----------------------
         // Users → created_at
         const { groupBy: usersGroup, label: usersLabel, interval: usersInterval } = getGrouping(range, "created_at");
+        const usersFilter = getDateFilter(range, "created_at");
         const rawUsers = await query(`
           SELECT ${usersLabel} AS label, COUNT(*) AS value
           FROM users
+          WHERE ${usersFilter}
           GROUP BY ${usersGroup}
           ORDER BY ${usersGroup}
         `);
         const usersGraph = fillMissingData(rawUsers, range, usersInterval);
-
+        
         // Bookings → created_at
         const { groupBy: bookingsGroup, label: bookingsLabel, interval: bookingsInterval } = getGrouping(range, "created_at");
+        const bookingsFilter = getDateFilter(range, "created_at");
         const rawBookings = await query(`
           SELECT ${bookingsLabel} AS label, COUNT(*) AS value
           FROM bookings
+          WHERE ${bookingsFilter}
           GROUP BY ${bookingsGroup}
           ORDER BY ${bookingsGroup}
         `);
         const bookingsGraph = fillMissingData(rawBookings, range, bookingsInterval);
-
+        
         // Payments → paid_at
         const { groupBy: paymentsGroup, label: paymentsLabel, interval: paymentsInterval } = getGrouping(range, "paid_at");
+        const paymentsFilter = getDateFilter(range, "paid_at");
         const rawPayments = await query(`
           SELECT ${paymentsLabel} AS label, COUNT(*) AS value
           FROM payments
+          WHERE ${paymentsFilter}
           GROUP BY ${paymentsGroup}
           ORDER BY ${paymentsGroup}
         `);
         const paymentsGraph = fillMissingData(rawPayments, range, paymentsInterval);
-
+        
         // Revenue → paid_at
         const { groupBy: revenueGroup, label: revenueLabel, interval: revenueInterval } = getGrouping(range, "paid_at");
+        const revenueFilter = getDateFilter(range, "paid_at");
         const rawRevenue = await query(`
           SELECT ${revenueLabel} AS label, SUM(amount) AS value
           FROM payments
-          WHERE status IN ('success','paid')
+          WHERE status IN ('success','paid') AND ${revenueFilter}
           GROUP BY ${revenueGroup}
           ORDER BY ${revenueGroup}
         `);
         const revenueGraph = fillMissingData(rawRevenue, range, revenueInterval);
-
+        
         // ----------------------
         // ✅ Final Response
         // ----------------------

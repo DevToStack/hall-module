@@ -12,7 +12,6 @@ import {
 import CustomSelect from "./select";
 
 export default function AdminDashboardStats() {
-    // Separate time range for each chart
     const [timeRanges, setTimeRanges] = useState({
         users: "day",
         bookings: "day",
@@ -34,9 +33,16 @@ export default function AdminDashboardStats() {
         revenue: [],
     });
 
-    // Initial fetch for totals + default graphs
+    const [loadingGraphs, setLoadingGraphs] = useState({
+        users: false,
+        bookings: false,
+        payments: false,
+        revenue: false,
+    });
+
+    // Initial fetch for totals + default graphs (day)
     useEffect(() => {
-        async function fetchData() {
+        async function fetchInitialData() {
             try {
                 const res = await fetch(`/api/admin/stats?range=day`);
                 const data = await res.json();
@@ -46,20 +52,24 @@ export default function AdminDashboardStats() {
                 console.error("❌ Stats fetch error:", err);
             }
         }
-        fetchData();
+        fetchInitialData();
     }, []);
 
     // Handle individual dropdown changes
     const handleRangeChange = async (key, value) => {
         setTimeRanges((prev) => ({ ...prev, [key]: value }));
+        setLoadingGraphs((prev) => ({ ...prev, [key]: true }));
 
         try {
             const res = await fetch(`/api/admin/stats?range=${value}`);
             const data = await res.json();
-            // update only one graph
+
+            // update only this graph
             setGraphs((prev) => ({ ...prev, [key]: data.graphs[key] }));
         } catch (err) {
             console.error("❌ Range change fetch error:", err);
+        } finally {
+            setLoadingGraphs((prev) => ({ ...prev, [key]: false }));
         }
     };
 
@@ -110,29 +120,32 @@ export default function AdminDashboardStats() {
                                 value={timeRanges[key]}
                                 onChange={(val) => handleRangeChange(key, val)}
                             />
-
-
                         </div>
 
                         <div className="flex-1">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={graphs[key]}>
-                                    <CartesianGrid stroke="#444" />
-                                    <XAxis dataKey="label" stroke="#888" />
-                                    <YAxis stroke="#888" allowDecimals={false} /> {/* ✅ no floating values */}
-                                    <Tooltip />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="value"
-                                        stroke={color}
-                                        strokeWidth={3}
-                                        dot={false} // stock-like small dots
-                                        activeDot={{ r: 2 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
+                            {loadingGraphs[key] ? (
+                                <div className="flex justify-center items-center h-[300px]">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <LineChart data={graphs[key]}>
+                                        <CartesianGrid stroke="#444" />
+                                        <XAxis dataKey="label" stroke="#888" />
+                                        <YAxis stroke="#888" allowDecimals={false} />
+                                        <Tooltip />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="value"
+                                            stroke={color}
+                                            strokeWidth={3}
+                                            dot={false}
+                                            activeDot={{ r: 2 }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
-
                     </div>
                 ))}
             </div>
