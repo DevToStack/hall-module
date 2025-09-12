@@ -1,4 +1,3 @@
-// app/api/auth/login/route.js
 import { query } from '@/lib/mysql-wrapper';
 import { generateToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
@@ -9,8 +8,21 @@ export async function POST(req) {
     try {
         const { email, password } = await req.json();
 
+        // ✅ Validate presence
         if (!email || !password) {
-            return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+            return NextResponse.json(
+                { error: 'Email and password are required' },
+                { status: 400 }
+            );
+        }
+
+        // ✅ Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(email.trim())) {
+            return NextResponse.json(
+                { error: 'Invalid email format' },
+                { status: 400 }
+            );
         }
 
         const users = await query(
@@ -29,9 +41,8 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
         }
 
-        const token = generateToken({ id: user.id, email: user.email,role:user.role });
+        const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
-        // ✅ Create response once and set cookie
         const response = NextResponse.json({ success: true, message: "Login successful" });
         response.cookies.set("token", token, {
             httpOnly: true,
@@ -42,7 +53,7 @@ export async function POST(req) {
         });
 
         await logActivity(user.id, 'Logged in successfully');
-        return response; // ✅ return the same response with cookie
+        return response;
     } catch (err) {
         console.error('Login Error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

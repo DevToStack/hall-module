@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faKey, faLock, faPaperPlane, faUser, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
+import Toast from './toast';
 
 export default function RegisterForm() {
     const [step, setStep] = useState(1); // 1: Fill details + send OTP, 2: Verify OTP & Register
@@ -15,9 +16,10 @@ export default function RegisterForm() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [otp, setOtp] = useState(Array(6).fill(""));
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
     const router = useRouter();
     const [timer, setTimer] = useState(0);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const otpRefs = useRef([]);
     // Countdown effect
@@ -66,17 +68,16 @@ export default function RegisterForm() {
     const handleSendOtp = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            setMessage('Passwords do not match!');
+            setError('Passwords do not match!');
             return;
         }
         setLoading(true);
-        setMessage('');
         setTimer(60);
         try {
             const requser = await fetch('/api/user',{
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email}),
+                body: JSON.stringify({ email,phone}),
             });
             const data = await requser.json();
             if(requser.ok){
@@ -88,21 +89,21 @@ export default function RegisterForm() {
 
                 const data = await res.json();
                 if (res.ok) {
-                    setMessage(`OTP sent to ${email}. Please check your inbox.`);
+                    setSuccess(`OTP sent to ${email}. Please check your inbox.`);
                     setTimeout(() => {
                         setStep(2);
                         setLoading(false);
                     }, 1000);
                 } else {
-                    setMessage(data.error || 'Failed to send OTP.');
+                    setError(data.error || 'Failed to send OTP.')
                 }
             }
             else{
-                setMessage(data.message);
+                setError(data.message);
             }
             
         } catch (error) {
-            setMessage('Something went wrong.');
+            setError('Something went wrong.Try again later');
         } finally {
             setLoading(false);
         }
@@ -112,7 +113,7 @@ export default function RegisterForm() {
     const handleRegister = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage('');
+        setError('');
 
         try {
             const res = await fetch('/api/auth/register', {
@@ -129,9 +130,10 @@ export default function RegisterForm() {
 
             const data = await res.json();
             if (res.ok) {
+                setSuccess("user registered succesfully.")
                 router.push('/signin'); // no delay needed
             } else {
-                setMessage(data.error || 'Failed to register account.');
+                setError(data.error || 'Failed to register account.');
                 setStep(1);
                 setOtp(Array(6).fill("")); // reset OTP
                 setName('');
@@ -141,7 +143,7 @@ export default function RegisterForm() {
                 setConfirmPassword('');
             }
         } catch {
-            setMessage('Something went wrong.');
+            setError('Something went wrong.');
         } finally {
             setLoading(false);
         }
@@ -240,12 +242,8 @@ export default function RegisterForm() {
                     
                 )}
 
-
-                {message && (
-                    <p className={`mt-4 text-center text-sm ${message.includes("success") ? "text-green-600" : "text-red-500"}`}>
-                        {message}
-                    </p>
-                )}
+                {error && <Toast message={error} type="error" onClose={() => setError(null)} />}
+                {success && <Toast message={success} type="success" onClose={() => setSuccess(null)} />}
             </div>
         </div>
     );

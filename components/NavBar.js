@@ -31,7 +31,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                 if (res.status === 401) {
                     setProfile(null);
-                    router.push("/signin");
+                    router.push("/");
                     return;
                 }
 
@@ -47,12 +47,12 @@ export default function NavBar({ activeTab, setActiveTab }) {
                     setProfile(data.user);
                 } else {
                     setProfile(null);
-                    router.push("/signin");
+                    router.push("/");
                 }
             } catch (err) {
                 console.error("Profile fetch error:", err);
                 setProfile(null);
-                router.push("/signin");
+                router.push("/");
             }
         };
 
@@ -126,7 +126,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
                                     onClick={() => handleTabClick(tab.id)}
                                     className={`transition-all duration-300 ${isActive
                                         ? "text-green-300 underline"
-                                        : "text-white hover:text-green-300"
+                                        : "text-white hover:text-green-300 cursor-pointer"
                                         }`}
                                 >
                                     <span className="text-sm">{tab.label}</span>
@@ -137,16 +137,16 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                     {/* Auth Buttons */}
                     {!profile ? (
-                        <div className="flex gap-3">
+                        <div className="flex gap-2 min-lg:gap-3">
                             <button
                                 onClick={() => router.push("/register")}
-                                className="rounded-full px-5 py-2 text-orange-300 hover:text-orange-100 bg-black/30 hover:bg-white/10"
+                                className="rounded-full p-2 px-3 text-gray-100 hover:text-gray-200 bg-white/20 hover:bg-white/10 cursor-pointer"
                             >
                                 Sign Up
                             </button>
                             <button
                                 onClick={() => router.push("/signin")}
-                                className="rounded-full px-5 py-2 text-blue-300 hover:text-blue-100 bg-black/30 hover:bg-white/10"
+                                className="rounded-full p-2 px-4 text-gray-100 hover:text-gray-200 bg-white/20 hover:bg-white/10 cursor-pointer"
                             >
                                 Login
                             </button>

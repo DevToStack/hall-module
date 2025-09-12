@@ -15,19 +15,29 @@ export async function POST(req) {
         if (!name || !email || !phone || !password || !otp) {
             return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
         }
+
         if (!isNaN(name)) {
             return NextResponse.json({ message: 'User Name is Invalid' }, { status: 400 });
         }
-        if (phone.length !== 10) {
-            return NextResponse.json({ message: 'Phone Number is Invalid' }, { status: 400 });
+
+        // ✅ Email and phone format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return NextResponse.json({ message: 'Email is invalid' }, { status: 400 });
         }
+
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone)) {
+            return NextResponse.json({ message: 'Phone number is invalid' }, { status: 400 });
+        }
+
         if (password.length < 8) {
             return NextResponse.json({ message: 'Password must be at least 8 characters long' }, { status: 400 });
         }
 
         // Check if user already exists
-        const Users = await query(`SELECT email FROM users WHERE email = ?`, [email]);
-        if (Users.length !== 0) {
+        const existing = await query(`SELECT email FROM users WHERE email = ?`, [email]);
+        if (existing.length !== 0) {
             return NextResponse.json({ message: "The account is already registered." }, { status: 400 });
         }
 
@@ -43,12 +53,13 @@ export async function POST(req) {
 
         // Hash password
         const hash = await bcrypt.hash(password, 10);
-        const adminEmails = ["rabimohammed740@gmail.com", "superadmin@site.com"]; // <--- put allowed admin emails here
+        const adminEmails = ["rabimohammed740@gmail.com", "superadmin@site.com"];
         const role = adminEmails.includes(email) ? "admin" : "guest";
+
         // Insert user
-        const result = await query(
-            `INSERT INTO users (name, email, phone_number, password,role) VALUES (?, ?, ?, ?,?)`,
-            [name, email, phone, hash,role]
+        await query(
+            `INSERT INTO users (name, email, phone_number, password, role) VALUES (?, ?, ?, ?, ?)`,
+            [name, email, phone, hash, role]
         );
 
         // Remove OTP so it can't be reused
@@ -59,7 +70,6 @@ export async function POST(req) {
         if (err.code === 'ER_DUP_ENTRY') {
             return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
         }
-        console.error('Registration Error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
