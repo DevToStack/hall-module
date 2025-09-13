@@ -53,7 +53,7 @@ export async function POST(req) {
 
         // Hash password
         const hash = await bcrypt.hash(password, 10);
-        const adminEmails = ["rabimohammed740@gmail.com", "superadmin@site.com"];
+        const adminEmails = ["rabimohammed740@gmail.com", "devdrop18@gmail.com"];
         const role = adminEmails.includes(email) ? "admin" : "guest";
 
         // Insert user
