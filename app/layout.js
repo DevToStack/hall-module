@@ -31,6 +31,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <Head>
         <title>Book Premium Furnished Apartments | YourBrand</title>
+        <meta name="viewport" content="width=device-width, initail-scale=1.0"/>
         <meta
           name="description"
           content="Discover and book modern, fully-furnished apartments with top amenities including Wi-Fi, private parking, kitchen access, and 24/7 availability. Perfect for family stays, business trips, and weekend getaways."

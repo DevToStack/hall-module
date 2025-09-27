@@ -19,7 +19,7 @@ export default function HomePage() {
             <HeroSection />
             <div className='bg-blue-50'><Overview /></div>
             
-            <div className='text-center bg-gray-300 rounded-3xl m-10 max-sm:m-1 max-lg:rounded-lg max-lg:m-2'>
+            <div className='text-center bg-gray-200'>
               <h1 className="p-2 text-5xl mt-4">Gallery</h1>
               <GallerySection />
             </div>

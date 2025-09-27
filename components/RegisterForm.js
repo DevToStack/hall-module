@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faKey, faLock, faPaperPlane, faUser, faPhone } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faPaperPlane, faUser, faPhone, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import Toast from './toast';
 
@@ -20,6 +20,8 @@ export default function RegisterForm() {
     const [timer, setTimer] = useState(0);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const otpRefs = useRef([]);
     // Countdown effect
@@ -133,7 +135,7 @@ export default function RegisterForm() {
                 setSuccess("user registered succesfully.")
                 router.push('/signin'); // no delay needed
             } else {
-                setError(data.error || 'Failed to register account.');
+                setError(data.message || 'Failed to register account.');
                 setStep(1);
                 setOtp(Array(6).fill("")); // reset OTP
                 setName('');
@@ -151,9 +153,9 @@ export default function RegisterForm() {
     
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md">
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+        <div className="min-h-screen flex items-center justify-top sm:justify-center bg-white/10 sm:bg-black">
+            <div className="sm:bg-white/10 text-gray-100 p-6 sm:p-8 rounded-2xl sm:shadow-xl w-full max-w-md border-0 border-white/10 sm:border max-sm:h-full">
+                <h2 className="text-2xl font-bold text-center text-gray-100 mb-6">
                     {step === 1 ? "Register Account" : "Verify OTP"}
                 </h2>
 
@@ -163,26 +165,63 @@ export default function RegisterForm() {
                             { icon: faUser, type: "text", placeholder: "Full Name", value: name, setter: setName },
                             { icon: faEnvelope, type: "email", placeholder: "Email", value: email, setter: setEmail },
                             { icon: faPhone, type: "tel", placeholder: "Phone Number", value: phone, setter: setPhone },
-                            { icon: faLock, type: "password", placeholder: "Password", value: password, setter: setPassword },
-                            { icon: faLock, type: "password", placeholder: "Confirm Password", value: confirmPassword, setter: setConfirmPassword },
+                            { icon: faLock, type: "password", placeholder: "Password", value: password, setter: setPassword, show: showPassword, setShow: setShowPassword },
+                            { icon: faLock, type: "password", placeholder: "Confirm Password", value: confirmPassword, setter: setConfirmPassword, show: showConfirmPassword, setShow: setShowConfirmPassword },
                         ].map((field, i) => (
-                            <div key={i} className="flex items-center border rounded-lg px-3 py-2">
-                                <FontAwesomeIcon icon={field.icon} className="text-gray-400 mr-2" />
+                            <div
+                                key={i}
+                                className="flex items-center border border-white/10 rounded-lg px-3 py-2 focus-within:border-white transition-colors relative"
+                            >
+                                <FontAwesomeIcon icon={field.icon} className="text-gray-100 mr-4" />
+
                                 <input
-                                    type={field.type}
-                                    className="flex-1 outline-none"
+                                    type={field.show !== undefined ? (field.show ? "text" : "password") : field.type}
                                     placeholder={field.placeholder}
                                     value={field.value}
-                                    onChange={(e) => field.setter(e.target.value)}
+                                    onChange={(e) => {
+                                        let val = e.target.value;
+
+                                        // ✅ Smart gmail autofill for email
+                                        if (field.type === "email") {
+                                            if (val.endsWith("@") && !val.includes("@gmail.com")) {
+                                                val = val + "gmail.com";
+                                            }
+                                            if (val.includes("@gmail.com")) {
+                                                const index = val.indexOf("@gmail.com") + "@gmail.com".length;
+                                                val = val.slice(0, index);
+                                            }
+                                        }
+
+                                        field.setter(val);
+                                    }}
+                                    className="flex-1 outline-none bg-transparent text-gray-100"
                                     required
                                 />
+
+                                {/* Eye icon for password fields */}
+                                {field.type === "password" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // Show password
+                                            field.setShow(true);
+
+                                            // Hide after 3 seconds
+                                            setTimeout(() => field.setShow(false), 3000);
+                                        }}
+                                        className="absolute right-3 text-gray-400 hover:text-gray-200"
+                                    >
+                                        <FontAwesomeIcon icon={field.show ? faEyeSlash : faEye} />
+                                    </button>
+                                )}
+
                             </div>
                         ))}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg flex items-center justify-center"
+                            className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg flex items-center justify-center"
                         >
                             {loading ? "Sending..." : (
                                 <>
@@ -191,10 +230,15 @@ export default function RegisterForm() {
                                 </>
                             )}
                         </button>
-                        <a href='/signin' className='text-sm text-right text-blue-700'>
-                            already have an account?
-                        </a>
+
+                        <p className='text-sm text-gray-400'>
+                            already have an account?{" "}
+                            <a href='/signin' className='text-right text-gray-100 ml-1 underline hover:text-gray-400'>
+                                Login
+                            </a>
+                        </p>
                     </form>
+                  
                 )}
 
                 {step === 2 &&(
@@ -207,7 +251,7 @@ export default function RegisterForm() {
                                         ref={(el) => otpRefs.current[i] = el}
                                         type="text"
                                         maxLength="1"
-                                        className="w-12 h-12 max-sm:w-10 max-sm:h-10 text-center text-lg font-bold border rounded-lg outline-none focus:border-blue-500"
+                                        className="w-12 h-12 max-sm:w-10 max-sm:h-10 text-center text-lg font-bold border border-white/20 rounded-lg outline-none focus:border-white"
                                         value={digit}
                                         onChange={(e) => handleOtpChange(e.target.value, i)}
                                         onKeyDown={(e) => handleOtpKeyDown(e, i)}
@@ -218,7 +262,7 @@ export default function RegisterForm() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg flex items-center justify-center"
+                                className="w-full bg-white/10 text-gray-100 py-2 rounded-lg hover:bg-white/20 transition-all"
                             >
                                 Register
                             </button>

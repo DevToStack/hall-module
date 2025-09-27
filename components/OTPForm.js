@@ -80,8 +80,8 @@ export default function OtpVerificationPage() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+        <div className="flex items-center justify-center min-h-screen justify-top sm:justify-center bg-white/10 sm:bg-black sm:p-4">
+            <div className="sm:bg-white/10 text-gray-100 p-8 rounded-2xl sm:shadow-xl w-full border-0 border-white/10 sm:max-w-md sm:border">
                 <h2 className="text-2xl font-bold mb-4 text-center">Verify OTP</h2>
                 <p className="text-center text-gray-600 mb-4">
                     Enter the OTP sent to <strong>{email}</strong>
@@ -100,7 +100,7 @@ export default function OtpVerificationPage() {
                         onChange={(e) => setOtp(e.target.value)}
                         placeholder="Enter OTP"
                         maxLength={6}
-                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                        className="w-full border border-white/10 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                         required
                     />
 

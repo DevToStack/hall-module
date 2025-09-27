@@ -153,13 +153,13 @@ export default function NavBar({ activeTab, setActiveTab }) {
                         </div>
                     ) : (
                         <div
-                            className="text-gray-100 flex items-center rounded-full sm:pr-2 bg-white/20 gap-2 cursor-pointer"
+                            className="text-gray-100 flex items-center rounded-full sm:pr-3 bg-white/10 gap-2 cursor-pointer"
                             onClick={() => router.push("/profile")}
                         >
                             <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-xl font-bold p-5">
                                 {profile?.name?.charAt(0)}
                             </div>
-                            <div className="max-sm:hidden">{profile?.name}</div>
+                                <div className="max-sm:hidden min-w-[60px]">{profile?.name}</div>
                         </div>
                     )}
                 </div>

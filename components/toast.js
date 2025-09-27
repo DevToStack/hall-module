@@ -11,7 +11,7 @@ export default function Toast({ message, type = "error", onClose }) {
     }, []); // ✅ no [onClose]
 
     return (
-        <div className="fixed bottom-5 right-5 z-50">
+        <div className="fixed bottom-5 right-5 max-sm:top-5 z-50">
             <div
                 className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm animate-slide-up 
           ${type === "error" ? "bg-red-600" : "bg-green-600"}`}

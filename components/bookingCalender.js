@@ -1,9 +1,41 @@
-import { useState } from 'react';
+
+'use client';
+import { useState, useEffect, useMemo } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
-export default function BookingCalendar({ formData, setFormData, disabledRanges }) {
+export default function BookingCalendar({
+    formData,
+    setFormData,
+    disabledRanges,
+    lockedRanges = [],
+    size = 'medium', // ✅ new attribute: "extraSmall" | "small" | "medium" | "large"
+}) {
     const [calendarDisabled, setCalendarDisabled] = useState(false);
+    const [monthsToShow, setMonthsToShow] = useState(1);
+
+    // ✅ size map
+    const sizeMap = useMemo(() => {
+        return {
+            extraSmall: { scale: 0.7, font: 'text-xs', width: 'max-w-[270px]' },
+            small: { scale: 0.85, font: 'text-sm', width: 'max-w-[300px]' },
+            medium: { scale: 1, font: 'text-base', width: 'max-w-[320px]' },
+            large: { scale: 1.2, font: 'text-lg', width: 'max-w-[420px]' },
+            extraLarge: { scale: 1.5, font: 'text-xl', width: 'max-w-[560px]'},
+        };
+    }, []);
+
+    const { scale, font, width } = sizeMap[size] || sizeMap.medium;
+
+    // screen responsive months
+    useEffect(() => {
+        const handleResize = () => {
+            setMonthsToShow(1);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleSelect = (range) => {
         if (!range?.from || !range?.to) return;
@@ -21,40 +53,69 @@ export default function BookingCalendar({ formData, setFormData, disabledRanges 
         }));
     };
 
-    const handleDoubleClick = () => {
+    const handleDisable = () => {
         setCalendarDisabled(true);
-        setFormData((prev) => ({
-            ...prev,
-            checkin: '',
-            checkout: '',
-        }));
+        setFormData((prev) => ({ ...prev, checkin: '', checkout: '' }));
     };
+
+    const handleEnable = () => {
+        setCalendarDisabled(false);
+    };
+
+    // Combine disabled + locked ranges
+    const allDisabled = [
+        ...disabledRanges,
+        ...lockedRanges.map(({ from, to }) => ({
+            from: new Date(from),
+            to: new Date(to),
+        })),
+    ];
 
     return (
         <div
-            className={`border rounded-xl p-4 ml-auto mr-auto ${calendarDisabled ? 'pointer-events-none cursor-default opacity-60' : ''}`}
+            className={`border border-white/10 rounded-xl p-2 bg-white/10 shadow-md mx-auto ${ width } `}
+            style={{ transform: `scale(${ scale })`, transformOrigin: 'top left' }}
         >
-            <DayPicker
-                mode="range"
-                selected={
-                    formData.checkin && formData.checkout
-                        ? {
-                            from: new Date(formData.checkin),
-                            to: new Date(formData.checkout),
+            {calendarDisabled ? (
+                <div className="flex flex-col items-center gap-3">
+                    <p className="text-gray-400 text-sm">📅 Calendar is disabled</p>
+                    <button
+                        onClick={handleEnable}
+                        className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+                    >
+                        Enable Calendar
+                    </button>
+                </div>
+            ) : (
+                <>
+                    <DayPicker
+                        mode="range"
+                        numberOfMonths={monthsToShow}
+                        selected={
+                            formData.checkin && formData.checkout
+                                ? { from: new Date(formData.checkin), to: new Date(formData.checkout) }
+                                : undefined
                         }
-                        : undefined
-                }
-                onSelect={handleSelect}
-                disabled={disabledRanges}
-                modifiersClassNames={{
-                    disabled: 'bg-blue-200 text-gray-800',
-                    selected: 'bg-blue-100 text-blue-900 ',
-                    range_start: 'bg-blue-600 text-white rounded-tl-full rounded-bl-full',
-                    range_end: 'bg-blue-600 text-white rounded-tr-full rounded-br-full',
-                }}
-                numberOfMonths={1}
-                className="mx-auto"
-            />
+                        onSelect={handleSelect}
+                        disabled={allDisabled}
+                        modifiersClassNames={{
+                            disabled: 'bg-white/10 text-gray-400 opacity-50',
+                            selected: 'bg-white/20 text-white',
+                            range_start: 'bg-white/20 text-white rounded-l-full',
+                            range_end: 'bg-white/20 text-white rounded-r-full',
+                            range_middle: 'bg-white/20 text-white',
+                        }}
+                        className={`${ font } bg - transparent text-white`}
+                    />
+
+                    <p
+                        className="text-xs text-gray-400 text-center mt-2 cursor-pointer min-sm:hidden"
+                        onDoubleClick={handleDisable}
+                    >
+                        📌 Double click to disable calendar
+                    </p>
+                </>
+            )}
         </div>
     );
 }

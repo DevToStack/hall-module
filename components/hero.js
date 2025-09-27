@@ -6,9 +6,9 @@ const HeroSection = () => {
         <section className="flex flex-col items-bottom relative bg-black w-full min-h-[100vh] overflow-hidden flex items-center justify-center px-4 py-16 sm:px-8 lg:px-24 text-white ">
 
 
-            <div className='absolute w-full h-full'>
-                <HeroParticlesBackground />
-            </div>
+        <div className='absolute w-full h-full'>
+            <HeroParticlesBackground/>
+        </div>
 
             {/* Hero Content */}
             <div className="mt-30 relative z-10 text-center max-w-4xl">
@@ -27,7 +27,7 @@ const HeroSection = () => {
                     </button>
                 </div>
             </div>
-            <div className='bottom-5 mt-20'>
+            <div className='bottom-5 mt-20 backdrop-blur-sm'>
                 <RoomAvailabilityForm />
             </div>
         </section>

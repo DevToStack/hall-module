@@ -46,7 +46,7 @@ const HeroParticlesBackground = () => {
           },
           move: {
             enable: true,
-            speed: 2,
+            speed: 1,
             direction: 'none',
             random: false,
             straight: true,
@@ -64,7 +64,7 @@ const HeroParticlesBackground = () => {
           wobble: {
             enable: true,
             distance: 5,
-            speed: 2,
+            speed: 1,
           },
         },
         interactivity: {

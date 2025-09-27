@@ -12,6 +12,7 @@ import Link from 'next/link';
 import BookingSection from '@/components/bookingsSection';
 import PaymentsSection from '@/components/paymentBlock';
 import TimeAgo from '@/components/TimeAgo';
+import Menu from '@/components/Menu';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },
@@ -26,6 +27,14 @@ export default function ProfileDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const router = useRouter();
     const [bookings, setBookings] = useState([]);
+    const [togleMenu, setMenuOpen] = useState(false);
+
+    const links = [
+        { label: 'Home', href: '/' },
+        { label: 'Bookings', href: '/bookings' },
+        { label: 'Payments', href: '/payments' },
+        { label: 'Settings', href: '/settings' },
+    ];
 
     const fetchProfile = useCallback(async () => {
         try {
@@ -147,14 +156,32 @@ export default function ProfileDashboard() {
     return (
         <div className="h-screen overflow-hidden bg-black text-white flex">
             {/* Mobile Toggle Button */}
-            <div className='md:hidden flex w-full bg-black h-[50px] fixed top-0 z-10  shadow shadow-white shadow-bottom-md'>
-                <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="p-2 ml-2"
+            <div className='md:hidden max-w-[1500px] mx-auto flex items-center justify-between w-full bg-black px-3 py-2 fixed top-0 z-10 border-b border-white/20 gap-3'>
+                <div className='flex items-center gap-3'>
+                    <div
+                        onClick={() => setSidebarOpen(true)}
+                        className="flex flex-col justify-center gap-[5px] cursor-pointer group lg:hidden"
+                    >
+                        <span className="w-7 h-[3px] bg-white rounded-full group-hover:scale-x-125 transition-transform duration-300"></span>
+                        <span className="w-5 h-[3px] bg-white rounded-full group-hover:scale-x-110 transition-transform duration-300"></span>
+                        <span className="w-6 h-[3px] bg-white rounded-full group-hover:scale-x-125 transition-transform duration-300"></span>
+                    </div>
+                    <h1 className='text-2xl font-bold tracking-tight'>Rooms4u</h1>
+                </div>
+                <div 
+                    className='flex flex-col items-end justify-center gap-[2px] w-[35px] h-[35px] pr-1'
+                    onClick={() => setMenuOpen(true)}
                 >
-                    <FontAwesomeIcon icon={faBars} className="text-2xl text-center text-white pt-1" />
-                </button>
+                    <span className='w-[5px] h-[5px] rounded-full bg-white'></span>
+                    <span className='w-[5px] h-[5px] rounded-full bg-white'></span>
+                    <span className='w-[5px] h-[5px] rounded-full bg-white'></span>
+                </div>
             </div>
+
+            <div>
+                <Menu open={togleMenu} onClose={() => setMenuOpen(false)} links={links} />
+            </div>
+
 
             {/* Desktop Sidebar */}
             <div className="hidden md:block h-full">{Sidebar}</div>
@@ -219,7 +246,7 @@ export default function ProfileDashboard() {
             {/* Main content */}
             <main className="flex-1 overflow-y-auto p-6 max-md:mt-[50px] h-full">
                 {active === 'overview' && (
-                    <section>
+                    <section className='pb-9'>
                         <h1 className="text-3xl font-bold mb-4">Dashboard Overview</h1>
                         <p className="text-gray-300 mb-6 text-lg">
                             You are logged in as <span className="font-bold text-white">{user.name}</span>.
@@ -260,7 +287,18 @@ export default function ProfileDashboard() {
                             ))}
                         </div>
 
-
+                        {/* Welcome Card */}
+                        <div className="bg-gray-100/5 border border-white/10 p-6 rounded-xl shadow mt-10">
+                            <h3 className="text-xl font-semibold mb-2 text-white">Welcome, {user.name.split(' ')[0]} 👋</h3>
+                            <p className="text-gray-300 text-sm">
+                                Here is what you can do next:
+                            </p>
+                            <ul className="list-disc list-inside text-gray-400 text-sm mt-2">
+                                <li>Check your upcoming apartment bookings</li>
+                                <li>Update your profile & secure your account</li>
+                                <li>Download invoices or receipts</li>
+                            </ul>
+                        </div>
 
                         {bookings.filter(b => b.status === 'confirmed' && getDaysUntil(b.start_date) > 0 && getDaysUntil(b.start_date) <= 5).length > 0 && (
                             <div className="mt-10">
@@ -311,19 +349,6 @@ export default function ProfileDashboard() {
                                     Edit Profile
                                 </Link>
                             </div>
-                        </div>
-
-                        {/* Welcome Card */}
-                        <div className="bg-gray-100/5 border border-white/10 p-6 rounded-xl shadow mt-10">
-                            <h3 className="text-xl font-semibold mb-2 text-white">Welcome, {user.name.split(' ')[0]} 👋</h3>
-                            <p className="text-gray-300 text-sm">
-                                Here is what you can do next:
-                            </p>
-                            <ul className="list-disc list-inside text-gray-400 text-sm mt-2">
-                                <li>Check your upcoming apartment bookings</li>
-                                <li>Update your profile & secure your account</li>
-                                <li>Download invoices or receipts</li>
-                            </ul>
                         </div>
 
                         {/* Recent Activity */}

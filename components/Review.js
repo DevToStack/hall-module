@@ -30,10 +30,22 @@ const ReviewSection = () => {
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(0);
     const [user, setUser] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        if (showModal) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "auto";
+        }
+        return () => {
+            document.body.style.overflow = "auto";
+        };
+    }, [showModal]);
+
 
     const apartmentId = 1; // Make dynamic if needed
 
-    // Fetch all reviews
     const fetchReviews = async () => {
         try {
             const res = await fetch('/api/reviews', { credentials: "include" });
@@ -55,7 +67,6 @@ const ReviewSection = () => {
         }
     };
 
-    // ✅ Load logged-in user from /api/profile
     useEffect(() => {
         fetch("/api/profile", { credentials: "include" })
             .then(async (res) => {
@@ -69,7 +80,6 @@ const ReviewSection = () => {
             .catch(() => setUser(null));
     }, []);
 
-    // Fetch reviews on mount
     useEffect(() => {
         fetchReviews();
     }, []);
@@ -91,7 +101,7 @@ const ReviewSection = () => {
             const res = await fetch("/api/reviews", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ send cookie
+                credentials: "include",
                 body: JSON.stringify({
                     apartment_id: apartmentId,
                     rating,
@@ -106,6 +116,7 @@ const ReviewSection = () => {
                 setComment('');
                 setRating(0);
                 setHover(0);
+                setShowModal(false); // close modal after submit
             } else {
                 alert(data.error || "Failed to submit review.");
             }
@@ -116,22 +127,22 @@ const ReviewSection = () => {
     };
 
     return (
-        <section className="max-h-[1500px] w-full px-4 py-12 bg-black">
+        <section className="w-full px-4 py-12 bg-black">
             <h2 className="text-4xl font-bold text-white text-center mb-12">
                 What Guests Are Saying
             </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_600px] gap-8 max-w-8xl mx-auto">
+            <div className="max-w-8xl mx-auto">
                 {/* Reviews List */}
-                <div className="max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+                <div className="max-h-[400px] overflow-y-auto scrollbar-hide mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {reviews.length === 0 ? (
                             <p className="text-white/60 text-lg">No reviews yet. Be the first!</p>
                         ) : (
                             reviews.map((review) => (
                                 <div
                                     key={review.id}
-                                    className="bg-gradient-to-br from-zinc-800 via-black/20 to-zinc-900 border border-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-lg text-white"
+                                    className="bg-white/10 border border-white/10 rounded-xl p-6 text-gray-100"
                                 >
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
@@ -152,7 +163,6 @@ const ReviewSection = () => {
                                             </div>
                                         </div>
                                     </div>
-
                                     <ReviewText text={review.comment} />
                                 </div>
                             ))
@@ -160,58 +170,81 @@ const ReviewSection = () => {
                     </div>
                 </div>
 
-                {/* Submit Form */}
-                <div className="w-full lg:sticky lg:top-24">
-                    <form
-                        onSubmit={handleSubmit}
-                        className="bg-gradient-to-br from-zinc-800 via-black to-zinc-900 border border-white/10 backdrop-blur-md rounded-2xl px-5 py-8 shadow-2xl space-y-6 transition-all duration-300"
+                {/* Write Review Button */}
+                <div className="text-center">
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="px-6 py-3 font-semibold text-white rounded-xl bg-blue-500/30 hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-md hover:shadow-xl"
                     >
-                        <h3 className="text-2xl font-semibold text-white">Leave a Review</h3>
-
-                        <textarea
-                            placeholder="Share your experience..."
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="w-full h-28 p-4 rounded-xl bg-white/10 text-white placeholder-white/60 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                            required
-                        />
-
-                        <div className="flex items-center gap-2">
-                            <span className="text-white/70 mr-2">Your Rating:</span>
-                            {[...Array(5)].map((_, i) => {
-                                const ratingValue = i + 1;
-                                return (
-                                    <label key={ratingValue} className="cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="rating"
-                                            value={ratingValue}
-                                            onClick={() => setRating(ratingValue)}
-                                            className="hidden"
-                                        />
-                                        <FontAwesomeIcon
-                                            icon={ratingValue <= (hover || rating) ? solidStar : regularStar}
-                                            onMouseEnter={() => setHover(ratingValue)}
-                                            onMouseLeave={() => setHover(0)}
-                                            className={`text-xl transition-all duration-150 ease-in-out ${ratingValue <= (hover || rating)
-                                                    ? 'text-yellow-400 scale-110'
-                                                    : 'text-white/30'
-                                                }`}
-                                        />
-                                    </label>
-                                );
-                            })}
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full py-3 font-semibold text-white rounded-xl bg-blue-500/20 hover:bg-white hover:text-black transition-all duration-200 shadow-md hover:shadow-xl"
-                        >
-                            Submit Review
-                        </button>
-                    </form>
+                        Write a Review
+                    </button>
                 </div>
             </div>
+
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-5">
+                    <div className="bg-black border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-lg relative backdrop-blur-xl">
+
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className="absolute top-4 right-4 text-white/60 hover:text-white"
+                        >
+                            ✕
+                        </button>
+
+                        <h3 className="text-2xl font-semibold text-white mb-6">Leave a Review</h3>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <textarea
+                                placeholder="Share your experience..."
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                className="w-full h-28 p-4 rounded-xl bg-white/10 text-white placeholder-white/60 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                required
+                            />
+
+                            <div className="flex flex-col items-left gap-2">
+                                <span className="text-white/70 mr-2">Your Rating:</span>
+                                <div>
+                                    {[...Array(5)].map((_, i) => {
+                                        const ratingValue = i + 1;
+                                        return (
+                                            <label key={ratingValue} className="cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="rating"
+                                                    value={ratingValue}
+                                                    onClick={() => setRating(ratingValue)}
+                                                    className="hidden"
+                                                />
+                                                <FontAwesomeIcon
+                                                    icon={ratingValue <= (hover || rating) ? solidStar : regularStar}
+                                                    onMouseEnter={() => setHover(ratingValue)}
+                                                    onMouseLeave={() => setHover(0)}
+                                                    className={`text-2xl transition-all duration-150 ease-in-out mr-2 ${ratingValue <= (hover || rating)
+                                                        ? 'text-yellow-400 scale-110'
+                                                        : 'text-white/30'
+                                                        }`}
+                                                />
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full py-3 font-semibold text-white rounded-xl bg-blue-500/20 hover:bg-white hover:text-black transition-all duration-200 shadow-md hover:shadow-xl"
+                            >
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };
