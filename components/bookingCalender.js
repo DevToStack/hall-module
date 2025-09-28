@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { DayPicker } from 'react-day-picker';
@@ -9,19 +8,19 @@ export default function BookingCalendar({
     setFormData,
     disabledRanges,
     lockedRanges = [],
-    size = 'medium', // ✅ new attribute: "extraSmall" | "small" | "medium" | "large"
+    size = 'medium', // ✅ "extraSmall" | "small" | "medium" | "large" | "extraLarge"
+    background = 'white/10', // ✅ NEW: background color class
 }) {
-    const [calendarDisabled, setCalendarDisabled] = useState(false);
     const [monthsToShow, setMonthsToShow] = useState(1);
 
     // ✅ size map
     const sizeMap = useMemo(() => {
         return {
             extraSmall: { scale: 0.7, font: 'text-xs', width: 'max-w-[270px]' },
-            small: { scale: 0.85, font: 'text-sm', width: 'max-w-[300px]' },
+            small: { scale: 0.9, font: 'text-sm', width: 'max-w-[310px]' },
             medium: { scale: 1, font: 'text-base', width: 'max-w-[320px]' },
             large: { scale: 1.2, font: 'text-lg', width: 'max-w-[420px]' },
-            extraLarge: { scale: 1.5, font: 'text-xl', width: 'max-w-[560px]'},
+            extraLarge: { scale: 1.5, font: 'text-xl', width: 'max-w-[560px]' },
         };
     }, []);
 
@@ -53,15 +52,6 @@ export default function BookingCalendar({
         }));
     };
 
-    const handleDisable = () => {
-        setCalendarDisabled(true);
-        setFormData((prev) => ({ ...prev, checkin: '', checkout: '' }));
-    };
-
-    const handleEnable = () => {
-        setCalendarDisabled(false);
-    };
-
     // Combine disabled + locked ranges
     const allDisabled = [
         ...disabledRanges,
@@ -73,49 +63,28 @@ export default function BookingCalendar({
 
     return (
         <div
-            className={`border border-white/10 rounded-xl p-2 bg-white/10 shadow-md mx-auto ${ width } `}
-            style={{ transform: `scale(${ scale })`, transformOrigin: 'top left' }}
+            className={`border border-white/30 rounded-xl p-2 mx-auto shadow-md ${width} bg-${background}`}
+            style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
         >
-            {calendarDisabled ? (
-                <div className="flex flex-col items-center gap-3">
-                    <p className="text-gray-400 text-sm">📅 Calendar is disabled</p>
-                    <button
-                        onClick={handleEnable}
-                        className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
-                    >
-                        Enable Calendar
-                    </button>
-                </div>
-            ) : (
-                <>
-                    <DayPicker
-                        mode="range"
-                        numberOfMonths={monthsToShow}
-                        selected={
-                            formData.checkin && formData.checkout
-                                ? { from: new Date(formData.checkin), to: new Date(formData.checkout) }
-                                : undefined
-                        }
-                        onSelect={handleSelect}
-                        disabled={allDisabled}
-                        modifiersClassNames={{
-                            disabled: 'bg-white/10 text-gray-400 opacity-50',
-                            selected: 'bg-white/20 text-white',
-                            range_start: 'bg-white/20 text-white rounded-l-full',
-                            range_end: 'bg-white/20 text-white rounded-r-full',
-                            range_middle: 'bg-white/20 text-white',
-                        }}
-                        className={`${ font } bg - transparent text-white`}
-                    />
-
-                    <p
-                        className="text-xs text-gray-400 text-center mt-2 cursor-pointer min-sm:hidden"
-                        onDoubleClick={handleDisable}
-                    >
-                        📌 Double click to disable calendar
-                    </p>
-                </>
-            )}
+            <DayPicker
+                mode="range"
+                numberOfMonths={monthsToShow}
+                selected={
+                    formData.checkin && formData.checkout
+                        ? { from: new Date(formData.checkin), to: new Date(formData.checkout) }
+                        : undefined
+                }
+                onSelect={handleSelect}
+                disabled={allDisabled}
+                modifiersClassNames={{
+                    disabled: 'bg-white/10 text-gray-400 opacity-50',
+                    selected: 'bg-white/20 text-white',
+                    range_start: 'bg-white/20 text-white rounded-l-full',
+                    range_end: 'bg-white/20 text-white rounded-r-full',
+                    range_middle: 'bg-white/20 text-white',
+                }}
+                className={`${font} bg-transparent text-white`}
+            />
         </div>
     );
 }
