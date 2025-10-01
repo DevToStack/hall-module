@@ -75,16 +75,22 @@ export default function BookingCalendar({
                         : undefined
                 }
                 onSelect={handleSelect}
-                disabled={allDisabled}
+                disabled={allDisabled} // ✅ include locked
+                modifiers={{
+                    locked: lockedRanges.map(r => ({ from: new Date(r.from), to: new Date(r.to) })),
+                }}
                 modifiersClassNames={{
                     disabled: 'bg-white/10 text-gray-400 opacity-50',
+                    locked: 'bg-red-600/40 text-red-200 line-through',
                     selected: 'bg-white/20 text-white',
                     range_start: 'bg-white/20 text-white rounded-l-full',
-                    range_end: 'bg-white/20 text-white rounded-r-full',
+                    range_end: 'bg-red-200 text-white rounded-r-full',
                     range_middle: 'bg-white/20 text-white',
                 }}
                 className={`${font} bg-transparent text-white`}
             />
+
+
         </div>
     );
 }

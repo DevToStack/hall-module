@@ -1,16 +1,18 @@
 // app/admin/dashboard/page.jsx
 'use client';
+import BookingsManagement from '@/components/admin/BookingsManagement';
 import AdminDashboardStats from '@/components/adminDashboard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faHome, faUsers, faCalendar, faCreditCard, faChartLine,
-    faBars, faXmark, faRightFromBracket
+    faBars, faXmark, faRightFromBracket, faBuilding
 } from '@fortawesome/free-solid-svg-icons';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },
+    { id: 'apartments', label: 'Apartments', icon: faBuilding },
     { id: 'users', label: 'Users', icon: faUsers },
     { id: 'bookings', label: 'Bookings', icon: faCalendar },
     { id: 'payments', label: 'Payments', icon: faCreditCard },
@@ -20,8 +22,20 @@ export default function AdminDashboard() {
     const [active, setActive] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dashboardData, setDashboardData] = useState(null);
+    const [apartments, setApartments] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [editingApartment, setEditingApartment] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        location: '',
+        price_per_night: '',
+        image_url: '',
+        available: true
+    });
     const router = useRouter();
-    
+
     const fetchDashboardData = useCallback(async () => {
         try {
             const res = await fetch('/api/admin/dashboard', {
@@ -41,13 +55,123 @@ export default function AdminDashboard() {
         }
     }, [router]);
 
+    const fetchApartments = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/apartments', {
+                credentials: 'include',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setApartments(data.apartments || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch apartments:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchDashboardData();
-    }, [fetchDashboardData]);
+        if (active === 'apartments') {
+            fetchApartments();
+        }
+    }, [fetchDashboardData, active, fetchApartments]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const url = editingApartment ? '/api/admin/apartments' : '/api/admin/apartments';
+            const method = editingApartment ? 'PUT' : 'POST';
+
+            const payload = editingApartment
+                ? { ...formData, id: editingApartment.id }
+                : formData;
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload),
+            });
+
+            if (res.ok) {
+                setShowForm(false);
+                setEditingApartment(null);
+                setFormData({
+                    title: '',
+                    description: '',
+                    location: '',
+                    price_per_night: '',
+                    image_url: '',
+                    available: true
+                });
+                fetchApartments();
+            } else {
+                alert('Failed to save apartment');
+            }
+        } catch (err) {
+            console.error('Error saving apartment:', err);
+            alert('Error saving apartment');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = (apartment) => {
+        setEditingApartment(apartment);
+        setFormData({
+            title: apartment.title,
+            description: apartment.description,
+            location: apartment.location,
+            price_per_night: apartment.price_per_night,
+            image_url: apartment.image_url,
+            available: apartment.available
+        });
+        setShowForm(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this apartment?')) return;
+
+        try {
+            const res = await fetch(`/api/admin/apartments?id=${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                fetchApartments();
+            } else {
+                alert('Failed to delete apartment');
+            }
+        } catch (err) {
+            console.error('Error deleting apartment:', err);
+            alert('Error deleting apartment');
+        }
+    };
+
+    const resetForm = () => {
+        setShowForm(false);
+        setEditingApartment(null);
+        setFormData({
+            title: '',
+            description: '',
+            location: '',
+            price_per_night: '',
+            image_url: '',
+            available: true
+        });
+    };
 
     if (!dashboardData) return <div className="h-screen flex items-center justify-center">Loading...</div>;
 
-    const { users, bookings, payments} = dashboardData;
+    const { users, bookings, payments } = dashboardData;
 
     const handleLogout = async () => {
         try {
@@ -109,13 +233,182 @@ export default function AdminDashboard() {
             </div>
 
             {/* Main content */}
-            <main className="flex-1 overflow-y-auto p-6 max-md:mt-[50px] mb-6 h-full">
+            <main className="flex-1 overflow-y-auto max-md:mt-[50px] mb-[50px] h-full">
                 {active === 'overview' && (
-                    <AdminDashboardStats/>
+                    <AdminDashboardStats />
+                )}
+
+                {active === 'apartments' && (
+                    <section className="p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">Apartments Management</h2>
+                            <button
+                                onClick={() => setShowForm(true)}
+                                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300"
+                            >
+                                + Add Apartment
+                            </button>
+                        </div>
+
+                        {/* Apartment Form Modal */}
+                        {showForm && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-gray-900 p-6 rounded-lg w-full max-w-md">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-xl font-bold">
+                                            {editingApartment ? 'Edit Apartment' : 'Add New Apartment'}
+                                        </h3>
+                                        <button onClick={resetForm} className="text-gray-400 hover:text-white">
+                                            <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Title"
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full p-2 bg-gray-800 rounded border border-gray-700"
+                                            required
+                                        />
+                                        <textarea
+                                            placeholder="Description"
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full p-2 bg-gray-800 rounded border border-gray-700 h-24"
+                                            required
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Location"
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            className="w-full p-2 bg-gray-800 rounded border border-gray-700"
+                                            required
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Price per night"
+                                            value={formData.price_per_night}
+                                            onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })}
+                                            className="w-full p-2 bg-gray-800 rounded border border-gray-700"
+                                            required
+                                        />
+                                        <input
+                                            type="url"
+                                            placeholder="Image URL"
+                                            value={formData.image_url}
+                                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                                            className="w-full p-2 bg-gray-800 rounded border border-gray-700"
+                                            required
+                                        />
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.available}
+                                                onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                                                className="rounded"
+                                            />
+                                            <span>Available</span>
+                                        </label>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                type="submit"
+                                                disabled={loading}
+                                                className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded disabled:opacity-50"
+                                            >
+                                                {loading ? 'Saving...' : (editingApartment ? 'Update' : 'Create')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={resetForm}
+                                                className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Apartments Table */}
+                        {loading ? (
+                            <div className="text-center py-8">Loading apartments...</div>
+                        ) : (
+                            <div className="bg-white/5 rounded-lg overflow-hidden">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white/10">
+                                            <th className="p-4">ID</th>
+                                            <th className="p-4">Title</th>
+                                            <th className="p-4">Location</th>
+                                            <th className="p-4">Price/Night</th>
+                                            <th className="p-4">Available</th>
+                                            <th className="p-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {apartments.map((apartment) => (
+                                            <tr key={apartment.id} className="border-b border-white/10 hover:bg-white/5">
+                                                <td className="p-4">{apartment.id}</td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center space-x-3">
+                                                        <img
+                                                            src={apartment.image_url}
+                                                            alt={apartment.title}
+                                                            className="w-10 h-10 rounded object-cover"
+                                                        />
+                                                        <div>
+                                                            <div className="font-medium">{apartment.title}</div>
+                                                            <div className="text-sm text-gray-400 truncate max-w-xs">
+                                                                {apartment.description}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">{apartment.location}</td>
+                                                <td className="p-4">₹{apartment.price_per_night}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded text-xs ${apartment.available
+                                                            ? 'bg-green-600 text-green-100'
+                                                            : 'bg-red-600 text-red-100'
+                                                        }`}>
+                                                        {apartment.available ? 'Yes' : 'No'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex space-x-2">
+                                                        <button
+                                                            onClick={() => handleEdit(apartment)}
+                                                            className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(apartment.id)}
+                                                            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {apartments.length === 0 && (
+                                    <div className="text-center py-8 text-gray-400">
+                                        No apartments found. Create your first apartment!
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </section>
                 )}
 
                 {active === 'users' && (
-                    <section>
+                    <section className="p-6">
                         <h2 className="text-2xl font-bold mb-4">All Users</h2>
                         <table className="w-full text-left border-collapse">
                             <thead>
@@ -141,35 +434,11 @@ export default function AdminDashboard() {
                 )}
 
                 {active === 'bookings' && (
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4">All Bookings</h2>
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-white/10">
-                                    <th className="p-2">ID</th>
-                                    <th className="p-2">User</th>
-                                    <th className="p-2">Apartment</th>
-                                    <th className="p-2">Dates</th>
-                                    <th className="p-2">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {bookings.map((b) => (
-                                    <tr key={b.id} className="border-b border-white/10">
-                                        <td className="p-2">{b.id}</td>
-                                        <td className="p-2">{b.user_name}</td>
-                                        <td className="p-2">{b.apartment_title}</td>
-                                        <td className="p-2">{b.start_date} → {b.end_date}</td>
-                                        <td className="p-2">{b.status}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </section>
+                    <BookingsManagement />
                 )}
 
                 {active === 'payments' && (
-                    <section>
+                    <section className="p-6">
                         <h2 className="text-2xl font-bold mb-4">All Payments</h2>
                         <table className="w-full text-left border-collapse">
                             <thead>

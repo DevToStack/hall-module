@@ -31,20 +31,22 @@ const ReviewSection = () => {
     const [hover, setHover] = useState(0);
     const [user, setUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    const apartmentId = 1; // Make dynamic if needed
+
+    const resetForm = () => {
+        setComment('');
+        setRating(0);
+        setHover(0);
+    };
 
     useEffect(() => {
-        if (showModal) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "auto";
-        }
+        document.body.style.overflow = showModal ? "hidden" : "auto";
         return () => {
             document.body.style.overflow = "auto";
         };
     }, [showModal]);
-
-
-    const apartmentId = 1; // Make dynamic if needed
 
     const fetchReviews = async () => {
         try {
@@ -86,6 +88,7 @@ const ReviewSection = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitting) return; // Prevent double submission
 
         if (!user) {
             alert("Please login to submit a review.");
@@ -96,6 +99,8 @@ const ReviewSection = () => {
             alert("Please provide both a comment and a rating.");
             return;
         }
+
+        setSubmitting(true);
 
         try {
             const res = await fetch("/api/reviews", {
@@ -113,16 +118,16 @@ const ReviewSection = () => {
 
             if (res.ok) {
                 await fetchReviews();
-                setComment('');
-                setRating(0);
-                setHover(0);
-                setShowModal(false); // close modal after submit
+                resetForm();
+                setShowModal(false);
             } else {
                 alert(data.error || "Failed to submit review.");
             }
         } catch (err) {
             console.error("Error submitting review:", err);
             alert("Something went wrong.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -133,7 +138,6 @@ const ReviewSection = () => {
             </h2>
 
             <div className="max-w-8xl mx-auto">
-                {/* Reviews List */}
                 <div className="max-h-[400px] overflow-y-auto scrollbar-hide mb-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {reviews.length === 0 ? (
@@ -149,9 +153,7 @@ const ReviewSection = () => {
                                             {review.name ? review.name.charAt(0).toUpperCase() : "?"}
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-lg truncate">
-                                                {review.name}
-                                            </h4>
+                                            <h4 className="font-semibold text-lg truncate">{review.name}</h4>
                                             <div className="flex">
                                                 {[...Array(5)].map((_, i) => (
                                                     <FontAwesomeIcon
@@ -170,7 +172,6 @@ const ReviewSection = () => {
                     </div>
                 </div>
 
-                {/* Write Review Button */}
                 <div className="text-center">
                     <button
                         onClick={() => setShowModal(true)}
@@ -181,14 +182,14 @@ const ReviewSection = () => {
                 </div>
             </div>
 
-            {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-5">
                     <div className="bg-black border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-lg relative backdrop-blur-xl">
-
-                        {/* Close button */}
                         <button
-                            onClick={() => setShowModal(false)}
+                            onClick={() => {
+                                resetForm();
+                                setShowModal(false);
+                            }}
                             className="absolute top-4 right-4 text-white/60 hover:text-white"
                         >
                             ✕
@@ -201,7 +202,7 @@ const ReviewSection = () => {
                                 placeholder="Share your experience..."
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
-                                className="w-full h-28 p-4 rounded-xl bg-white/10 text-white placeholder-white/60 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                className="w-full h-28 p-4 rounded-xl border border-white/10 bg-white/10 text-white placeholder-white/60 resize-none focus:outline-none focus:border-white transition-all"
                                 required
                             />
 
@@ -224,22 +225,25 @@ const ReviewSection = () => {
                                                     onMouseEnter={() => setHover(ratingValue)}
                                                     onMouseLeave={() => setHover(0)}
                                                     className={`text-2xl transition-all duration-150 ease-in-out mr-2 ${ratingValue <= (hover || rating)
-                                                        ? 'text-yellow-400 scale-110'
-                                                        : 'text-white/30'
+                                                            ? 'text-yellow-400 scale-110'
+                                                            : 'text-white/30'
                                                         }`}
                                                 />
                                             </label>
                                         );
                                     })}
                                 </div>
-                                
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full py-3 font-semibold text-white rounded-xl bg-blue-500/20 hover:bg-white hover:text-black transition-all duration-200 shadow-md hover:shadow-xl"
+                                disabled={submitting}
+                                className={`w-full py-3 font-semibold text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-xl ${submitting
+                                        ? 'bg-gray-500 cursor-not-allowed'
+                                        : 'bg-blue-500/20 hover:bg-white hover:text-black'
+                                    }`}
                             >
-                                Submit Review
+                                {submitting ? 'Submitting...' : 'Submit Review'}
                             </button>
                         </form>
                     </div>

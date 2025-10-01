@@ -9,9 +9,13 @@ export async function POST(req) {
         if (!apartment_id) {
             return NextResponse.json({ error: 'Missing apartment ID' }, { status: 400 });
         }
-        
+
+        // ✅ lock both confirmed + pending
         const bookings = await query(
-            `SELECT start_date, end_date FROM bookings WHERE apartment_id = ? AND status='confirmed'`,
+            `SELECT start_date, end_date 
+       FROM bookings 
+       WHERE apartment_id = ? 
+       AND status IN ('confirmed', 'pending')`,
             [apartment_id]
         );
 

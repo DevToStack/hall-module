@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faHome, faCreditCard, faGears, faCalendar, faBars, faXmark, faRightFromBracket,
-    faBuilding, faLocationDot, faCalendarDays, faClock, faIndianRupeeSign
+    faBuilding, faLocationDot, faCalendarDays, faClock, faIndianRupeeSign,
+    faCalendarCheck, faMoneyBill, faCog
 } from '@fortawesome/free-solid-svg-icons';
 import EditProfileForm from '@/components/EditProfile';
 import Link from 'next/link';
@@ -30,10 +31,10 @@ export default function ProfileDashboard() {
     const [togleMenu, setMenuOpen] = useState(false);
 
     const links = [
-        { label: 'Home', href: '/' },
-        { label: 'Bookings', href: '/bookings' },
-        { label: 'Payments', href: '/payments' },
-        { label: 'Settings', href: '/settings' },
+        { label: "Home", href: "/", icon: faHome },
+        { label: "Bookings", href: "/bookings", icon: faCalendarCheck },
+        { label: "Payments", href: "/payments", icon: faMoneyBill },
+        { label: "Settings", href: "/settings", icon: faCog },
     ];
 
     const fetchProfile = useCallback(async () => {
@@ -99,10 +100,10 @@ export default function ProfileDashboard() {
     
     const Sidebar = (
         <aside className="w-80 p-6 space-y-6 text-white bg-white/10 backdrop-blur-md h-full">
-            <div className="flex items-center justify-between md:block">
+            <div className="flex items-center justify-between lg:block">
                 <h2 className="text-2xl font-bold tracking-wide">Welcome</h2>
                 <button
-                    className="md:hidden text-white"
+                    className="lg:hidden text-white"
                     onClick={() => setSidebarOpen(false)}
                 >
                     <FontAwesomeIcon icon={faXmark} className="w-6 h-6" />
@@ -156,7 +157,7 @@ export default function ProfileDashboard() {
     return (
         <div className="h-screen overflow-hidden bg-black text-white flex">
             {/* Mobile Toggle Button */}
-            <div className='md:hidden max-w-[1500px] mx-auto flex items-center justify-between w-full bg-black px-3 py-2 fixed top-0 z-10 border-b border-white/20 gap-3'>
+            <div className='lg:hidden max-w-[1500px] mx-auto flex items-center justify-between w-full bg-black px-3 py-2 fixed top-0 z-10 border-b border-white/20 gap-3'>
                 <div className='flex items-center gap-3'>
                     <div
                         onClick={() => setSidebarOpen(true)}
@@ -184,10 +185,10 @@ export default function ProfileDashboard() {
 
 
             {/* Desktop Sidebar */}
-            <div className="hidden md:block h-full">{Sidebar}</div>
+            <div className="hidden lg:block h-full">{Sidebar}</div>
             {/* Mobile Sidebar (Slide-in) */}
             <div
-                className={`fixed inset-0 z-40 md:hidden transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed inset-0 z-40 lg:hidden transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     } flex`}
             >
                 {/* Sidebar Panel */}
@@ -300,40 +301,62 @@ export default function ProfileDashboard() {
                             </ul>
                         </div>
 
-                        {bookings.filter(b => b.status === 'confirmed' && getDaysUntil(b.start_date) > 0 && getDaysUntil(b.start_date) <= 5).length > 0 && (
-                            <div className="mt-10">
-                                <h2 className="text-xl font-bold mb-4 text-white">⏳ Upcoming Check-ins (Next 5 Days)</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                    {bookings
-                                        .filter(b => b.status === 'confirmed' && getDaysUntil(b.start_date) > 0 && getDaysUntil(b.start_date) <= 5)
-                                        .slice(0, 3)
-                                        .map(b => (
-                                            <div key={b.id} className="bg-white/10 p-4 rounded-xl shadow hover:shadow-lg">
-                                                <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                                                    <FontAwesomeIcon icon={faBuilding} className="text-blue-300" />
-                                                    {b.apartment_title}
-                                                </h3>
-                                                <p className="text-blue-300 text-sm mb-1 flex items-center gap-2">
-                                                    <FontAwesomeIcon icon={faLocationDot} />
-                                                    {b.apartment_location}
-                                                </p>
-                                                <p className="text-gray-300 text-sm mb-1 flex items-center gap-2">
-                                                    <FontAwesomeIcon icon={faCalendarDays} />
-                                                    {b.start_date} → {b.end_date}
-                                                </p>
-                                                <p className="text-yellow-400 text-sm mb-1 flex items-center gap-2">
-                                                    <FontAwesomeIcon icon={faClock} />
-                                                    {getDaysUntil(b.start_date)} day(s) until check-in
-                                                </p>
-                                                <p className="text-sm text-white flex items-center gap-2">
-                                                    <FontAwesomeIcon icon={faIndianRupeeSign} />
-                                                    {b.amount} • via <strong>{b.method}</strong>
-                                                </p>
-                                            </div>
-                                        ))}
+                        {bookings.filter(
+                            b =>
+                                b.status === 'confirmed' &&
+                                getDaysUntil(b.start_date) > 0 &&
+                                getDaysUntil(b.start_date) <= 5
+                        ).length > 0 && (
+                                <div className="mt-10">
+                                    <h2 className="text-xl font-bold mb-4 text-white">
+                                        ⏳ Upcoming Check-ins (Next 5 Days)
+                                    </h2>
+
+                                    <div className="flex flex-wrap gap-4">
+                                        {bookings
+                                            .filter(
+                                                b =>
+                                                    b.status === 'confirmed' &&
+                                                    getDaysUntil(b.start_date) > 0 &&
+                                                    getDaysUntil(b.start_date) <= 5
+                                            )
+                                            .slice(0, 3)
+                                            .map(b => (
+                                                <div
+                                                    key={b.id}
+                                                    className="flex flex-col bg-white/10 p-4 rounded-xl shadow hover:shadow-lg w-full max-w-sm"
+                                                >
+                                                    <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faBuilding} className="text-blue-300" />
+                                                        {b.apartment_title}
+                                                    </h3>
+
+                                                    <p className="text-blue-300 text-sm mb-1 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faLocationDot} />
+                                                        {b.apartment_location}
+                                                    </p>
+
+                                                    <p className="text-gray-300 text-sm mb-1 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faCalendarDays} />
+                                                        {b.start_date} → {b.end_date}
+                                                    </p>
+
+                                                    <p className="text-yellow-400 text-sm mb-1 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faClock} />
+                                                        {getDaysUntil(b.start_date)} day(s) until check-in
+                                                    </p>
+
+                                                    <p className="text-sm text-white flex items-center gap-2 mt-auto">
+                                                        <FontAwesomeIcon icon={faIndianRupeeSign} />
+                                                        {b.amount} • via <strong>{b.method}</strong>
+                                                    </p>
+                                                </div>
+                                            ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+
+
 
                         {/* Quick Actions */}
                         <div className="mt-10">

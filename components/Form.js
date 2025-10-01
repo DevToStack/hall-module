@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendar, faUser, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import BookingCalendar from '@/components/bookingCalender';
-import Toast from '@/components/toast';
 
 const RoomAvailabilityForm = ({ open, onClose, setToast }) => {
     const [formData, setFormData] = useState({ checkin: '', checkout: '' });
