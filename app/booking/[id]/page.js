@@ -71,14 +71,14 @@ function formatForMySQL(date) {
 // Calculate number of nights between two dates
 function calculateNights(checkin, checkout) {
   if (!checkin || !checkout) return 0;
-  
+
   const checkinDate = new Date(checkin);
   const checkoutDate = new Date(checkout);
-  
+
   // Calculate difference in milliseconds and convert to days
   const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
   const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
-  
+
   return nights > 0 ? nights : 0;
 }
 
@@ -95,8 +95,8 @@ function VerificationModal({ isOpen, onClose, onConfirm, loading }) {
           </div>
           <h3 className="text-xl font-bold text-white mb-2">Confirm Your Booking</h3>
           <p className="text-gray-300 text-sm">
-            Please verify your booking details before proceeding to payment. 
-            This helps prevent automated bookings.
+            Please verify your booking details before proceeding.
+            You'll complete payment on the next page.
           </p>
         </div>
 
@@ -150,7 +150,6 @@ export default function BookingPage() {
 
   const DAILY_RATE = 200; // 200 rupees per day
   const cleaningFee = 500;
-  // Removed tax as requested
 
   // Calculate price summary whenever dates change
   useEffect(() => {
@@ -243,8 +242,8 @@ export default function BookingPage() {
 
     setFormError("");
     setError("");
-    
-    // Show verification modal instead of proceeding directly to payment
+
+    // Show verification modal
     setShowVerificationModal(true);
   };
 
@@ -254,12 +253,12 @@ export default function BookingPage() {
 
       const checkinDateTime = new Date(`${formData.checkin}T${checkinTime}`);
       const checkoutDateTime = new Date(`${formData.checkout}T${checkoutTime}`);
-      
+
       const checkinSQL = formatForMySQL(checkinDateTime);
       const checkoutSQL = formatForMySQL(checkoutDateTime);
 
-      // First, check availability and create booking
-      const lockRes = await fetch("/api/bookings/confirm", {
+      // Create a temporary booking and redirect to payment page
+      const bookingRes = await fetch("/api/bookings/create-temp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -268,82 +267,25 @@ export default function BookingPage() {
           check_in: checkinSQL,
           check_out: checkoutSQL,
           guests: formData.guests,
+          total_amount: bookingSummary.total,
+          nights: bookingSummary.nights,
         }),
       });
 
-      const lockData = await lockRes.json();
-      console.log(lockData)
-      if (!lockRes.ok) {
-        setFormError(lockData.error || "Apartment not available.");
+      const bookingData = await bookingRes.json();
+
+      if (!bookingRes.ok) {
+        setFormError(bookingData.error || "Apartment not available.");
         setShowVerificationModal(false);
         return;
       }
 
-      const bookingId = lockData.booking_id;
+      // Redirect to payment page with booking ID
+      router.push(`/payment/${bookingData.booking_id}`);
 
-      // Create Razorpay order with the calculated total
-      const orderRes = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ amount: bookingSummary.total * 100 }), // Convert to paise
-      });
-
-      if (!orderRes.ok) {
-        throw new Error("Failed to create payment order");
-      }
-
-      const order = await orderRes.json();
-
-      // Load Razorpay script
-      if (!window.Razorpay) {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-        });
-      }
-
-      const rzp = new window.Razorpay({
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.order.amount,
-        currency: "INR",
-        name: "Apartment Booking",
-        description: plan.title,
-        order_id: order.order.id,
-        handler: async (resp) => {
-          try {
-            await fetch("/api/bookings/confirm", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                booking_id: bookingId,
-                razorpay_payment_id: resp.razorpay_payment_id,
-              }),
-            });
-            router.push("/profile");
-          } catch (err) {
-            console.error("Error confirming booking:", err);
-            setError("Payment successful but failed to confirm booking. Please contact support.");
-          }
-        },
-        prefill: {
-          name: "Customer",
-          email: "customer@example.com",
-        },
-        theme: { color: "#0d9488" },
-      });
-
-      rzp.open();
-      setShowVerificationModal(false);
     } catch (err) {
       console.error("Booking error:", err);
-      setError(err.message || "Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
       setShowVerificationModal(false);
     } finally {
       setLoading(false);
@@ -558,7 +500,7 @@ export default function BookingPage() {
                     {/* Price Summary */}
                     <div className="p-4 rounded-xl border border-white/10 bg-neutral-800 shadow-sm space-y-3">
                       <p className="text-white font-semibold text-lg">Price Summary</p>
-                      
+
                       {bookingSummary ? (
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
@@ -604,7 +546,7 @@ export default function BookingPage() {
                     {/* Secure Payment Badge */}
                     <div className="flex items-center justify-center gap-2 p-3 bg-teal-900/20 rounded-lg border border-teal-800/50">
                       <ShieldCheck className="w-5 h-5 text-teal-400" />
-                      <span className="text-sm">Secure payment with SSL encryption</span>
+                      <span className="text-sm">Secure booking process</span>
                     </div>
 
                     {/* Terms */}
