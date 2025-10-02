@@ -129,7 +129,7 @@ const BookingsManagement = () => {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-900 text-neutral-200 px-4 py-8">
+        <div className="min-h-screen pb-16 bg-neutral-900 text-neutral-200 px-4 py-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-3xl font-bold text-neutral-200">Bookings Management</h1>
                 <div className="flex space-x-2">

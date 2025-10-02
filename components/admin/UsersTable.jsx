@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faUsers,
@@ -17,13 +17,30 @@ import {
     faCheck,
     faExclamationTriangle,
     faInfoCircle,
+    faClipboardList,
     faSort,
+    faShieldAlt,
     faSortUp,
     faSortDown,
     faChevronDown,
     faChevronUp,
     faDownload,
-    faCog
+    faCog,
+    faPen,
+    faCalendarCheck,
+    faCreditCard,
+    faMoneyBill,
+    faEnvelope,
+    faPhone,
+    faClock,
+    faCheckCircle,
+    faTimesCircle,
+    faBan,
+    faSyncAlt,
+    faWallet,
+    faXmark,
+    faCircleDot,
+    faIdBadge,
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function UsersTable() {
@@ -309,14 +326,11 @@ export default function UsersTable() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-6">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen pb-16 text-white p-6">
+            <div className="mx-auto">
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            User Management
-                        </h1>
                         <p className="text-gray-400 mt-2">
                             Manage your platform users and their activities
                         </p>
@@ -324,9 +338,10 @@ export default function UsersTable() {
                     <div className="flex items-center space-x-3 mt-4 lg:mt-0">
                         <button
                             onClick={fetchUsers}
-                            className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 transition-colors duration-200"
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 
+                     border border-neutral-800 rounded-lg transition-colors duration-200 text-sm text-gray-300"
                         >
-                            <FontAwesomeIcon icon={faSync} className="w-4 h-4" />
+                            <FontAwesomeIcon icon={faSync} className="w-4 h-4 text-gray-400" />
                             <span>Refresh</span>
                         </button>
                     </div>
@@ -334,72 +349,55 @@ export default function UsersTable() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <StatCard
-                        title="Total Users"
-                        value={totalUsers}
-                        icon={faUsers}
-                        color="blue"
-                    />
-                    <StatCard
-                        title="Admins"
-                        value={users.filter(u => u.role === 'admin').length}
-                        icon={faUserShield}
-                        color="purple"
-                    />
-                    <StatCard
-                        title="Active Today"
-                        value={users.filter(u => {
-                            const userDate = new Date(u.created_at);
-                            const today = new Date();
-                            return userDate.toDateString() === today.toDateString();
-                        }).length}
-                        icon={faUser}
-                        color="green"
-                    />
-                    <StatCard
-                        title="Filtered"
-                        value={filteredCount}
-                        icon={faFilter}
-                        color="orange"
-                    />
+                    <StatCard title="Total Users" value={totalUsers} icon={faUsers} color="blue" />
+                    <StatCard title="Admins" value={users.filter(u => u.role === 'admin').length} icon={faUserShield} color="purple" />
+                    <StatCard title="Active Today" value={users.filter(u => {
+                        const userDate = new Date(u.created_at);
+                        const today = new Date();
+                        return userDate.toDateString() === today.toDateString();
+                    }).length} icon={faUser} color="green" />
+                    <StatCard title="Filtered" value={filteredCount} icon={faFilter} color="orange" />
                 </div>
 
                 {/* Filters Bar */}
-                <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 mb-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4 mb-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         {/* Search */}
                         <div className="relative flex-1 max-w-md">
                             <FontAwesomeIcon
                                 icon={faSearch}
-                                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"
                             />
                             <input
                                 type="text"
                                 placeholder="Search users by name or email..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                                className="w-full pl-10 pr-4 py-2 bg-neutral-950 border border-neutral-800 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-white text-gray-300 placeholder-gray-500"
                             />
                         </div>
 
                         {/* Filter Controls */}
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 transition-colors duration-200"
+                                className="flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 
+                       border border-neutral-800 rounded-lg text-sm text-gray-300 transition-colors"
                             >
-                                <FontAwesomeIcon icon={faFilter} className="w-4 h-4" />
+                                <FontAwesomeIcon icon={faFilter} className="w-4 h-4 text-gray-400" />
                                 <span>Filters</span>
                                 <FontAwesomeIcon
                                     icon={showFilters ? faChevronUp : faChevronDown}
-                                    className="w-3 h-3"
+                                    className="w-3 h-3 text-gray-400"
                                 />
                             </button>
 
-                            {(searchTerm || roleFilter !== 'all' || dateFilter !== 'all') && (
+                            {(searchTerm || roleFilter !== "all" || dateFilter !== "all") && (
                                 <button
                                     onClick={clearFilters}
-                                    className="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-white transition-colors duration-200"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white 
+                         hover:bg-neutral-800 rounded-lg transition-colors"
                                 >
                                     <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
                                     <span>Clear</span>
@@ -410,16 +408,15 @@ export default function UsersTable() {
 
                     {/* Expanded Filters */}
                     {showFilters && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-800">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-800">
                             {/* Role Filter */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Role
-                                </label>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
                                 <select
                                     value={roleFilter}
                                     onChange={(e) => setRoleFilter(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-300"
                                 >
                                     <option value="all">All Roles</option>
                                     <option value="guest">Guest</option>
@@ -429,13 +426,12 @@ export default function UsersTable() {
 
                             {/* Date Filter */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Join Date
-                                </label>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Join Date</label>
                                 <select
                                     value={dateFilter}
                                     onChange={(e) => setDateFilter(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-300"
                                 >
                                     <option value="all">All Time</option>
                                     <option value="today">Today</option>
@@ -447,13 +443,12 @@ export default function UsersTable() {
 
                             {/* Sort By */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Sort By
-                                </label>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Sort By</label>
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-300"
                                 >
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
@@ -468,16 +463,16 @@ export default function UsersTable() {
                 </div>
 
                 {/* Users Table */}
-                <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
                     {/* Table Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
                                     checked={selectedUsers.size > 0 && selectedUsers.size === filteredUsers.length}
                                     onChange={toggleSelectAll}
-                                    className="rounded border-gray-600 bg-gray-800"
+                                    className="rounded border-neutral-700 bg-neutral-950"
                                 />
                                 <span className="text-sm text-gray-400">
                                     {selectedCount > 0 ? `${selectedCount} selected` : `${filteredCount} users`}
@@ -486,8 +481,8 @@ export default function UsersTable() {
                         </div>
 
                         {selectedCount > 0 && (
-                            <div className="flex items-center space-x-2">
-                                <button className="flex items-center space-x-2 px-3 py-1 text-sm text-red-400 hover:text-red-300 transition-colors">
+                            <div className="flex items-center gap-2">
+                                <button className="flex items-center gap-2 px-3 py-1 text-sm text-red-400 hover:text-red-300 transition-colors">
                                     <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
                                     <span>Delete Selected</span>
                                 </button>
@@ -499,46 +494,36 @@ export default function UsersTable() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-gray-800">
+                                <tr className="border-b border-neutral-800">
                                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
                                         <input
                                             type="checkbox"
                                             checked={selectedUsers.size > 0 && selectedUsers.size === filteredUsers.length}
                                             onChange={toggleSelectAll}
-                                            className="rounded border-gray-600 bg-gray-800"
+                                            className="rounded border-neutral-700 bg-neutral-950"
                                         />
                                     </th>
                                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">User</th>
                                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Role</th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
-                                        <div className="flex items-center space-x-1">
-                                            <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
-                                            <span>Bookings</span>
-                                        </div>
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">
-                                        <div className="flex items-center space-x-1">
-                                            <FontAwesomeIcon icon={faDollarSign} className="w-4 h-4" />
-                                            <span>Spent</span>
-                                        </div>
-                                    </th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Bookings</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Spent</th>
                                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Joined</th>
                                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.map((user) => (
-                                    <tr key={user.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                                    <tr key={user.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/40 transition-colors">
                                         <td className="px-4 py-3">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedUsers.has(user.id)}
                                                 onChange={() => toggleUserSelection(user.id)}
-                                                className="rounded border-gray-600 bg-gray-800"
+                                                className="rounded border-neutral-700 bg-neutral-950"
                                             />
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex items-center space-x-3">
+                                            <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                                                     <FontAwesomeIcon icon={faUser} className="w-4 h-4 text-white" />
                                                 </div>
@@ -549,51 +534,43 @@ export default function UsersTable() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                                                }`}>
+                                            <span
+                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === "admin"
+                                                        ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                                        : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                                    }`}
+                                            >
                                                 <FontAwesomeIcon
-                                                    icon={user.role === 'admin' ? faUserShield : faUser}
+                                                    icon={user.role === "admin" ? faUserShield : faUser}
                                                     className="w-3 h-3 mr-1"
                                                 />
                                                 {user.role}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center space-x-2">
-                                                <FontAwesomeIcon icon={faCalendar} className="w-4 h-4 text-gray-400" />
-                                                <span>{user.total_bookings}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center space-x-2">
-                                                <FontAwesomeIcon icon={faDollarSign} className="w-4 h-4 text-gray-400" />
-                                                <span>${user.statistics?.total_spent || 0}</span>
-                                            </div>
-                                        </td>
+                                        <td className="px-4 py-3 text-gray-300">{user.total_bookings}</td>
+                                        <td className="px-4 py-3 text-gray-300">${user.statistics?.total_spent || 0}</td>
                                         <td className="px-4 py-3 text-sm text-gray-400">
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex items-center space-x-2">
+                                            <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => fetchUserDetails(user.id)}
-                                                    className="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors duration-200"
+                                                    className="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                                                     title="View Details"
                                                 >
                                                     <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleEdit(user)}
-                                                    className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors duration-200"
+                                                    className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors"
                                                     title="Edit User"
                                                 >
                                                     <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => confirmDelete(user.id, user.name)}
-                                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors duration-200"
+                                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     title="Delete User"
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
@@ -614,7 +591,7 @@ export default function UsersTable() {
                             <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
                             <button
                                 onClick={clearFilters}
-                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 transition-colors duration-200"
+                                className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg transition-colors"
                             >
                                 Clear Filters
                             </button>
@@ -682,39 +659,16 @@ export default function UsersTable() {
     );
 }
 
-// Stat Card Component
-function StatCard({ title, value, icon, color }) {
-    const colorClasses = {
-        blue: 'from-blue-500 to-cyan-500',
-        purple: 'from-purple-500 to-pink-500',
-        green: 'from-green-500 to-emerald-500',
-        orange: 'from-orange-500 to-red-500'
-    };
 
-    return (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-400">{title}</p>
-                    <p className="text-2xl font-bold mt-1">{value}</p>
-                </div>
-                <div className={`p-3 rounded-lg bg-gradient-to-r ${colorClasses[color]} bg-opacity-10`}>
-                    <FontAwesomeIcon
-                        icon={icon}
-                        className={`w-6 h-6 bg-gradient-to-r ${colorClasses[color]} bg-clip-text text-transparent`}
-                    />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Reusable Component: Section
+// ✅ Section (Vercel-like)
 function Section({ title, children, action }) {
     return (
-        <div className="bg-gray-700 p-4 rounded-xl border border-gray-600">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-lg">{title}</h4>
+        <div className="bg-neutral-900 rounded-2xl shadow-sm border border-neutral-800 p-5">
+            <div className="flex justify-between items-center mb-4">
+                <h4 className="font-medium text-base text-white flex items-center gap-2">
+                    <FontAwesomeIcon icon={faCircleDot} className="text-blue-400" />
+                    {title}
+                </h4>
                 {action}
             </div>
             {children}
@@ -722,110 +676,97 @@ function Section({ title, children, action }) {
     );
 }
 
-// Reusable Component: Info Field
+// ✅ Info Field
 function InfoField({ label, value, important = false, badge = false, badgeColor = "gray", mono = false }) {
     const badgeColors = {
-        gray: "bg-gray-600",
-        green: "bg-green-600",
-        blue: "bg-blue-600",
-        purple: "bg-purple-600",
-        red: "bg-red-600",
-        yellow: "bg-yellow-600"
+        gray: "bg-neutral-700 text-gray-200",
+        green: "bg-emerald-600 text-white",
+        blue: "bg-blue-600 text-white",
+        purple: "bg-purple-600 text-white",
+        red: "bg-red-600 text-white",
+        yellow: "bg-yellow-500 text-black",
     };
 
     return (
         <div>
-            <label className="text-sm text-gray-400 block mb-1">{label}</label>
+            <label className="text-xs text-neutral-500 block mb-1">{label}</label>
             {badge ? (
-                <span className={`px-2 py-1 rounded text-xs ${badgeColors[badgeColor]} text-white`}>
+                <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${badgeColors[badgeColor]}`}>
+                    <FontAwesomeIcon
+                        icon={value === "admin" ? faUserShield : faUser}
+                        className="mr-1"
+                    />
                     {value}
                 </span>
             ) : (
-                <p className={`${important ? 'font-semibold' : ''} ${mono ? 'font-mono text-sm' : ''}`}>
-                    {value || 'Not provided'}
+                <p
+                    className={`${important ? "font-medium text-white" : "text-neutral-300"} ${mono ? "font-mono text-sm" : ""
+                        }`}
+                >
+                    {value || "—"}
                 </p>
             )}
         </div>
     );
 }
 
-
-// Reusable Component: Data Table
-function DataTable({ data, columns, emptyMessage }) {
-    if (data.length === 0) {
-        return <EmptyState message={emptyMessage} />;
-    }
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b border-gray-600">
-                        {columns.map(column => (
-                            <th
-                                key={column.key}
-                                className={`p-2 text-left ${column.center ? 'text-center' : ''}`}
-                            >
-                                {column.label}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((item, index) => (
-                        <tr key={item.id || index} className="border-b border-gray-600/50 hover:bg-gray-600/20 transition-colors">
-                            {columns.map(column => (
-                                <td
-                                    key={column.key}
-                                    className={`p-2 ${column.center ? 'text-center' : ''}`}
-                                >
-                                    {column.render ? column.render(item) : item[column.key]}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-}
-
-// Reusable Component: Status Badge
+// ✅ Status Badge
 function StatusBadge({ status, variants }) {
     const colorClasses = {
-        green: "bg-green-600 text-white",
+        green: "bg-emerald-600 text-white",
         blue: "bg-blue-600 text-white",
-        yellow: "bg-yellow-600 text-white",
+        yellow: "bg-yellow-500 text-black",
         red: "bg-red-600 text-white",
-        gray: "bg-gray-600 text-white",
-        purple: "bg-purple-600 text-white"
+        gray: "bg-neutral-700 text-gray-200",
+        purple: "bg-purple-600 text-white",
+    };
+
+    const icons = {
+        confirmed: faCheckCircle,
+        pending: faClock,
+        cancelled: faTimesCircle,
+        expired: faBan,
+        refunded: faSyncAlt,
+        paid: faWallet,
+        failed: faExclamationTriangle,
     };
 
     return (
-        <span className={`px-2 py-1 rounded text-xs ${colorClasses[variants[status]] || colorClasses.gray}`}>
+        <span
+            className={`px-2 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 ${colorClasses[variants[status]] || colorClasses.gray
+                }`}
+        >
+            <FontAwesomeIcon icon={icons[status] || faCircleDot} />
             {status}
         </span>
     );
 }
 
-// Reusable Component: Review Card
+// ✅ Review Card
 function ReviewCard({ review }) {
     return (
-        <div className="border-b border-gray-600 pb-4 last:border-b-0">
+        <div className="border-b border-neutral-800 pb-4 last:border-b-0">
             <div className="flex justify-between items-start">
                 <div className="flex-1">
-                    <p className="font-semibold">{review.apartment_title}</p>
+                    <p className="font-medium text-white">{review.apartment_title}</p>
                     <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-yellow-400 text-lg">
-                            {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                        <span className="text-yellow-400">
+                            {Array.from({ length: review.rating }, (_, i) => (
+                                <FontAwesomeIcon key={i} icon={faStar} />
+                            ))}
+                            {Array.from({ length: 5 - review.rating }, (_, i) => (
+                                <FontAwesomeIcon key={i} icon={faStar} className="text-neutral-600" />
+                            ))}
                         </span>
-                        <span className="text-sm text-gray-400">({review.rating}/5)</span>
+                        <span className="text-sm text-neutral-500">({review.rating}/5)</span>
                     </div>
                     {review.comment && (
-                        <p className="text-gray-300 mt-2 bg-gray-600/30 p-3 rounded-lg">{review.comment}</p>
+                        <p className="text-neutral-300 mt-2 bg-neutral-800/50 p-3 rounded-lg">
+                            {review.comment}
+                        </p>
                     )}
                 </div>
-                <span className="text-sm text-gray-400 whitespace-nowrap ml-4">
+                <span className="text-sm text-neutral-500 whitespace-nowrap ml-4">
                     {new Date(review.review_date).toLocaleDateString()}
                 </span>
             </div>
@@ -833,184 +774,174 @@ function ReviewCard({ review }) {
     );
 }
 
-// Reusable Component: Activity Item
+// ✅ Activity Item
 function ActivityItem({ activity }) {
     return (
-        <div className="flex justify-between items-center border-b border-gray-600 pb-3 last:border-b-0">
+        <div className="flex justify-between items-center border-b border-neutral-800 pb-3 last:border-b-0">
             <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <p>{activity.message}</p>
+                <FontAwesomeIcon icon={faCircleDot} className="text-blue-400" />
+                <p className="text-neutral-300">{activity.message}</p>
             </div>
-            <span className="text-sm text-gray-400 whitespace-nowrap">
+            <span className="text-sm text-neutral-500 whitespace-nowrap">
                 {new Date(activity.date).toLocaleString()}
             </span>
         </div>
     );
 }
 
-// Reusable Component: Empty State
+// ✅ Empty State
 function EmptyState({ message }) {
     return (
-        <div className="text-center py-8 text-gray-400">
-            <div className="text-4xl mb-2">📭</div>
+        <div className="text-center py-10 text-neutral-500">
+            <FontAwesomeIcon icon={faEnvelope} className="text-3xl mb-2" />
             <p>{message}</p>
         </div>
     );
 }
 
-// User Details Modal Component
+// ✅ User Details Modal (Vercel style) with Font Awesome
 function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
-    const { user, bookings, payments, reviews, sessions, activities } = userDetails;
+    const { user, bookings, payments, reviews, activities } = userDetails;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 p-6 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+            <div className="bg-[#0a0a0a] p-6 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-800">
+                {/* Header */}
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        User Details: {user.name}
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
+                        <FontAwesomeIcon icon={faUser} className="mr-2" />
+                        {user.name}
                     </h3>
                     <div className="flex space-x-2">
                         <button
                             onClick={() => onEdit(user)}
-                            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition flex items-center"
                         >
-                            <span>✏️</span>
-                            <span>Edit User</span>
+                            <FontAwesomeIcon icon={faPen} className="mr-2" /> Edit
                         </button>
                         <button
                             onClick={onClose}
-                            className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-lg transition-colors duration-200"
+                            className="bg-gray-700 hover:bg-gray-800 text-white p-2 rounded-lg transition"
                         >
-                            <span className="text-xl">×</span>
+                            <FontAwesomeIcon icon={faTimes} />
                         </button>
                     </div>
                 </div>
 
+                {/* Loader */}
                 {loading ? (
-                    <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    <div className="flex justify-center items-center py-10">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent"></div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        {/* User Basic Info */}
+                    <div className="space-y-8">
+                        {/* Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <StatCard
-                                title="Total Bookings"
+                                title="Bookings"
                                 value={user.statistics.total_bookings}
-                                color="green"
-                                icon="📅"
+                                color="from-green-400 to-emerald-600"
+                                icon={faClipboardList}
                             />
                             <StatCard
-                                title="Total Payments"
+                                title="Payments"
                                 value={user.statistics.total_payments}
-                                color="blue"
-                                icon="💰"
+                                color="from-blue-400 to-indigo-600"
+                                icon={faMoneyBill}
                             />
                             <StatCard
-                                title="Total Reviews"
+                                title="Reviews"
                                 value={user.statistics.total_reviews}
-                                color="yellow"
-                                icon="⭐"
+                                color="from-yellow-400 to-orange-500"
+                                icon={faStar}
                             />
                             <StatCard
                                 title="Total Spent"
                                 value={`$${user.statistics.total_spent || 0}`}
-                                color="purple"
-                                icon="💳"
+                                color="from-purple-400 to-pink-500"
+                                icon={faCreditCard}
                             />
                         </div>
 
-                        {/* Personal Information */}
-                        <Section title="Personal Information" action={
-                            <button
-                                onClick={() => onEdit(user)}
-                                className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition-colors duration-200"
-                            >
-                                Edit
-                            </button>
-                        }>
+                        {/* Personal Info */}
+                        <Section title="Personal Information">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InfoField label="Name" value={user.name} important />
-                                <InfoField label="Email" value={user.email} />
-                                <InfoField label="Alternate Email" value={user.alternate_email} />
-                                <InfoField label="Phone" value={user.phone_number} />
-                                <InfoField label="Alternate Phone" value={user.alternate_phone} />
+                                <InfoField icon={faUser} label="Name" value={user.name} />
+                                <InfoField icon={faEnvelope} label="Email" value={user.email} />
+                                <InfoField icon={faPhone} label="Phone" value={user.phone_number} />
                                 <InfoField
-                                    label="Role"
-                                    value={user.role}
-                                    badge
-                                    badgeColor={user.role === 'admin' ? 'purple' : 'gray'}
+                                    icon={faCalendar}
+                                    label="Member Since"
+                                    value={new Date(user.created_at).toLocaleDateString()}
                                 />
-                                <InfoField label="Member Since" value={new Date(user.created_at).toLocaleDateString()} />
-                                <InfoField label="User ID" value={user.id} mono />
+                                <InfoField icon={faIdBadge} label="User ID" value={user.id} mono />
                             </div>
                         </Section>
 
                         {/* Bookings */}
-                        <Section title={`Booking History (${bookings.length})`}>
+                        <Section title={`Bookings (${bookings.length})`}>
                             <DataTable
                                 data={bookings}
                                 columns={[
-                                    { key: 'id', label: 'Booking ID' },
-                                    { key: 'apartment_title', label: 'Apartment' },
+                                    { key: "id", label: "Booking ID" },
+                                    { key: "apartment_title", label: "Apartment" },
                                     {
-                                        key: 'dates',
-                                        label: 'Dates',
-                                        render: (booking) =>
-                                            `${new Date(booking.start_date).toLocaleDateString()} - ${new Date(booking.end_date).toLocaleDateString()}`
+                                        key: "dates",
+                                        label: "Dates",
+                                        render: (b) =>
+                                            `${new Date(b.start_date).toLocaleDateString()} - ${new Date(
+                                                b.end_date
+                                            ).toLocaleDateString()}`,
                                     },
-                                    { key: 'nights', label: 'Nights', center: true },
-                                    { key: 'total_amount', label: 'Amount', render: (booking) => `$${booking.total_amount}` },
+                                    { key: "nights", label: "Nights", center: true },
                                     {
-                                        key: 'status',
-                                        label: 'Status',
-                                        render: (booking) => (
+                                        key: "status",
+                                        label: "Status",
+                                        render: (b) => (
                                             <StatusBadge
-                                                status={booking.status}
+                                                status={b.status}
                                                 variants={{
-                                                    confirmed: 'green',
-                                                    pending: 'yellow',
-                                                    cancelled: 'red',
-                                                    expired: 'gray'
+                                                    confirmed: "green",
+                                                    pending: "yellow",
+                                                    cancelled: "red",
+                                                    expired: "gray",
                                                 }}
                                             />
-                                        )
-                                    }
+                                        ),
+                                    },
                                 ]}
                                 emptyMessage="No bookings found"
                             />
                         </Section>
 
                         {/* Payments */}
-                        <Section title={`Payment History (${payments.length})`}>
+                        <Section title={`Payments (${payments.length})`}>
                             <DataTable
                                 data={payments}
                                 columns={[
-                                    { key: 'id', label: 'Payment ID' },
-                                    { key: 'booking_id', label: 'Booking ID' },
-                                    { key: 'apartment_title', label: 'Apartment' },
-                                    { key: 'amount', label: 'Amount', render: (payment) => `$${payment.amount}` },
-                                    { key: 'method', label: 'Method' },
+                                    { key: "id", label: "Payment ID" },
+                                    { key: "booking_id", label: "Booking ID" },
+                                    { key: "amount", label: "Amount", render: (p) => `$${p.amount}` },
                                     {
-                                        key: 'status',
-                                        label: 'Status',
-                                        render: (payment) => (
+                                        key: "status",
+                                        label: "Status",
+                                        render: (p) => (
                                             <StatusBadge
-                                                status={payment.status}
+                                                status={p.status}
                                                 variants={{
-                                                    paid: 'green',
-                                                    refunded: 'blue',
-                                                    failed: 'red',
-                                                    cancelled: 'gray'
+                                                    paid: "green",
+                                                    refunded: "blue",
+                                                    failed: "red",
+                                                    cancelled: "gray",
                                                 }}
                                             />
-                                        )
+                                        ),
                                     },
                                     {
-                                        key: 'paid_at',
-                                        label: 'Date',
-                                        render: (payment) => new Date(payment.paid_at).toLocaleDateString()
-                                    }
+                                        key: "paid_at",
+                                        label: "Date",
+                                        render: (p) => new Date(p.paid_at).toLocaleDateString(),
+                                    },
                                 ]}
                                 emptyMessage="No payments found"
                             />
@@ -1020,21 +951,21 @@ function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
                         <Section title={`Reviews (${reviews.length})`}>
                             {reviews.length > 0 ? (
                                 <div className="space-y-4">
-                                    {reviews.map(review => (
-                                        <ReviewCard key={review.id} review={review} />
+                                    {reviews.map((r) => (
+                                        <ReviewCard key={r.id} review={r} />
                                     ))}
                                 </div>
                             ) : (
-                                <EmptyState message="No reviews found" />
+                                <EmptyState message="No reviews yet" />
                             )}
                         </Section>
 
-                        {/* Recent Activity */}
+                        {/* Activity */}
                         <Section title="Recent Activity">
                             {activities.length > 0 ? (
                                 <div className="space-y-3">
-                                    {activities.map(activity => (
-                                        <ActivityItem key={activity.id} activity={activity} />
+                                    {activities.map((a) => (
+                                        <ActivityItem key={a.id} activity={a} />
                                     ))}
                                 </div>
                             ) : (
@@ -1048,59 +979,141 @@ function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
     );
 }
 
-// Edit User Modal Component
+// ✅ StatCard with Font Awesome
+function StatCard({ title, value, color, icon }) {
+    const colors = {
+        green: "text-emerald-400",
+        blue: "text-blue-400",
+        yellow: "text-yellow-400",
+        purple: "text-purple-400",
+    };
+
+    return (
+        <div className="bg-neutral-800 rounded-xl p-4 flex flex-col items-center justify-center">
+            <FontAwesomeIcon icon={icon} className={`text-2xl mb-2 ${colors[color]}`} />
+            <h4 className="text-neutral-400 text-sm">{title}</h4>
+            <p className="text-white text-lg font-semibold">{value}</p>
+        </div>
+    );
+}
+
+function DataTable({ data, columns, emptyMessage }) {
+    if (!data || data.length === 0) {
+        return <EmptyState message={emptyMessage} />;
+    }
+
+    return (
+        <div className="overflow-x-auto rounded-xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-sm shadow-lg">
+            <table className="w-full text-sm text-gray-300">
+                {/* Table Head */}
+                <thead>
+                    <tr className="border-b border-neutral-800 bg-neutral-900/80">
+                        {columns.map((column) => (
+                            <th
+                                key={column.key}
+                                className={`px-4 py-3 text-left font-medium text-gray-400 tracking-wide ${column.center ? "text-center" : ""
+                                    }`}
+                            >
+                                {column.icon && (
+                                    <FontAwesomeIcon
+                                        icon={column.icon}
+                                        className="mr-2 text-gray-500"
+                                    />
+                                )}
+                                {column.label}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+
+                {/* Table Body */}
+                <tbody>
+                    {data.map((item, index) => (
+                        <tr
+                            key={item.id || index}
+                            className="border-b border-neutral-800 hover:bg-neutral-800/50 transition-colors"
+                        >
+                            {columns.map((column) => (
+                                <td
+                                    key={column.key}
+                                    className={`px-4 py-3 ${column.center ? "text-center" : "text-left"
+                                        }`}
+                                >
+                                    {column.render ? column.render(item) : item[column.key]}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+
 function EditUserModal({ formData, onInputChange, onSubmit, onClose }) {
     return (
         <Modal title="Edit User" onClose={onClose}>
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form
+                onSubmit={onSubmit}
+                className="space-y-6 text-sm text-gray-300"
+            >
+                {/* Name */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
+                    <label className="block mb-2 text-gray-400 font-medium flex items-center gap-2">
+                        <FontAwesomeIcon icon={faUser} className="text-gray-500" />
+                        <span>Name</span>
+                    </label>
                     <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={onInputChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent
+                       transition-all placeholder-gray-500"
+                        placeholder="Enter user name"
                         required
                     />
                 </div>
 
+                {/* Email */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <label className="block mb-2 text-gray-400 font-medium flex items-center gap-2">
+                        <FontAwesomeIcon icon={faEnvelope} className="text-gray-500" />
+                        <span>Email</span>
+                    </label>
                     <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={onInputChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:white focus:border-transparent
+                       transition-all placeholder-gray-500"
+                        placeholder="user@example.com"
                         required
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
-                    <select
-                        name="role"
-                        value={formData.role}
-                        onChange={onInputChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-                    >
-                        <option value="guest">Guest</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+                {/* Role */}
+                <RoleDropdown value={formData.role} onChange={onInputChange} />
 
-                <div className="flex justify-end space-x-3 pt-4">
+                {/* Actions */}
+                <div className="flex justify-end gap-3 pt-5">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 text-gray-400 hover:text-white hover:bg-neutral-800 
+                       rounded-lg transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 
+                       hover:from-blue-500 hover:to-purple-500 rounded-lg 
+                       text-white font-medium shadow-md transition-all"
                     >
                         Update User
                     </button>
@@ -1110,34 +1123,94 @@ function EditUserModal({ formData, onInputChange, onSubmit, onClose }) {
     );
 }
 
-// Reusable Modal Component
+const roleOptions = [
+    { label: "Guest", value: "guest", icon: faUser },
+    { label: "Admin", value: "admin", icon: faUserShield },
+  ];
+
+function RoleDropdown({ value, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (ref.current && !ref.current.contains(event.target)) setOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selected = roleOptions.find((r) => r.value === value);
+
+    return (
+        <div className="relative" ref={ref}>
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full flex justify-between items-center px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-gray-300 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    <FontAwesomeIcon icon={selected.icon} className="w-4 h-4 text-gray-400" />
+                    <span>{selected.label}</span>
+                </div>
+                <FontAwesomeIcon icon={faChevronDown} className="w-3 h-3 text-gray-400" />
+            </button>
+
+            {open && (
+                <ul className="absolute mt-1 w-full bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg z-10">
+                    {roleOptions.map((role) => (
+                        <li
+                            key={role.value}
+                            onClick={() => {
+                                onChange({ target: { name: "role", value: role.value } });
+                                setOpen(false);
+                            }}
+                            className={`cursor-pointer flex items-center gap-2 px-3 py-2 text-gray-300 hover:bg-neutral-800 transition-colors ${role.value === value ? "bg-neutral-800 text-blue-400" : ""
+                                }`}
+                        >
+                            <FontAwesomeIcon icon={role.icon} className="w-4 h-4" />
+                            <span>{role.label}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+  }
+
 function Modal({ title, children, onClose, size = "md" }) {
     const sizeClasses = {
         sm: "max-w-md",
         md: "max-w-lg",
         lg: "max-w-2xl",
-        xl: "max-w-4xl"
+        xl: "max-w-4xl",
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className={`bg-gray-900 rounded-xl border border-gray-800 w-full ${sizeClasses[size]} shadow-2xl animate-scale-in`}>
-                <div className="flex items-center justify-between p-6 border-b border-gray-800">
-                    <h3 className="text-xl font-semibold">{title}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div
+                className={`bg-neutral-900 rounded-xl border border-neutral-800 w-full ${sizeClasses[size]} 
+                      shadow-2xl animate-scale-in transition-transform duration-200`}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+                    <h3 className="text-xl font-semibold text-gray-100">{title}</h3>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="text-gray-400 hover:text-white p-1 rounded-lg transition-colors"
+                        aria-label="Close Modal"
                     >
                         <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
                     </button>
                 </div>
-                <div className="p-6">
-                    {children}
-                </div>
+
+                {/* Body */}
+                <div className="p-6 text-gray-300">{children}</div>
             </div>
         </div>
     );
-}
+  }
 
 // Confirmation Modal Component
 function ConfirmationModal({ title, message, confirmText, cancelText, onConfirm, onCancel, type = "danger" }) {
