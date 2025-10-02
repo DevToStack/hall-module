@@ -317,7 +317,7 @@ export default function UsersTable() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black text-white p-6">
+            <div className="min-h-screen text-white p-6">
                 <div className="flex items-center justify-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                 </div>
@@ -326,7 +326,7 @@ export default function UsersTable() {
     }
 
     return (
-        <div className="min-h-screen pb-16 text-white p-6">
+        <div className="min-h-screen max-sm:pb-16 text-white p-6">
             <div className="mx-auto">
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">

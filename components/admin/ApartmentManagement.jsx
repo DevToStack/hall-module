@@ -12,7 +12,7 @@ const initialFormState = {
     available: true,
 };
 
-const ApartmentsManager = ({ apartments, loading, onRefresh }) => {
+const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
     const [showForm, setShowForm] = useState(false);
     const [editingApartment, setEditingApartment] = useState(null);
     const [formData, setFormData] = useState(initialFormState);
@@ -29,16 +29,21 @@ const ApartmentsManager = ({ apartments, loading, onRefresh }) => {
     const [sortOrder, setSortOrder] = useState('asc');
 
     const filteredAndSortedApartments = useMemo(() => {
+        if (!apartments || apartments.length === 0) return [];
+
         let filtered = apartments.filter((apartment) => {
             const matchesSearch =
-                apartment.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-                apartment.description.toLowerCase().includes(filters.search.toLowerCase());
+                apartment.title?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                apartment.description?.toLowerCase().includes(filters.search.toLowerCase());
+
             const matchesLocation =
-                !filters.location || apartment.location.toLowerCase().includes(filters.location.toLowerCase());
+                !filters.location || apartment.location?.toLowerCase().includes(filters.location.toLowerCase());
+
             const matchesAvailability =
                 filters.availability === 'all' ||
                 (filters.availability === 'available' && apartment.available) ||
                 (filters.availability === 'unavailable' && !apartment.available);
+
             const matchesMinPrice = !filters.minPrice || apartment.price_per_night >= Number(filters.minPrice);
             const matchesMaxPrice = !filters.maxPrice || apartment.price_per_night <= Number(filters.maxPrice);
 
@@ -61,6 +66,7 @@ const ApartmentsManager = ({ apartments, loading, onRefresh }) => {
 
         return filtered;
     }, [apartments, filters, sortBy, sortOrder]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -143,7 +149,7 @@ const ApartmentsManager = ({ apartments, loading, onRefresh }) => {
     const getImageUrl = (apartment) => apartment.image_url || '';
 
     return (
-        <section className="p-6 pb-16 min-h-screen">
+        <section className="max-sm:p-6 max-sm:pb-16 min-h-screen">
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>

@@ -113,7 +113,7 @@ export default function AdminDashboardStats() {
     };
 
     return (
-        <section className="p-6 pb-20">
+        <section className="max-sm:p-6 max-sm:pb-20">
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
