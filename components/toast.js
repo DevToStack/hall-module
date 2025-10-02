@@ -10,13 +10,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Toast({ message, type = "error", onClose }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [onClose]);
+    useEffect(() => {
+      const timer = setTimeout(onClose, 3000);
+      return () => clearTimeout(timer);
+      // Remove [onClose] if you want it to run only once
+    }, []);
 
   const icon =
     type === "success"

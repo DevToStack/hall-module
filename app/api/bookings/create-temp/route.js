@@ -26,7 +26,11 @@ export async function POST(request) {
 
         const cookieStore = await cookies(); // ✅ await here
         const sessionToken = cookieStore.get('token')?.value;
+        console.log("JWT_SECRET in verify:", process.env.JWT_SECRET);
+        console.log("Token being verified:", sessionToken);
+        console.log("Request cookie header:", request.headers.get("cookie"));
 
+        
         if (!sessionToken) {
             return NextResponse.json(
                 { error: 'Authentication required', code: 'UNAUTHORIZED' },
@@ -36,6 +40,7 @@ export async function POST(request) {
 
         // Verify token synchronously
         const tokenResult = verifyToken(sessionToken);
+        console.log(tokenResult)
         if (!tokenResult.valid) {
             return NextResponse.json(
                 { error: 'Invalid or expired session', code: 'UNAUTHORIZED' },

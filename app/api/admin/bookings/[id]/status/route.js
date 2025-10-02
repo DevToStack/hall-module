@@ -3,20 +3,18 @@ import { query } from '@/lib/mysql-wrapper';
 import { emailService } from '@/lib/emailService';
 
 export async function PUT(request, { params }) {
-    try {
-        const { id } = params;
+
+    try{
+        const { id } = params; // ✅ correct
         const { status, admin_notes } = await request.json();
 
-        // ✅ Validate status
+        // Validate status
         const validStatuses = ['pending', 'confirmed', 'cancelled', 'expired'];
         if (!validStatuses.includes(status)) {
-            return NextResponse.json(
-                { success: false, message: 'Invalid status' },
-                { status: 400 }
-            );
+            return NextResponse.json({ success: false, message: 'Invalid status' }, { status: 400 });
         }
 
-        // ✅ Get current booking details
+        // Get current booking
         const currentBookings = await query(
             `SELECT b.*, u.email as user_email, u.name as user_name, a.title as apartment_title
              FROM bookings b
@@ -26,56 +24,40 @@ export async function PUT(request, { params }) {
             [id]
         );
 
-        if (currentBookings.length === 0) {
-            return NextResponse.json(
-                { success: false, message: 'Booking not found' },
-                { status: 404 }
-            );
+        if (!currentBookings.length) {
+            return NextResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
         }
 
         const currentBooking = currentBookings[0];
 
-        // ✅ Update booking status
+        // Update status
         let expiresAt = currentBooking.expires_at;
-        if (status === 'confirmed' && currentBooking.status === 'pending') {
-            expiresAt = null; // reset expiry if confirming
-        }
+        if (status === 'confirmed' && currentBooking.status === 'pending') expiresAt = null;
 
-        await query(
-            `UPDATE bookings SET status = ?, expires_at = ? WHERE id = ?`,
-            [status, expiresAt, id]
-        );
+        await query(`UPDATE bookings SET status = ?, expires_at = ? WHERE id = ?`, [status, expiresAt, id]);
 
-        // ✅ Send email notifications
+        // Send emails
         if (status === 'confirmed' && currentBooking.status === 'pending') {
-            try {
-                await emailService.sendBookingConfirmation({
-                    to: currentBooking.user_email,
-                    userName: currentBooking.user_name,
-                    apartmentTitle: currentBooking.apartment_title,
-                    bookingId: id,
-                    startDate: currentBooking.start_date,
-                    endDate: currentBooking.end_date,
-                    nextSteps: 'Please proceed with the payment to secure your booking.',
-                });
-            } catch (err) {
-                console.error('❌ Email confirmation failed:', err);
-            }
+            await emailService.sendBookingConfirmation({
+                to: currentBooking.user_email,
+                userName: currentBooking.user_name,
+                apartmentTitle: currentBooking.apartment_title,
+                bookingId: id,
+                startDate: currentBooking.start_date,
+                endDate: currentBooking.end_date,
+                nextSteps: 'Please proceed with the payment to secure your booking.',
+            });
         } else if (status === 'cancelled') {
-            try {
-                await emailService.sendBookingCancellation({
-                    to: currentBooking.user_email,
-                    userName: currentBooking.user_name,
-                    apartmentTitle: currentBooking.apartment_title,
-                    bookingId: id,
-                    adminNotes: admin_notes,
-                });
-            } catch (err) {
-                console.error('❌ Email cancellation failed:', err);
-            }
+            await emailService.sendBookingCancellation({
+                to: currentBooking.user_email,
+                userName: currentBooking.user_name,
+                apartmentTitle: currentBooking.apartment_title,
+                bookingId: id,
+                adminNotes: admin_notes,
+            });
         }
 
-        // ✅ Get updated booking
+        // Return updated booking
         const updatedBookings = await query(
             `SELECT b.*, u.email as user_email, u.name as user_name, a.title as apartment_title
              FROM bookings b
@@ -93,9 +75,6 @@ export async function PUT(request, { params }) {
 
     } catch (error) {
         console.error('❌ Error updating booking status:', error);
-        return NextResponse.json(
-            { success: false, message: 'Error updating booking status' },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, message: 'Error updating booking status' }, { status: 500 });
     }
 }

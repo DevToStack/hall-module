@@ -266,7 +266,7 @@ export default function BookingPage() {
           apartment_id: id,
           check_in: checkinSQL,
           check_out: checkoutSQL,
-          guests: formData.guests,
+          guests: 1,
           total_amount: bookingSummary.total,
           nights: bookingSummary.nights,
         }),
@@ -281,7 +281,7 @@ export default function BookingPage() {
       }
 
       // Redirect to payment page with booking ID
-      router.push(`/payment/${bookingData.booking_id}`);
+      router.push(`/profile`);
 
     } catch (err) {
       console.error("Booking error:", err);

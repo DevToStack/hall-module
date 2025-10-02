@@ -25,6 +25,7 @@ export async function POST(req) {
             );
         }
 
+        // ✅ Check user exists
         const users = await query(
             `SELECT * FROM users WHERE email = ?`,
             [email.toLowerCase().trim()]
@@ -36,13 +37,23 @@ export async function POST(req) {
 
         const user = users[0];
 
+        // ✅ Compare password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
         }
 
+        // ✅ Generate JWT
         const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
+        // ✅ Insert into sessions table
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await query(
+            `INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)`,
+            [user.id, token, expiresAt]
+        );
+
+        // ✅ Set cookie
         const response = NextResponse.json({ success: true, message: "Login successful" });
         response.cookies.set("token", token, {
             httpOnly: true,
@@ -52,7 +63,9 @@ export async function POST(req) {
             path: "/",
         });
 
+        // ✅ Log activity
         await logActivity(user.id, 'Logged in successfully');
+
         return response;
     } catch (err) {
         console.error('Login Error:', err);

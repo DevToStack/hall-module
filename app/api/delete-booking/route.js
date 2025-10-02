@@ -53,8 +53,12 @@ export async function POST(req) {
         // ✅ Delete payments first (foreign key constraint)
         await query(`DELETE FROM payments WHERE booking_id = ?`, [booking_id]);
 
-        // ✅ Delete booking
-        await query(`DELETE FROM bookings WHERE id = ?`, [booking_id]);
+        await query(
+            `UPDATE bookings 
+             SET status = 'expired' 
+             WHERE id = ?`,
+            [booking_id]
+        );          
 
         // ✅ Log activity
         const message = `Deleted booking for "${bookingRows[0].title}" (Booking ID: ${booking_id})`;

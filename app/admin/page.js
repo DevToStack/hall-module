@@ -9,6 +9,7 @@ import {
     faHome, faUsers, faCalendar, faCreditCard, faChartLine,
     faBars, faXmark, faRightFromBracket, faBuilding
 } from '@fortawesome/free-solid-svg-icons';
+import UsersTable from '@/components/admin/UsersTable';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },
@@ -407,31 +408,7 @@ export default function AdminDashboard() {
                     </section>
                 )}
 
-                {active === 'users' && (
-                    <section className="p-6">
-                        <h2 className="text-2xl font-bold mb-4">All Users</h2>
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-white/10">
-                                    <th className="p-2">ID</th>
-                                    <th className="p-2">Name</th>
-                                    <th className="p-2">Email</th>
-                                    <th className="p-2">Joined</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map((u) => (
-                                    <tr key={u.id} className="border-b border-white/10">
-                                        <td className="p-2">{u.id}</td>
-                                        <td className="p-2">{u.name}</td>
-                                        <td className="p-2">{u.email}</td>
-                                        <td className="p-2">{new Date(u.created_at).toLocaleDateString()}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </section>
-                )}
+                {active === 'users' && <UsersTable/>}
 
                 {active === 'bookings' && (
                     <BookingsManagement />
