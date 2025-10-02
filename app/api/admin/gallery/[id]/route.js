@@ -1,0 +1,100 @@
+import { query } from '@/lib/mysql-wrapper';
+import { NextResponse } from 'next/server';
+import { unlink } from 'fs/promises';
+import path from 'path';
+
+// DELETE - Remove an image
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = params;
+
+        // Get image info before deletion
+        const [image] = await query(
+            'SELECT image_url FROM apartment_gallery WHERE id = ?',
+            [id]
+        );
+
+        if (!image) {
+            return NextResponse.json(
+                { error: 'Image not found' },
+                { status: 404 }
+            );
+        }
+
+        // Delete from database
+        await query('DELETE FROM apartment_gallery WHERE id = ?', [id]);
+
+        // Delete physical file
+        try {
+            const filePath = path.join(process.cwd(), 'public', image.image_url);
+            await unlink(filePath);
+        } catch (fileError) {
+            console.warn('Could not delete physical file:', fileError.message);
+        }
+
+        return NextResponse.json({ success: true });
+
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete image' },
+            { status: 500 }
+        );
+    }
+}
+
+// PATCH - Update image properties (order, primary status)
+export async function PATCH(request, { params }) {
+    try {
+        const { id } = params;
+        const updates = await request.json();
+
+        const allowedUpdates = ['display_order', 'is_primary'];
+        const updateFields = [];
+        const updateValues = [];
+
+        Object.keys(updates).forEach(key => {
+            if (allowedUpdates.includes(key)) {
+                updateFields.push(`${key} = ?`);
+                updateValues.push(updates[key]);
+            }
+        });
+
+        if (updateFields.length === 0) {
+            return NextResponse.json(
+                { error: 'No valid fields to update' },
+                { status: 400 }
+            );
+        }
+
+        // If setting as primary, unset other primaries for this apartment
+        if (updates.is_primary) {
+            const [image] = await query(
+                'SELECT apartment_id FROM apartment_gallery WHERE id = ?',
+                [id]
+            );
+
+            if (image) {
+                await query(
+                    'UPDATE apartment_gallery SET is_primary = FALSE WHERE apartment_id = ? AND id != ?',
+                    [image.apartment_id, id]
+                );
+            }
+        }
+
+        updateValues.push(id);
+        await query(
+            `UPDATE apartment_gallery SET ${updateFields.join(', ')} WHERE id = ?`,
+            updateValues
+        );
+
+        return NextResponse.json({ success: true });
+
+    } catch (error) {
+        console.error('Error updating image:', error);
+        return NextResponse.json(
+            { error: 'Failed to update image' },
+            { status: 500 }
+        );
+    }
+}

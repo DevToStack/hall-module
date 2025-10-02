@@ -120,16 +120,18 @@ const BookingsManagement = () => {
         }
     };
 
-    if (loading && view === 'list' && bookings.length === 0) {
+    if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="h-screen text-white p-6 flex items-center justify-center"
+                style={{ maxHeight: 'calc(100vh - 96px)' }}
+            >
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen max-sm:pb-16 bg-neutral-900 text-neutral-200 px-4 py-8">
+        <div className="h-full max-sm:pb-16 bg-neutral-900 text-neutral-200 px-4 py-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex space-x-2">
                     <button

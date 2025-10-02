@@ -1,6 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSort, faXmark, faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faXmark, faEdit, faTrash, faPlus, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+
+// Lazy load components that are only used conditionally
+const ApartmentForm = lazy(() => import('./ApartmentForm'));
+const ApartmentRow = lazy(() => import('./ApartmentRow'));
+const ConfirmModal = lazy(() => import('./ConfirmModal'));
 
 // Initial form state
 const initialFormState = {
@@ -17,6 +22,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
     const [editingApartment, setEditingApartment] = useState(null);
     const [formData, setFormData] = useState(initialFormState);
     const [loadingAction, setLoadingAction] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, apartmentId: null, apartmentTitle: '' });
 
     const [filters, setFilters] = useState({
         search: '',
@@ -67,7 +73,6 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         return filtered;
     }, [apartments, filters, sortBy, sortOrder]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoadingAction(true);
@@ -107,16 +112,27 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this apartment?')) return;
+    const handleDeleteClick = (apartment) => {
+        setDeleteModal({
+            isOpen: true,
+            apartmentId: apartment.id,
+            apartmentTitle: apartment.title
+        });
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteModal.apartmentId) return;
+
         setLoadingAction(true);
         try {
-            const response = await fetch(`/api/admin/apartments?id=${id}`, {
+            const response = await fetch(`/api/admin/apartments?id=${deleteModal.apartmentId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
-            if (response.ok) onRefresh();
-            else {
+            if (response.ok) {
+                onRefresh();
+                setDeleteModal({ isOpen: false, apartmentId: null, apartmentTitle: '' });
+            } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to delete apartment');
             }
@@ -126,6 +142,10 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         } finally {
             setLoadingAction(false);
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteModal({ isOpen: false, apartmentId: null, apartmentTitle: '' });
     };
 
     const resetForm = () => {
@@ -148,8 +168,18 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
 
     const getImageUrl = (apartment) => apartment.image_url || '';
 
+    if (loading) {
+        return (
+            <div className="h-screen text-white p-6 flex items-center justify-center"
+                style={{ maxHeight: 'calc(100vh - 96px)' }}
+            >
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            </div>
+        );
+    }
+
     return (
-        <section className="max-sm:p-6 max-sm:pb-16 min-h-screen">
+        <section className="max-sm:p-6 max-sm:pb-16 h-full">
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
@@ -223,190 +253,144 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
             </div>
 
             {/* Apartments Table */}
-            {loading ? (
-                <div className="text-center py-8 text-neutral-400">Loading apartments...</div>
-            ) : (
-                <div className="bg-neutral-800 rounded-xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left border-collapse text-neutral-50">
-                        <thead className="bg-neutral-700">
-                            <tr>
-                                <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>
-                                    ID
-                                </th>
-                                <th className="p-4">Apartment</th>
-                                <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>
-                                    Location
-                                </th>
-                                <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>
-                                    Price/Night
-                                </th>
-                                <th className="p-4">Available</th>
-                                <th className="p-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAndSortedApartments.map((apartment) => (
+            <div className="bg-neutral-800 rounded-xl overflow-x-auto shadow-sm">
+                <table className="w-full text-left border-collapse text-neutral-50">
+                    <thead className="bg-neutral-700">
+                        <tr>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>
+                                ID
+                            </th>
+                            <th className="p-4">Apartment</th>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>
+                                Location
+                            </th>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>
+                                Price/Night
+                            </th>
+                            <th className="p-4">Available</th>
+                            <th className="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredAndSortedApartments.map((apartment) => (
+                            <Suspense key={apartment.id} fallback={<TableRowSkeleton />}>
                                 <ApartmentRow
-                                    key={apartment.id}
                                     apartment={apartment}
                                     onEdit={handleEdit}
-                                    onDelete={handleDelete}
+                                    onDelete={handleDeleteClick}
                                     loadingAction={loadingAction}
                                     getImageUrl={getImageUrl}
                                 />
-                            ))}
-                        </tbody>
-                    </table>
-                    {filteredAndSortedApartments.length === 0 && (
-                        <div className="text-center py-8 text-neutral-400">
-                            {apartments.length === 0
-                                ? 'No apartments found. Create your first apartment!'
-                                : 'No apartments match your filters.'}
-                        </div>
-                    )}
-                </div>
+                            </Suspense>
+                        ))}
+                    </tbody>
+                </table>
+                {filteredAndSortedApartments.length === 0 && (
+                    <div className="text-center py-8 text-neutral-400">
+                        {apartments.length === 0
+                            ? 'No apartments found. Create your first apartment!'
+                            : 'No apartments match your filters.'}
+                    </div>
+                )}
+            </div>
+
+            {/* Apartment Form Modal - Only loads when needed */}
+            {showForm && (
+                <Suspense fallback={<FormSkeleton />}>
+                    <ApartmentForm
+                        editingApartment={editingApartment}
+                        formData={formData}
+                        setFormData={setFormData}
+                        loading={loadingAction}
+                        onSubmit={handleSubmit}
+                        onCancel={resetForm}
+                    />
+                </Suspense>
             )}
 
-            {/* Apartment Form Modal */}
-            {showForm && (
-                <ApartmentForm
-                    showForm={showForm}
-                    editingApartment={editingApartment}
-                    formData={formData}
-                    setFormData={setFormData}
-                    loading={loadingAction}
-                    onSubmit={handleSubmit}
-                    onCancel={resetForm}
-                />
+            {/* Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <Suspense fallback={<ConfirmModalSkeleton />}>
+                    <ConfirmModal
+                        isOpen={deleteModal.isOpen}
+                        title="Delete Apartment"
+                        message={`Are you sure you want to delete "${deleteModal.apartmentTitle}"? This action cannot be undone.`}
+                        onConfirm={handleDeleteConfirm}
+                        onCancel={handleDeleteCancel}
+                        confirmText="Delete"
+                        cancelText="Cancel"
+                        variant="danger"
+                        loading={loadingAction}
+                    />
+                </Suspense>
             )}
         </section>
     );
 };
 
-// ------------------ Sub-components ------------------
-
-const ApartmentForm = ({ editingApartment, formData, setFormData, loading, onSubmit, onCancel }) => (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-neutral-50">{editingApartment ? 'Edit Apartment' : 'Add New Apartment'}</h3>
-                <button onClick={onCancel} className="text-neutral-400 hover:text-neutral-50">
-                    <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
-                </button>
-            </div>
-            <form onSubmit={onSubmit} className="space-y-4">
-                <input
-                    type="text"
-                    placeholder="Title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                    required
-                />
-                <textarea
-                    placeholder="Description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 h-24 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                    required
-                />
-                <input
-                    type="text"
-                    placeholder="Location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                    required
-                />
-                <input
-                    type="number"
-                    placeholder="Price per night"
-                    value={formData.price_per_night}
-                    onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                    required
-                    min="0"
-                />
-                <input
-                    type="url"
-                    placeholder="Image URL"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                />
-                <label className="flex items-center space-x-2 text-neutral-50">
-                    <input
-                        type="checkbox"
-                        checked={formData.available}
-                        onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                        className="rounded"
-                    />
-                    <span>Available</span>
-                </label>
-                <div className="flex space-x-2">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded text-neutral-50 disabled:opacity-50"
-                    >
-                        {loading ? 'Saving...' : editingApartment ? 'Update' : 'Create'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="flex-1 bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded text-neutral-50"
-                    >
-                        Cancel
-                    </button>
+// Loading components
+const TableRowSkeleton = () => (
+    <tr className="border-b border-neutral-700 animate-pulse">
+        <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-8"></div></td>
+        <td className="p-4">
+            <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-neutral-700 rounded"></div>
+                <div className="flex-1">
+                    <div className="h-4 bg-neutral-700 rounded mb-2"></div>
+                    <div className="h-3 bg-neutral-700 rounded w-3/4"></div>
                 </div>
-            </form>
+            </div>
+        </td>
+        <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-20"></div></td>
+        <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-16"></div></td>
+        <td className="p-4"><div className="h-6 bg-neutral-700 rounded w-12"></div></td>
+        <td className="p-4">
+            <div className="flex space-x-2">
+                <div className="h-8 bg-neutral-700 rounded w-12"></div>
+                <div className="h-8 bg-neutral-700 rounded w-12"></div>
+            </div>
+        </td>
+    </tr>
+);
+
+const FormSkeleton = () => (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md">
+            <div className="animate-pulse space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="h-6 bg-neutral-700 rounded w-32"></div>
+                    <div className="h-5 bg-neutral-700 rounded w-5"></div>
+                </div>
+                <div className="h-10 bg-neutral-700 rounded"></div>
+                <div className="h-24 bg-neutral-700 rounded"></div>
+                <div className="h-10 bg-neutral-700 rounded"></div>
+                <div className="h-10 bg-neutral-700 rounded"></div>
+                <div className="h-10 bg-neutral-700 rounded"></div>
+                <div className="flex space-x-2">
+                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
+                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
+                </div>
+            </div>
         </div>
     </div>
 );
 
-const ApartmentRow = ({ apartment, onEdit, onDelete, loadingAction, getImageUrl }) => (
-    <tr className="border-b border-neutral-700 hover:bg-neutral-800 transition duration-150">
-        <td className="p-4">{apartment.id}</td>
-        <td className="p-4">
-            <div className="flex items-center space-x-3">
-                <img src={getImageUrl(apartment)} alt={apartment.title} className="w-12 h-12 rounded object-cover border border-neutral-700" />
-                <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate text-neutral-50">{apartment.title}</div>
-                    <div className="text-sm text-neutral-400 truncate">{apartment.description}</div>
+const ConfirmModalSkeleton = () => (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md">
+            <div className="animate-pulse space-y-4">
+                <div className="flex items-center space-x-3 mb-4">
+                    <div className="h-6 bg-neutral-700 rounded w-6"></div>
+                    <div className="h-6 bg-neutral-700 rounded w-32"></div>
+                </div>
+                <div className="h-16 bg-neutral-700 rounded"></div>
+                <div className="flex space-x-2">
+                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
+                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
                 </div>
             </div>
-        </td>
-        <td className="p-4 text-neutral-50">{apartment.location}</td>
-        <td className="p-4 text-neutral-50">₹{apartment.price_per_night?.toLocaleString()}</td>
-        <td className="p-4">
-            <span
-                className={`px-2 py-1 rounded text-xs ${apartment.available ? 'bg-neutral-700 text-green-400' : 'bg-neutral-700 text-red-400'
-                    }`}
-            >
-                {apartment.available ? 'Yes' : 'No'}
-            </span>
-        </td>
-        <td className="p-4">
-            <div className="flex space-x-2">
-                <button
-                    onClick={() => onEdit(apartment)}
-                    disabled={loadingAction}
-                    className="bg-neutral-700 hover:bg-neutral-600 px-3 py-1 rounded text-sm flex items-center space-x-1 text-yellow-400 disabled:opacity-50"
-                >
-                    <FontAwesomeIcon icon={faEdit} className="w-3 h-3" />
-                    <span>Edit</span>
-                </button>
-                <button
-                    onClick={() => onDelete(apartment.id)}
-                    disabled={loadingAction}
-                    className="bg-neutral-700 hover:bg-neutral-600 px-3 py-1 rounded text-sm flex items-center space-x-1 text-red-400 disabled:opacity-50"
-                >
-                    <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
-                    <span>Delete</span>
-                </button>
-            </div>
-        </td>
-    </tr>
+        </div>
+    </div>
 );
 
 export default ApartmentsManager;
