@@ -113,10 +113,10 @@ export default function AdminDashboardStats() {
     };
 
     return (
-        <section className="max-sm:p-6 max-sm:pb-20">
+        <section className="h-screen max-sm:pb-20">
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 max-sm:gap-4 gap-6 mb-6">
                 <div className="bg-white/10 p-4 rounded-lg shadow">
                     <p className="text-gray-300">Total Users</p>
                     <p className="text-2xl font-bold">{totals.totalUsers.toLocaleString()}</p>
@@ -138,75 +138,78 @@ export default function AdminDashboardStats() {
             </div>
 
             {/* Graph Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {chartOptions.map(({ key, label, color }) => (
-                    <div
-                        key={key}
-                        className="bg-white/10 p-6 rounded-lg shadow flex flex-col"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold">{label} Trend</h2>
+            <div className="h-full overflow-y-auto pb-50">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-20">
+                    {chartOptions.map(({ key, label, color }) => (
+                        <div
+                            key={key}
+                            className="bg-white/10 p-6 rounded-lg shadow flex flex-col"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold">{label} Trend</h2>
 
-                            <CustomSelect
-                                value={timeRanges[key]}
-                                onChange={(val) => handleRangeChange(key, val)}
-                            />
-                        </div>
+                                <CustomSelect
+                                    value={timeRanges[key]}
+                                    onChange={(val) => handleRangeChange(key, val)}
+                                />
+                            </div>
 
-                        <div className="flex-1">
-                            {loadingGraphs[key] ? (
-                                <div className="flex justify-center items-center h-[300px]">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
-                                </div>
-                            ) : graphs[key] && graphs[key].length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <LineChart data={graphs[key]}>
-                                        <CartesianGrid stroke="#444" strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="label"
-                                            stroke="#888"
-                                            fontSize={12}
-                                            tick={{ fill: '#888' }}
-                                        />
-                                        <YAxis
-                                            stroke="#888"
-                                            fontSize={12}
-                                            tick={{ fill: '#888' }}
-                                            tickFormatter={(value) => {
-                                                if (key === 'revenue') {
-                                                    return `₹${(value / 1000).toFixed(0)}k`;
-                                                }
-                                                return value.toLocaleString();
-                                            }}
-                                        />
-                                        <Tooltip
-                                            formatter={(value) => [formatTooltipValue(value, key), label]}
-                                            labelFormatter={(label) => `Time: ${label}`}
-                                            contentStyle={{
-                                                backgroundColor: '#1f2937',
-                                                border: '1px solid #374151',
-                                                borderRadius: '6px'
-                                            }}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="value"
-                                            stroke={color}
-                                            strokeWidth={2}
-                                            dot={false}
-                                            activeDot={{ r: 4, fill: color }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="flex justify-center items-center h-[300px] text-gray-400">
-                                    No data available for this period
-                                </div>
-                            )}
+                            <div className="flex-1">
+                                {loadingGraphs[key] ? (
+                                    <div className="flex justify-center items-center h-[300px]">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
+                                    </div>
+                                ) : graphs[key] && graphs[key].length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <LineChart data={graphs[key]}>
+                                            <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="label"
+                                                stroke="#888"
+                                                fontSize={12}
+                                                tick={{ fill: '#888' }}
+                                            />
+                                            <YAxis
+                                                stroke="#888"
+                                                fontSize={12}
+                                                tick={{ fill: '#888' }}
+                                                tickFormatter={(value) => {
+                                                    if (key === 'revenue') {
+                                                        return `₹${(value / 1000).toFixed(0)}k`;
+                                                    }
+                                                    return value.toLocaleString();
+                                                }}
+                                            />
+                                            <Tooltip
+                                                formatter={(value) => [formatTooltipValue(value, key), label]}
+                                                labelFormatter={(label) => `Time: ${label}`}
+                                                contentStyle={{
+                                                    backgroundColor: '#1f2937',
+                                                    border: '1px solid #374151',
+                                                    borderRadius: '6px'
+                                                }}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="value"
+                                                stroke={color}
+                                                strokeWidth={2}
+                                                dot={false}
+                                                activeDot={{ r: 4, fill: color }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex justify-center items-center h-[300px] text-gray-400">
+                                        No data available for this period
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
+            
         </section>
     );
 }

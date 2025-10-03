@@ -397,8 +397,9 @@ export default function AdminDashboard() {
                             <PaymentManagement/>
                         )}
                         {active === 'gallery' && (
-                            <ApartmentGallery />
+                            <ApartmentGallery/>
                         )}
+
                     </div>
                 </main>
             </div>

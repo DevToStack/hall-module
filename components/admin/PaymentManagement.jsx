@@ -148,7 +148,7 @@ const PaymentManagement = () => {
     }
 
     return (
-        <div className="p-6 bg-neutral-900 h-full text-neutral-100">
+        <div className="bg-neutral-900 h-full text-neutral-100">
             <Suspense fallback={null}>
                 {snackbar.open && (
                     <Snackbar message={snackbar.message} type={snackbar.type} />
