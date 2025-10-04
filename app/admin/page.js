@@ -1,16 +1,16 @@
 'use client';
-import BookingsManagement from '@/components/admin/BookingsManagement';
-import AdminDashboardStats from '@/components/adminDashboard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faHome, faUsers, faCalendar, faCreditCard,
-    faBars, faXmark, faRightFromBracket, faBuilding,
+    faBars, faRightFromBracket, faBuilding,
     faChevronDown, faChevronUp, faImages
 } from '@fortawesome/free-solid-svg-icons';
-import UsersTable from '@/components/admin/UsersTable';
+import AdminDashboardStats from '@/components/adminDashboard';
 import ApartmentsManager from '@/components/admin/ApartmentManagement';
+import UsersTable from '@/components/admin/UsersTable';
+import BookingsManagement from '@/components/admin/BookingsManagement';
 import PaymentManagement from '@/components/admin/PaymentManagement';
 import ApartmentGallery from '@/components/admin/GalleryManagement';
 
@@ -27,43 +27,20 @@ export default function AdminDashboard() {
     const [active, setActive] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [dashboardData, setDashboardData] = useState(null);
+    const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
     const [apartments, setApartments] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
-    const [logoHover, setLogoHover] = useState(false); // for hover state when collapsed
     const router = useRouter();
-    const [collapseHover, setCollapseHover] = useState(false);
 
-    // Handle scroll for navbar shadow
+    // Handle scroll for header shadow
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
+        const handleScroll = () => setIsScrolled(window.scrollY > 10);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Close sidebar when route changes (mobile only)
-    useEffect(() => {
-        setSidebarOpen(false);
-        setMobileDropdownOpen(false);
-    }, [active]);
-
-    // Close sidebar on escape key
-    useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                setSidebarOpen(false);
-                setMobileDropdownOpen(false);
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, []);
-
-    // Auto-collapse sidebar on desktop, keep closed on mobile
+    // Auto-collapse sidebar on resize
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 768) {
@@ -73,37 +50,16 @@ export default function AdminDashboard() {
                 setSidebarCollapsed(false);
             }
         };
-
-        handleResize(); // Set initial state
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const fetchDashboardData = useCallback(async () => {
-        try {
-            const res = await fetch('/api/admin/dashboard', {
-                cache: 'no-store',
-                credentials: 'include',
-            });
-
-            if (!res.ok) {
-                router.push('/signin');
-                return;
-            }
-            const data = await res.json();
-            setDashboardData(data);
-        } catch (err) {
-            console.error('Admin dashboard fetch error:', err);
-            router.push('/signin');
-        }
-    }, [router]);
-
+    // Fetch Apartments (used only when active === apartments)
     const fetchApartments = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/apartments', {
-                credentials: 'include',
-            });
+            const res = await fetch('/api/admin/apartments', { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 setApartments(data.apartments || []);
@@ -116,11 +72,8 @@ export default function AdminDashboard() {
     }, []);
 
     useEffect(() => {
-        fetchDashboardData();
-        if (active === 'apartments') {
-            fetchApartments();
-        }
-    }, [fetchDashboardData, active, fetchApartments]);
+        if (active === 'apartments') fetchApartments();
+    }, [active, fetchApartments]);
 
     const handleLogout = async () => {
         try {
@@ -132,163 +85,82 @@ export default function AdminDashboard() {
         }
     };
 
-    const getActiveLabel = () => {
-        return navItems.find(item => item.id === active)?.label || 'Dashboard';
-    };
+    const getActiveLabel = () =>
+        navItems.find((item) => item.id === active)?.label || 'Dashboard';
 
-    if (!dashboardData) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-900">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            </div>
-        );
-    }
-
-    const { users, bookings, payments } = dashboardData;
-
-    /* Inline SVG components for arrows (no angle bracket characters used as text)
-       leftChevron = collapse (←)
-       rightChevron = expand (→)
-    */
-    const LeftChevron = ({ className = 'w-4 h-4' }) => (
-        <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-
-    const RightChevron = ({ className = 'w-4 h-4' }) => (
-        <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-
+    /** ───────────────────────── Sidebar ───────────────────────── */
     const Sidebar = (
         <aside
-            className={`bg-neutral-900 border-r border-gray-700 h-full flex flex-col transition-all duration-200 ${sidebarCollapsed ? 'w-16' : 'w-72'}`}
-            aria-label="Rooms4u sidebar"
+            className={`bg-neutral-900 border-r border-gray-700 h-full flex flex-col transition-all duration-200 ${sidebarCollapsed ? 'w-16' : 'w-72'
+                }`}
         >
-            {/* Sidebar Header */}
-            <div className="p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    {/* Logo area */}
-                    <button
-                        onClick={() => {
-                            if (sidebarCollapsed) setSidebarCollapsed(false);
-                        }}
-                        onMouseEnter={() => setLogoHover(true)}
-                        onMouseLeave={() => setLogoHover(false)}
-                        className="flex items-center gap-3 focus:outline-none"
-                        aria-label="Rooms4u"
-                    >
-                        <div
-                            className="flex items-center justify-center rounded-md bg-neutral-800 border border-gray-600 w-10 h-10"
-                        >
-                            {/* Collapsed: default = R4, hover = path */}
-                            {sidebarCollapsed ? (
-                                logoHover ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                        className="w-6 h-6 text-white"
-                                    >
-                                        <path d="M6.83496 3.99992C6.38353 4.00411 6.01421 4.0122 5.69824 4.03801C5.31232 4.06954 5.03904 4.12266 4.82227 4.20012L4.62207 4.28606C4.18264 4.50996 3.81498 4.85035 3.55859 5.26848L3.45605 5.45207C3.33013 5.69922 3.25006 6.01354 3.20801 6.52824C3.16533 7.05065 3.16504 7.71885 3.16504 8.66301V11.3271C3.16504 12.2712 3.16533 12.9394 3.20801 13.4618C3.25006 13.9766 3.33013 14.2909 3.45605 14.538L3.55859 14.7216C3.81498 15.1397 4.18266 15.4801 4.62207 15.704L4.82227 15.79C5.03904 15.8674 5.31234 15.9205 5.69824 15.9521C6.01398 15.9779 6.383 15.986 6.83398 15.9902L6.83496 3.99992ZM18.165 11.3271C18.165 12.2493 18.1653 12.9811 18.1172 13.5702C18.0745 14.0924 17.9916 14.5472 17.8125 14.9648L17.7295 15.1415C17.394 15.8 16.8834 16.3511 16.2568 16.7353L15.9814 16.8896C15.5157 17.1268 15.0069 17.2285 14.4102 17.2773C13.821 17.3254 13.0893 17.3251 12.167 17.3251H7.83301C6.91071 17.3251 6.17898 17.3254 5.58984 17.2773C5.06757 17.2346 4.61294 17.1508 4.19531 16.9716L4.01855 16.8896C3.36014 16.5541 2.80898 16.0434 2.4248 15.4169L2.27051 15.1415C2.03328 14.6758 1.93158 14.167 1.88281 13.5702C1.83468 12.9811 1.83496 12.2493 1.83496 11.3271V8.66301C1.83496 7.74072 1.83468 7.00898 1.88281 6.41985C1.93157 5.82309 2.03329 5.31432 2.27051 4.84856L2.4248 4.57317C2.80898 3.94666 3.36012 3.436 4.01855 3.10051L4.19531 3.0175C4.61285 2.83843 5.06771 2.75548 5.58984 2.71281C6.17898 2.66468 6.91071 2.66496 7.83301 2.66496H12.167C13.0893 2.66496 13.821 2.66468 14.4102 2.71281C15.0069 2.76157 15.5157 2.86329 15.9814 3.10051L16.2568 3.25481C16.8833 3.63898 17.394 4.19012 17.7295 4.84856L17.8125 5.02531C17.9916 5.44285 18.0745 5.89771 18.1172 6.41985C18.1653 7.00898 18.165 7.74072 18.165 8.66301V11.3271ZM8.16406 15.995H12.167C13.1112 15.995 13.7794 15.9947 14.3018 15.9521C14.8164 15.91 15.1308 15.8299 15.3779 15.704L15.5615 15.6015C15.9797 15.3451 16.32 14.9774 16.5439 14.538L16.6299 14.3378C16.7074 14.121 16.7605 13.8478 16.792 13.4618C16.8347 12.9394 16.835 12.2712 16.835 11.3271V8.66301C16.835 7.71885 16.8347 7.05065 16.792 6.52824C16.7605 6.14232 16.7073 5.86904 16.6299 5.65227L16.5439 5.45207C16.32 5.01264 15.9796 4.64498 15.5615 4.3886L15.3779 4.28606C15.1308 4.16013 14.8165 4.08006 14.3018 4.03801C13.7794 3.99533 13.1112 3.99504 12.167 3.99504H8.16406C8.16407 3.99667 8.16504 3.99829 8.16504 3.99992L8.16406 15.995Z"></path>
-                                    </svg>
-                                ) : (
-                                    <span className="text-lg font-bold text-white">R4</span>
-                                )
-                            ) : (
-                                // Expanded → always R4
-                                <span className="text-lg font-bold text-white">R4</span>
-                            )}
+            <div className="p-4 flex items-center justify-between border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-neutral-800 text-white flex items-center justify-center font-bold rounded-md">
+                        R4
+                    </div>
+                    {!sidebarCollapsed && (
+                        <div>
+                            <h2 className="text-lg font-semibold text-white">Rooms4u</h2>
+                            <p className="text-xs text-gray-400">Admin Panel</p>
                         </div>
-
-                        {/* Expanded sidebar shows text */}
-                        {!sidebarCollapsed && (
-                            <div className="leading-tight flex flex-col justify-left">
-                                <h2 className="text-lg font-semibold text-white">Rooms4u</h2>
-                                <p className="text-xs text-gray-400">Admin Management</p>
-                            </div>
-                        )}
-                    </button>
+                    )}
                 </div>
-
-                {/* Collapse button with hover effect */}
-                <div
-                    className={`${sidebarCollapsed ? 'hidden' : ''} cursor-pointer`}
-                    onClick={() => {
-                        if (window.innerWidth < 768) {
-                            setSidebarOpen(false);      // mobile: close overlay sidebar
-                        } else {
-                            setSidebarCollapsed(true);  // desktop: collapse sidebar
-                        }
-                    }}
-                    onMouseEnter={() => setCollapseHover(true)}
-                    onMouseLeave={() => setCollapseHover(false)}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className={`w-6 h-6 transition-colors duration-200 ${collapseHover ? 'text-gray-400' : 'text-white'}`}
+                {!sidebarCollapsed && (
+                    <button
+                        onClick={() => setSidebarCollapsed(true)}
+                        className="text-gray-300 hover:text-white"
                     >
-                        <path d="M6.83496 3.99992C6.38353 4.00411 6.01421 4.0122 5.69824 4.03801C5.31232 4.06954 5.03904 4.12266 4.82227 4.20012L4.62207 4.28606C4.18264 4.50996 3.81498 4.85035 3.55859 5.26848L3.45605 5.45207C3.33013 5.69922 3.25006 6.01354 3.20801 6.52824C3.16533 7.05065 3.16504 7.71885 3.16504 8.66301V11.3271C3.16504 12.2712 3.16533 12.9394 3.20801 13.4618C3.25006 13.9766 3.33013 14.2909 3.45605 14.538L3.55859 14.7216C3.81498 15.1397 4.18266 15.4801 4.62207 15.704L4.82227 15.79C5.03904 15.8674 5.31234 15.9205 5.69824 15.9521C6.01398 15.9779 6.383 15.986 6.83398 15.9902L6.83496 3.99992ZM18.165 11.3271C18.165 12.2493 18.1653 12.9811 18.1172 13.5702C18.0745 14.0924 17.9916 14.5472 17.8125 14.9648L17.7295 15.1415C17.394 15.8 16.8834 16.3511 16.2568 16.7353L15.9814 16.8896C15.5157 17.1268 15.0069 17.2285 14.4102 17.2773C13.821 17.3254 13.0893 17.3251 12.167 17.3251H7.83301C6.91071 17.3251 6.17898 17.3254 5.58984 17.2773C5.06757 17.2346 4.61294 17.1508 4.19531 16.9716L4.01855 16.8896C3.36014 16.5541 2.80898 16.0434 2.4248 15.4169L2.27051 15.1415C2.03328 14.6758 1.93158 14.167 1.88281 13.5702C1.83468 12.9811 1.83496 12.2493 1.83496 11.3271V8.66301C1.83496 7.74072 1.83468 7.00898 1.88281 6.41985C1.93157 5.82309 2.03329 5.31432 2.27051 4.84856L2.4248 4.57317C2.80898 3.94666 3.36012 3.436 4.01855 3.10051L4.19531 3.0175C4.61285 2.83843 5.06771 2.75548 5.58984 2.71281C6.17898 2.66468 6.91071 2.66496 7.83301 2.66496H12.167C13.0893 2.66496 13.821 2.66468 14.4102 2.71281C15.0069 2.76157 15.5157 2.86329 15.9814 3.10051L16.2568 3.25481C16.8833 3.63898 17.394 4.19012 17.7295 4.84856L17.8125 5.02531C17.9916 5.44285 18.0745 5.89771 18.1172 6.41985C18.1653 7.00898 18.165 7.74072 18.165 8.66301V11.3271ZM8.16406 15.995H12.167C13.1112 15.995 13.7794 15.9947 14.3018 15.9521C14.8164 15.91 15.1308 15.8299 15.3779 15.704L15.5615 15.6015C15.9797 15.3451 16.32 14.9774 16.5439 14.538L16.6299 14.3378C16.7074 14.121 16.7605 13.8478 16.792 13.4618C16.8347 12.9394 16.835 12.2712 16.835 11.3271V8.66301C16.835 7.71885 16.8347 7.05065 16.792 6.52824C16.7605 6.14232 16.7073 5.86904 16.6299 5.65227L16.5439 5.45207C16.32 5.01264 15.9796 4.64498 15.5615 4.3886L15.3779 4.28606C15.1308 4.16013 14.8165 4.08006 14.3018 4.03801C13.7794 3.99533 13.1112 3.99504 12.167 3.99504H8.16406C8.16407 3.99667 8.16504 3.99829 8.16504 3.99992L8.16406 15.995Z"></path>
-                    </svg>
-                </div>
-
+                        <FontAwesomeIcon icon={faBars} />
+                    </button>
+                )}
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
                 {navItems.map(({ id, label, icon }) => (
                     <button
                         key={id}
                         onClick={() => setActive(id)}
-                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150 ${active === id
-                            ? 'bg-neutral-800 text-white shadow-sm'
-                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${active === id
+                                ? 'bg-neutral-800 text-white shadow-sm'
+                                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                             } ${sidebarCollapsed ? 'justify-center' : ''}`}
                         title={sidebarCollapsed ? label : ''}
                     >
-                        <FontAwesomeIcon
-                            icon={icon}
-                            className={`w-4 h-4 transition-transform duration-200 ${active === id ? 'scale-110' : 'group-hover:scale-105'}`}
-                        />
-                        {!sidebarCollapsed && (
-                            <span className="font-medium text-sm">{label}</span>
-                        )}
+                        <FontAwesomeIcon icon={icon} className="w-4 h-4" />
+                        {!sidebarCollapsed && <span className="text-sm">{label}</span>}
                     </button>
                 ))}
             </nav>
 
-            {/* Logout Section */}
             <div className="p-2 border-t border-gray-700">
                 <button
                     onClick={handleLogout}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg bg-red-700/10 hover:bg-red-700/20 text-red-300 hover:text-red-200 transition-all duration-150 border border-red-700/20 ${sidebarCollapsed ? 'justify-center' : ''}`}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg bg-red-700/10 hover:bg-red-700/20 text-red-300 hover:text-red-200 transition-all border border-red-700/20 ${sidebarCollapsed ? 'justify-center' : ''
+                        }`}
                     title={sidebarCollapsed ? 'Logout' : ''}
                 >
                     <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
-                    {!sidebarCollapsed && (
-                        <span className="font-medium text-sm">Logout</span>
-                    )}
+                    {!sidebarCollapsed && <span className="text-sm font-medium">Logout</span>}
                 </button>
             </div>
         </aside>
     );
 
+    /** ───────────────────────── Mobile Navbar ───────────────────────── */
     const MobileNavbar = (
-        <nav className={`fixed md:hidden top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-neutral-800" : "bg-neutral-900"}`}>
+        <nav
+            className={`fixed md:hidden top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-800' : 'bg-neutral-900'
+                }`}
+        >
             <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="text-gray-300 hover:text-white transition-colors p-2"
+                        className="text-gray-300 hover:text-white"
                     >
                         <FontAwesomeIcon icon={faBars} className="w-5 h-5" />
                     </button>
-
-                    {/* Mobile dropdown for quick navigation */}
                     <div className="relative">
                         <button
                             onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
@@ -300,9 +172,8 @@ export default function AdminDashboard() {
                                 className="w-3 h-3"
                             />
                         </button>
-
                         {mobileDropdownOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-neutral-900 border border-white/10 rounded-lg shadow-xl z-60">
+                            <div className="absolute top-full left-0 mt-2 w-48 bg-neutral-900 border border-white/10 rounded-lg shadow-xl">
                                 {navItems.map(({ id, label, icon }) => (
                                     <button
                                         key={id}
@@ -310,10 +181,10 @@ export default function AdminDashboard() {
                                             setActive(id);
                                             setMobileDropdownOpen(false);
                                         }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${active === id
-                                            ? 'bg-neutral-800 text-white'
-                                            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                            } first:rounded-t-lg last:rounded-b-lg`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left ${active === id
+                                                ? 'bg-neutral-800 text-white'
+                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                            }`}
                                     >
                                         <FontAwesomeIcon icon={icon} className="w-4 h-4" />
                                         <span>{label}</span>
@@ -323,61 +194,49 @@ export default function AdminDashboard() {
                         )}
                     </div>
                 </div>
-
-                <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-400 hidden xs:inline">
-                        Welcome, Admin
-                    </span>
-                </div>
             </div>
         </nav>
     );
 
+    /** ───────────────────────── Layout ───────────────────────── */
     return (
         <div className="bg-neutral-900 text-white">
-            {/* Mobile Navbar */}
             {MobileNavbar}
 
-            {/* Sidebar Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
-            {/* Sidebar */}
-            <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+            <div
+                className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } md:translate-x-0`}
+            >
                 {Sidebar}
             </div>
 
-            {/* Main Content */}
-            <div className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'} max-md:pt-16`}>
-                {/* Desktop Header */}
-                <header className={`hidden md:flex items-center justify-between p-6 border-b border-gray-700 fixed top-0 left-0 right-0 z-30 bg-neutral-900 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'}`}>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                            className="sm:hidden text-gray-300 hover:text-white transition-colors p-2"
-                        >
-                            <FontAwesomeIcon icon={faBars} className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">{getActiveLabel()}</h1>
-                            <p className="text-gray-400 text-sm mt-1">
-                                Manage your {getActiveLabel().toLowerCase()} and monitor activities
-                            </p>
-                        </div>
+            <div
+                className={`transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
+                    } max-md:pt-16`}
+            >
+                <header
+                    className={`hidden md:flex items-center h-[96px] justify-between p-6 border-b border-gray-700 fixed top-0 left-0 right-0 z-30 bg-neutral-900 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
+                        }`}
+                >
+                    <div>
+                        <h1 className="text-2xl font-bold">{getActiveLabel()}</h1>
+                        <p className="text-gray-400 text-sm">
+                            Manage your {getActiveLabel().toLowerCase()}
+                        </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-gray-300">Welcome back, Admin</span>
-                    </div>
+                    <span className="text-gray-300">Welcome, Admin</span>
                 </header>
 
-                {/* Main Content Area */}
                 <main
-                    className="h-screen p-4 sm:p-6 min-md:mt-25 overflow-hidden"
-                    style={{ maxHeight: 'calc(100vh - 96px)' }} // adjust 96px to match your header height
+                    className="h-screen mt-[96px] p-4 sm:p-6 overflow-hidden"
+                    style={{ maxHeight: 'calc(100vh - 96px)' }}
                 >
                     <div className="mx-auto overflow-hidden">
                         {active === 'overview' && <AdminDashboardStats />}
@@ -388,23 +247,14 @@ export default function AdminDashboard() {
                                 onRefresh={fetchApartments}
                             />
                         )}
-
-                        {active === 'users' && (
-                            <UsersTable/>
-                        )}
+                        {active === 'users' && <UsersTable />}
                         {active === 'bookings' && <BookingsManagement />}
-                        {active === 'payments' && (
-                            <PaymentManagement/>
-                        )}
-                        {active === 'gallery' && (
-                            <ApartmentGallery/>
-                        )}
-
+                        {active === 'payments' && <PaymentManagement />}
+                        {active === 'gallery' && <ApartmentGallery />}
                     </div>
                 </main>
             </div>
 
-            {/* Close dropdown when clicking outside */}
             {mobileDropdownOpen && (
                 <div
                     className="fixed inset-0 z-40 md:hidden"

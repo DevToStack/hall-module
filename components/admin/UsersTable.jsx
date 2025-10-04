@@ -805,7 +805,7 @@ function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-            <div className="bg-[#0a0a0a] p-6 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-800">
+            <div className="bg-[#0a0a0a] p-6 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl border border-neutral-800">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
@@ -836,7 +836,7 @@ function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
                 ) : (
                     <div className="space-y-8">
                         {/* Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <StatCard
                                 title="Bookings"
                                 value={user.statistics.total_bookings}
@@ -862,116 +862,118 @@ function UserDetailsModal({ userDetails, loading, onClose, onEdit }) {
                                 icon={faCreditCard}
                             />
                         </div>
+                        <div className='max-h-[70vh] overflow-y-auto space-y-8 max-sm:pb-50 pb-20'>
+                                {/* Personal Info */}
+                                <Section title="Personal Information">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <InfoField icon={faUser} label="Name" value={user.name} />
+                                        <InfoField icon={faEnvelope} label="Email" value={user.email} />
+                                        <InfoField icon={faPhone} label="Phone" value={user.phone_number} />
+                                        <InfoField
+                                            icon={faCalendar}
+                                            label="Member Since"
+                                            value={new Date(user.created_at).toLocaleDateString()}
+                                        />
+                                        <InfoField icon={faIdBadge} label="User ID" value={user.id} mono />
+                                    </div>
+                                </Section>
 
-                        {/* Personal Info */}
-                        <Section title="Personal Information">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InfoField icon={faUser} label="Name" value={user.name} />
-                                <InfoField icon={faEnvelope} label="Email" value={user.email} />
-                                <InfoField icon={faPhone} label="Phone" value={user.phone_number} />
-                                <InfoField
-                                    icon={faCalendar}
-                                    label="Member Since"
-                                    value={new Date(user.created_at).toLocaleDateString()}
-                                />
-                                <InfoField icon={faIdBadge} label="User ID" value={user.id} mono />
-                            </div>
-                        </Section>
+                                {/* Bookings */}
+                                <Section title={`Bookings (${bookings.length})`}>
+                                    <DataTable
+                                        data={bookings}
+                                        columns={[
+                                            { key: "id", label: "Booking ID" },
+                                            { key: "apartment_title", label: "Apartment" },
+                                            {
+                                                key: "dates",
+                                                label: "Dates",
+                                                render: (b) =>
+                                                    `${new Date(b.start_date).toLocaleDateString()} - ${new Date(
+                                                        b.end_date
+                                                    ).toLocaleDateString()}`,
+                                            },
+                                            { key: "nights", label: "Nights", center: true },
+                                            {
+                                                key: "status",
+                                                label: "Status",
+                                                render: (b) => (
+                                                    <StatusBadge
+                                                        status={b.status}
+                                                        variants={{
+                                                            confirmed: "green",
+                                                            pending: "yellow",
+                                                            cancelled: "red",
+                                                            expired: "gray",
+                                                        }}
+                                                    />
+                                                ),
+                                            },
+                                        ]}
+                                        emptyMessage="No bookings found"
+                                    />
+                                </Section>
 
-                        {/* Bookings */}
-                        <Section title={`Bookings (${bookings.length})`}>
-                            <DataTable
-                                data={bookings}
-                                columns={[
-                                    { key: "id", label: "Booking ID" },
-                                    { key: "apartment_title", label: "Apartment" },
-                                    {
-                                        key: "dates",
-                                        label: "Dates",
-                                        render: (b) =>
-                                            `${new Date(b.start_date).toLocaleDateString()} - ${new Date(
-                                                b.end_date
-                                            ).toLocaleDateString()}`,
-                                    },
-                                    { key: "nights", label: "Nights", center: true },
-                                    {
-                                        key: "status",
-                                        label: "Status",
-                                        render: (b) => (
-                                            <StatusBadge
-                                                status={b.status}
-                                                variants={{
-                                                    confirmed: "green",
-                                                    pending: "yellow",
-                                                    cancelled: "red",
-                                                    expired: "gray",
-                                                }}
-                                            />
-                                        ),
-                                    },
-                                ]}
-                                emptyMessage="No bookings found"
-                            />
-                        </Section>
+                                {/* Payments */}
+                                <Section title={`Payments (${payments.length})`}>
+                                    <DataTable
+                                        data={payments}
+                                        columns={[
+                                            { key: "id", label: "Payment ID" },
+                                            { key: "booking_id", label: "Booking ID" },
+                                            { key: "amount", label: "Amount", render: (p) => `$${p.amount}` },
+                                            {
+                                                key: "status",
+                                                label: "Status",
+                                                render: (p) => (
+                                                    <StatusBadge
+                                                        status={p.status}
+                                                        variants={{
+                                                            paid: "green",
+                                                            refunded: "blue",
+                                                            failed: "red",
+                                                            cancelled: "gray",
+                                                        }}
+                                                    />
+                                                ),
+                                            },
+                                            {
+                                                key: "paid_at",
+                                                label: "Date",
+                                                render: (p) => new Date(p.paid_at).toLocaleDateString(),
+                                            },
+                                        ]}
+                                        emptyMessage="No payments found"
+                                    />
+                                </Section>
 
-                        {/* Payments */}
-                        <Section title={`Payments (${payments.length})`}>
-                            <DataTable
-                                data={payments}
-                                columns={[
-                                    { key: "id", label: "Payment ID" },
-                                    { key: "booking_id", label: "Booking ID" },
-                                    { key: "amount", label: "Amount", render: (p) => `$${p.amount}` },
-                                    {
-                                        key: "status",
-                                        label: "Status",
-                                        render: (p) => (
-                                            <StatusBadge
-                                                status={p.status}
-                                                variants={{
-                                                    paid: "green",
-                                                    refunded: "blue",
-                                                    failed: "red",
-                                                    cancelled: "gray",
-                                                }}
-                                            />
-                                        ),
-                                    },
-                                    {
-                                        key: "paid_at",
-                                        label: "Date",
-                                        render: (p) => new Date(p.paid_at).toLocaleDateString(),
-                                    },
-                                ]}
-                                emptyMessage="No payments found"
-                            />
-                        </Section>
+                                {/* Reviews */}
+                                <Section title={`Reviews (${reviews.length})`}>
+                                    {reviews.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {reviews.map((r) => (
+                                                <ReviewCard key={r.id} review={r} />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <EmptyState message="No reviews yet" />
+                                    )}
+                                </Section>
 
-                        {/* Reviews */}
-                        <Section title={`Reviews (${reviews.length})`}>
-                            {reviews.length > 0 ? (
-                                <div className="space-y-4">
-                                    {reviews.map((r) => (
-                                        <ReviewCard key={r.id} review={r} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <EmptyState message="No reviews yet" />
-                            )}
-                        </Section>
+                                {/* Activity */}
+                                <Section title="Recent Activity">
+                                    {activities.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {activities.map((a) => (
+                                                <ActivityItem key={a.id} activity={a} />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <EmptyState message="No recent activity" />
+                                    )}
+                                </Section>
+                        </div>
 
-                        {/* Activity */}
-                        <Section title="Recent Activity">
-                            {activities.length > 0 ? (
-                                <div className="space-y-3">
-                                    {activities.map((a) => (
-                                        <ActivityItem key={a.id} activity={a} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <EmptyState message="No recent activity" />
-                            )}
-                        </Section>
                     </div>
                 )}
             </div>

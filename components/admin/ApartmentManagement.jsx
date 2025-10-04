@@ -1,8 +1,8 @@
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faXmark, faEdit, faTrash, faPlus, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faXmark, faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 
-// Lazy load components that are only used conditionally
+// Lazy-loaded components
 const ApartmentForm = lazy(() => import('./ApartmentForm'));
 const ApartmentRow = lazy(() => import('./ApartmentRow'));
 const ConfirmModal = lazy(() => import('./ConfirmModal'));
@@ -17,11 +17,14 @@ const initialFormState = {
     available: true,
 };
 
-const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
+const ApartmentsManager = () => {
+    const [apartments, setApartments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingAction, setLoadingAction] = useState(false);
+
     const [showForm, setShowForm] = useState(false);
     const [editingApartment, setEditingApartment] = useState(null);
     const [formData, setFormData] = useState(initialFormState);
-    const [loadingAction, setLoadingAction] = useState(false);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, apartmentId: null, apartmentTitle: '' });
 
     const [filters, setFilters] = useState({
@@ -34,6 +37,26 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
     const [sortBy, setSortBy] = useState('id');
     const [sortOrder, setSortOrder] = useState('asc');
 
+    // 🔹 Fetch apartments from API
+    const fetchApartments = async () => {
+        try {
+            const res = await fetch('/api/admin/apartments', { credentials: 'include' });
+            const data = await res.json();
+            if (res.ok) setApartments(data.apartments || []);
+            else console.error('Fetch error:', data.error);
+        } catch (err) {
+            console.error('Error fetching apartments:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch on mount
+    useEffect(() => {
+        fetchApartments();
+    }, []);
+
+    // 🔹 Filter + Sort apartments
     const filteredAndSortedApartments = useMemo(() => {
         if (!apartments || apartments.length === 0) return [];
 
@@ -73,6 +96,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         return filtered;
     }, [apartments, filters, sortBy, sortOrder]);
 
+    // 🔹 Save or update apartment
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoadingAction(true);
@@ -86,7 +110,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
             });
             if (response.ok) {
                 resetForm();
-                onRefresh();
+                fetchApartments(); // ✅ Refresh list after save
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to save apartment');
@@ -99,6 +123,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         }
     };
 
+    // 🔹 Edit apartment
     const handleEdit = (apartment) => {
         setEditingApartment(apartment);
         setFormData({
@@ -112,6 +137,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         setShowForm(true);
     };
 
+    // 🔹 Delete flow
     const handleDeleteClick = (apartment) => {
         setDeleteModal({
             isOpen: true,
@@ -130,7 +156,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                 credentials: 'include',
             });
             if (response.ok) {
-                onRefresh();
+                fetchApartments(); // ✅ Refresh after delete
                 setDeleteModal({ isOpen: false, apartmentId: null, apartmentTitle: '' });
             } else {
                 const errorData = await response.json();
@@ -144,10 +170,13 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         }
     };
 
+    const getImageUrl = (apartment) => apartment.image_url || '/placeholder.jpg';
+
     const handleDeleteCancel = () => {
         setDeleteModal({ isOpen: false, apartmentId: null, apartmentTitle: '' });
     };
 
+    // 🔹 Reset form
     const resetForm = () => {
         setShowForm(false);
         setEditingApartment(null);
@@ -166,8 +195,6 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         setFilters({ search: '', location: '', availability: 'all', minPrice: '', maxPrice: '' });
     };
 
-    const getImageUrl = (apartment) => apartment.image_url || '';
-
     if (loading) {
         return (
             <div className="h-screen text-white p-6 flex items-center justify-center"
@@ -182,11 +209,9 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
         <section className="max-sm:p-6 max-sm:pb-16 h-full">
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
-                <div>
-                    <p className="text-neutral-400">
-                        {filteredAndSortedApartments.length} of {apartments.length} apartments
-                    </p>
-                </div>
+                <p className="text-neutral-400">
+                    {filteredAndSortedApartments.length} of {apartments.length} apartments
+                </p>
                 <button
                     onClick={() => setShowForm(true)}
                     className="bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 px-4 py-2 rounded-lg flex items-center space-x-2 text-neutral-50 font-medium"
@@ -197,7 +222,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                 </button>
             </div>
 
-            {/* Filters Section */}
+            {/* Filters */}
             <div className="bg-neutral-800 rounded-xl p-4 mb-6 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div className="relative">
@@ -244,12 +269,13 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                    <button className="text-neutral-400 hover:text-neutral-50 text-sm flex items-center space-x-1" onClick={clearFilters}>
-                        <FontAwesomeIcon icon={faXmark} />
-                        <span>Clear filters</span>
-                    </button>
-                </div>
+                <button
+                    className="text-neutral-400 hover:text-neutral-50 text-sm flex items-center space-x-1"
+                    onClick={clearFilters}
+                >
+                    <FontAwesomeIcon icon={faXmark} />
+                    <span>Clear filters</span>
+                </button>
             </div>
 
             {/* Apartments Table */}
@@ -257,16 +283,10 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                 <table className="w-full text-left border-collapse text-neutral-50">
                     <thead className="bg-neutral-700">
                         <tr>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>
-                                ID
-                            </th>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>ID</th>
                             <th className="p-4">Apartment</th>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>
-                                Location
-                            </th>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>
-                                Price/Night
-                            </th>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>Location</th>
+                            <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>Price/Night</th>
                             <th className="p-4">Available</th>
                             <th className="p-4">Actions</th>
                         </tr>
@@ -294,7 +314,7 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                 )}
             </div>
 
-            {/* Apartment Form Modal - Only loads when needed */}
+            {/* Apartment Form Modal */}
             {showForm && (
                 <Suspense fallback={<FormSkeleton />}>
                     <ApartmentForm
@@ -308,13 +328,13 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
                 </Suspense>
             )}
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Confirmation */}
             {deleteModal.isOpen && (
                 <Suspense fallback={<ConfirmModalSkeleton />}>
                     <ConfirmModal
                         isOpen={deleteModal.isOpen}
                         title="Delete Apartment"
-                        message={`Are you sure you want to delete "${deleteModal.apartmentTitle}"? This action cannot be undone.`}
+                        message={`Are you sure you want to delete "${deleteModal.apartmentTitle}"?`}
                         onConfirm={handleDeleteConfirm}
                         onCancel={handleDeleteCancel}
                         confirmText="Delete"
@@ -328,28 +348,14 @@ const ApartmentsManager = ({ apartments = [], loading, onRefresh }) => {
     );
 };
 
-// Loading components
+// Skeleton loaders
 const TableRowSkeleton = () => (
     <tr className="border-b border-neutral-700 animate-pulse">
         <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-8"></div></td>
-        <td className="p-4">
-            <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-neutral-700 rounded"></div>
-                <div className="flex-1">
-                    <div className="h-4 bg-neutral-700 rounded mb-2"></div>
-                    <div className="h-3 bg-neutral-700 rounded w-3/4"></div>
-                </div>
-            </div>
-        </td>
+        <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-20"></div></td>
         <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-20"></div></td>
         <td className="p-4"><div className="h-4 bg-neutral-700 rounded w-16"></div></td>
         <td className="p-4"><div className="h-6 bg-neutral-700 rounded w-12"></div></td>
-        <td className="p-4">
-            <div className="flex space-x-2">
-                <div className="h-8 bg-neutral-700 rounded w-12"></div>
-                <div className="h-8 bg-neutral-700 rounded w-12"></div>
-            </div>
-        </td>
     </tr>
 );
 
@@ -357,19 +363,9 @@ const FormSkeleton = () => (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
         <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md">
             <div className="animate-pulse space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="h-6 bg-neutral-700 rounded w-32"></div>
-                    <div className="h-5 bg-neutral-700 rounded w-5"></div>
-                </div>
+                <div className="h-6 bg-neutral-700 rounded w-32"></div>
                 <div className="h-10 bg-neutral-700 rounded"></div>
                 <div className="h-24 bg-neutral-700 rounded"></div>
-                <div className="h-10 bg-neutral-700 rounded"></div>
-                <div className="h-10 bg-neutral-700 rounded"></div>
-                <div className="h-10 bg-neutral-700 rounded"></div>
-                <div className="flex space-x-2">
-                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
-                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -377,17 +373,12 @@ const FormSkeleton = () => (
 
 const ConfirmModalSkeleton = () => (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md">
-            <div className="animate-pulse space-y-4">
-                <div className="flex items-center space-x-3 mb-4">
-                    <div className="h-6 bg-neutral-700 rounded w-6"></div>
-                    <div className="h-6 bg-neutral-700 rounded w-32"></div>
-                </div>
-                <div className="h-16 bg-neutral-700 rounded"></div>
-                <div className="flex space-x-2">
-                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
-                    <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
-                </div>
+        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md animate-pulse">
+            <div className="h-6 bg-neutral-700 rounded w-32 mb-4"></div>
+            <div className="h-16 bg-neutral-700 rounded mb-4"></div>
+            <div className="flex space-x-2">
+                <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
+                <div className="flex-1 h-10 bg-neutral-700 rounded"></div>
             </div>
         </div>
     </div>

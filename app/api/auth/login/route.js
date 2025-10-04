@@ -8,62 +8,35 @@ export async function POST(req) {
     try {
         const { email, password } = await req.json();
 
-        // ✅ Validate presence
         if (!email || !password) {
-            return NextResponse.json(
-                { error: 'Email and password are required' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
         }
 
-        // ✅ Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        if (!emailRegex.test(email.trim())) {
-            return NextResponse.json(
-                { error: 'Invalid email format' },
-                { status: 400 }
-            );
-        }
-
-        // ✅ Check user exists
-        const users = await query(
-            `SELECT * FROM users WHERE email = ?`,
-            [email.toLowerCase().trim()]
-        );
-
-        if (!users.length) {
-            return NextResponse.json({ error: 'Incorrect Email or Password' }, { status: 404 });
-        }
+        const users = await query(`SELECT * FROM users WHERE email = ?`, [email.toLowerCase().trim()]);
+        if (!users.length) return NextResponse.json({ error: 'Incorrect email or password' }, { status: 404 });
 
         const user = users[0];
 
-        // ✅ Compare password
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
-        }
+        if (!isMatch) return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
 
         // ✅ Generate JWT
         const token = generateToken({ id: user.id, email: user.email, role: user.role });
-
-        // ✅ Insert into sessions table
+        console.log(user.role)
+        // ✅ Insert session
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-        await query(
-            `INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)`,
-            [user.id, token, expiresAt]
-        );
+        await query(`INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)`, [user.id, token, expiresAt]);
 
-        // ✅ Set cookie
+        // ✅ Set cookie (works in dev & production)
         const response = NextResponse.json({ success: true, message: "Login successful" });
         response.cookies.set("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: process.env.NODE_ENV === "production", // false for localhost
             sameSite: "strict",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            maxAge: 60 * 60 * 24 * 7,
             path: "/",
         });
 
-        // ✅ Log activity
         await logActivity(user.id, 'Logged in successfully');
 
         return response;

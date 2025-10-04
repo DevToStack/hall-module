@@ -6,6 +6,7 @@ import BookingCalendar from "@/components/bookingCalender";
 import { CheckCircle2, Loader2, ShieldCheck, Star, Users, Wifi, Car, Utensils } from "lucide-react";
 import Toast from "@/components/toast";
 import GallerySection from "@/components/galery1";
+import Link from "next/link";
 
 function NavBar({ username = "Guest" }) {
   const trimmed = username.length > 10 ? username.slice(0, 10) + "…" : username;
@@ -13,18 +14,19 @@ function NavBar({ username = "Guest" }) {
     <nav className="fixed top-0 left-0 w-full bg-black/90 backdrop-blur-sm shadow-lg z-50">
       <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center text-white">
         <div className="flex gap-6">
-          <a href="/" className="hover:text-teal-400 transition flex items-center gap-1">
+          <Link href="/" className="hover:text-teal-400 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
             Home
-          </a>
-          <a href="/profile" className="hover:text-teal-400 transition flex items-center gap-1">
+          </Link>
+
+          <Link href="/profile" className="hover:text-teal-400 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
             Profile
-          </a>
+          </Link>
         </div>
         <div className="flex gap-2 items-center">
           <div className="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white flex items-center justify-center font-bold shadow-md">
@@ -36,6 +38,7 @@ function NavBar({ username = "Guest" }) {
     </nav>
   );
 }
+
 
 function getLockedDates(bookings) {
   const locked = [];
@@ -96,7 +99,7 @@ function VerificationModal({ isOpen, onClose, onConfirm, loading }) {
           <h3 className="text-xl font-bold text-white mb-2">Confirm Your Booking</h3>
           <p className="text-gray-300 text-sm">
             Please verify your booking details before proceeding.
-            You'll complete payment on the next page.
+            You&apos;ll complete payment on the next page.
           </p>
         </div>
 
@@ -354,7 +357,7 @@ export default function BookingPage() {
 
               {/* Additional Amenities */}
               <div className="bg-neutral-900 rounded-xl p-6 border border-white/10 shadow-lg">
-                <h2 className="text-xl font-bold mb-4">What's Included</h2>
+                <h2 className="text-xl font-bold mb-4">What&apos;s Included</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="flex flex-col items-center p-3 bg-neutral-800/50 rounded-lg">
                     <Wifi className="w-8 h-8 text-teal-400 mb-2" />
