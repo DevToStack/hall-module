@@ -82,6 +82,7 @@ export default function RegisterForm() {
             });
             const data = await requser.json();
             if(requser.ok){
+                console.log("responser is ok")
                 const res = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -90,6 +91,7 @@ export default function RegisterForm() {
 
                 const data = await res.json();
                 if (res.ok) {
+                    console.log("response is ok")
                     setSuccess(`OTP sent to ${email}. Please check your inbox.`);
                     setTimeout(() => {
                         setStep(2);
