@@ -205,7 +205,7 @@ export default function AdminDashboardStats() {
             </div>
 
             {/* Graph Cards */}
-            <div className="h-full overflow-y-auto pb-20">
+            <div className="h-full max-h-[80vh] overflow-y-auto pb-0">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-20">
                     {chartOptions.map(({ key, label, color }) => (
                         <div key={key} className="bg-white/10 p-6 rounded-lg shadow flex flex-col">
