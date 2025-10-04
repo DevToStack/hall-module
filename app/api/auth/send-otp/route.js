@@ -9,8 +9,8 @@ export async function POST(req) {
     
     const otp = await generateOTP(email, purpose);
 
-    // TODO: send otp via email
-    sendOtp(email,otp);
+    // ✅ Await the email sending
+    await sendOtp(email, otp);
 
     return Response.json({ success: true });
 }
