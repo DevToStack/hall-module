@@ -83,6 +83,7 @@ export default function RegisterForm() {
                 },
                 body: JSON.stringify({ email,phone}),
             });
+
             const data = await requser.json();
             if(requser.ok){
                 console.log("responser is ok")
@@ -105,7 +106,7 @@ export default function RegisterForm() {
                 }
             }
             else{
-                setError(data.error);
+                setError(data.message);
             }
             
         } catch (error) {
