@@ -33,7 +33,7 @@ const PaymentStats = ({ stats }) => {
 
 const StatCard = ({ icon, label, value }) => (
     <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-neutral-700">
+        <div className="flex justify-center items-center p-2 w-10 h-10 rounded-lg bg-neutral-700">
             <FontAwesomeIcon icon={icon} className="text-neutral-300" />
         </div>
         <div>

@@ -302,7 +302,7 @@ export default function AdminDashboard() {
                         </button>
 
                         {mobileDropdownOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-neutral-900 border border-white/10 rounded-lg shadow-xl z-50">
+                            <div className="absolute top-full left-0 mt-2 w-48 bg-neutral-900 border border-white/10 rounded-lg shadow-xl z-60">
                                 {navItems.map(({ id, label, icon }) => (
                                     <button
                                         key={id}

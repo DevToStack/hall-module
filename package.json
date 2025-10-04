@@ -27,7 +27,7 @@
     "lru-cache": "^6.0.0",
     "lucide-react": "^0.536.0",
     "mysql2": "^3.14.3",
-    "next": "15.3.5",
+    "next": "^15.3.5",
     "nodemailer": "^7.0.5",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",

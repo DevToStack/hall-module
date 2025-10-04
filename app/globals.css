@@ -70,3 +70,40 @@ body {
   width: 0;
   animation: typing 3s steps(30, end) forwards, blink 0.75s step-end infinite;
 }
+
+/* Remove focus rings from Recharts */
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-wrapper *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.recharts-surface {
+  outline: none !important;
+}
+
+/* Remove focus from SVG elements */
+svg:focus,
+svg *:focus {
+  outline: none !important;
+}
+
+/* Smooth scrolling and prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
