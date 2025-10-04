@@ -4,7 +4,7 @@ import { generateOTP } from "@/utils/otp";
 export async function POST(req) {
     const { email, purpose } = await req.json();
     if (!email || !purpose) {
-        return Response.json({ error: 'Email and purpose of otp required' }, { status: 400 });
+        return Response.json({ error: 'Unusual input detected' }, { status: 400 });
     }
     
     const otp = await generateOTP(email, purpose);

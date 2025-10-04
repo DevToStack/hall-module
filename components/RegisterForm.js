@@ -78,7 +78,6 @@ export default function RegisterForm() {
         try {
             const requser = await fetch('/api/user',{
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email,phone}),
             });
             const data = await requser.json();
@@ -101,7 +100,7 @@ export default function RegisterForm() {
                 }
             }
             else{
-                setError(data.message);
+                setError(data.error);
             }
             
         } catch (error) {
