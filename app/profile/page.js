@@ -8,11 +8,10 @@ import {
     faBuilding, faLocationDot, faCalendarDays, faClock, faIndianRupeeSign,
     faCalendarCheck, faMoneyBill, faCog
 } from '@fortawesome/free-solid-svg-icons';
-import EditProfileForm from '@/components/EditProfile';
+import EditProfileForm from '@/app/profile/components/EditProfile';
 import Link from 'next/link';
-import BookingSection from '@/components/bookingsSection';
-import PaymentsSection from '@/components/paymentBlock';
-import TimeAgo from '@/components/TimeAgo';
+import BookingSection from '@/app/profile/components/bookingsSection';
+import PaymentsSection from '@/app/profile/components/paymentBlock';
 import Menu from '@/components/Menu';
 
 const navItems = [

@@ -1,6 +1,6 @@
 'use client';
-import BookingsManagement from '@/components/admin/BookingsManagement';
-import AdminDashboardStats from '@/components/adminDashboard';
+import BookingsManagement from '@/app/admin/components/bookings/BookingsManagement';
+import AdminDashboardStats from '@/app/admin/components/stats/adminDashboard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,10 +9,10 @@ import {
     faBars, faXmark, faRightFromBracket, faBuilding,
     faChevronDown, faChevronUp, faImages
 } from '@fortawesome/free-solid-svg-icons';
-import UsersTable from '@/components/admin/UsersTable';
-import ApartmentsManager from '@/components/admin/ApartmentManagement';
-import PaymentManagement from '@/components/admin/PaymentManagement';
-import ApartmentGallery from '@/components/admin/GalleryManagement';
+import UsersTable from '@/app/admin/components/users/UsersTable';
+import ApartmentsManager from '@/app/admin/components/apartment/ApartmentManagement';
+import PaymentManagement from '@/app/admin/components/payments/PaymentManagement';
+import ApartmentGallery from '@/app/admin/components/gallery/GalleryManagement';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },

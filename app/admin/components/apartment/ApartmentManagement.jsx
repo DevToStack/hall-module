@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faXmark, faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faXmark, faEdit, faTrash, faPlus, faFilter } from '@fortawesome/free-solid-svg-icons';
 
 // Lazy-loaded components
 const ApartmentForm = lazy(() => import('./ApartmentForm'));
@@ -36,6 +36,7 @@ const ApartmentsManager = () => {
     });
     const [sortBy, setSortBy] = useState('id');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [showFilters, setShowFilters] = useState(false);
 
     // 🔹 Fetch apartments from API
     const fetchApartments = async () => {
@@ -193,6 +194,14 @@ const ApartmentsManager = () => {
 
     const clearFilters = () => {
         setFilters({ search: '', location: '', availability: 'all', minPrice: '', maxPrice: '' });
+        // Hide filters on small screens after clearing
+        if (window.innerWidth < 768) {
+            setShowFilters(false);
+        }
+    };
+
+    const toggleFilters = () => {
+        setShowFilters(!showFilters);
     };
 
     if (loading) {
@@ -206,24 +215,36 @@ const ApartmentsManager = () => {
     }
 
     return (
-        <section className="max-sm:p-6 max-sm:pb-16 h-full">
+        <section className="max-sm:pb-16 h-full">
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <p className="text-neutral-400">
                     {filteredAndSortedApartments.length} of {apartments.length} apartments
                 </p>
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 px-4 py-2 rounded-lg flex items-center space-x-2 text-neutral-50 font-medium"
-                    disabled={loadingAction}
-                >
-                    <FontAwesomeIcon icon={faPlus} />
-                    <span className='text-xs sm:text-sm'>Add Apartment</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                    {/* Filter Button for Small Screens */}
+                    <button
+                        onClick={toggleFilters}
+                        className="md:hidden bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 px-4 py-2 rounded-lg flex items-center space-x-2 text-neutral-50 font-medium"
+                    >
+                        <FontAwesomeIcon icon={faFilter} />
+                        <span className="text-xs sm:text-sm">Filters</span>
+                    </button>
+
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 px-4 py-2 rounded-lg flex items-center space-x-2 text-neutral-50 font-medium"
+                        disabled={loadingAction}
+                    >
+                        <FontAwesomeIcon icon={faPlus} />
+                        <span className='text-xs sm:text-sm'>Add <span className='max-sm:hidden'>Apartment</span></span>
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-neutral-800 rounded-xl p-4 mb-6 shadow-sm">
+            <div className={`bg-neutral-800 rounded-xl p-4 mb-6 shadow-sm transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'
+                }`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div className="relative">
                         <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-3 text-neutral-400" />
@@ -269,42 +290,72 @@ const ApartmentsManager = () => {
                     </div>
                 </div>
 
-                <button
-                    className="text-neutral-400 hover:text-neutral-50 text-sm flex items-center space-x-1"
-                    onClick={clearFilters}
-                >
-                    <FontAwesomeIcon icon={faXmark} />
-                    <span>Clear filters</span>
-                </button>
+                <div className="flex justify-between items-center">
+                    <button
+                        className="text-neutral-400 hover:text-neutral-50 text-sm flex items-center space-x-1 p-2 bg-neutral-700 rounded-md"
+                        onClick={clearFilters}
+                    >
+                        <FontAwesomeIcon icon={faXmark} />
+                        <span>Clear filters</span>
+                    </button>
+
+                    {/* Close filters button for mobile */}
+                    <button
+                        onClick={toggleFilters}
+                        className="md:hidden text-neutral-400 hover:text-neutral-50 text-sm flex items-center space-x-1 p-2 bg-neutral-700 rounded-md"
+                    >
+                        <FontAwesomeIcon icon={faXmark} />
+                        <span>Close</span>
+                    </button>
+                </div>
             </div>
 
             {/* Apartments Table */}
-            <div className="bg-neutral-800 rounded-xl overflow-x-auto shadow-sm">
-                <table className="w-full text-left border-collapse text-neutral-50">
-                    <thead className="bg-neutral-700">
-                        <tr>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>ID</th>
-                            <th className="p-4">Apartment</th>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>Location</th>
-                            <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>Price/Night</th>
-                            <th className="p-4">Available</th>
-                            <th className="p-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredAndSortedApartments.map((apartment) => (
-                            <Suspense key={apartment.id} fallback={<TableRowSkeleton />}>
-                                <ApartmentRow
-                                    apartment={apartment}
-                                    onEdit={handleEdit}
-                                    onDelete={handleDeleteClick}
-                                    loadingAction={loadingAction}
-                                    getImageUrl={getImageUrl}
-                                />
-                            </Suspense>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="bg-neutral-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <div className="min-w-full" style={{ minWidth: '768px' }}>
+                        <table className="w-full text-left border-collapse text-neutral-50">
+                            <thead className="bg-neutral-700">
+                                <tr>
+                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>ID</th>
+                                    <th className="p-4">Apartment</th>
+                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>Location</th>
+                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>Price/Night</th>
+                                    <th className="p-4">Available</th>
+                                    <th className="p-4">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Scrollable table body */}
+                <div
+                    className="overflow-y-auto"
+                    style={{
+                        maxHeight: 'calc(100vh - 400px)',
+                        minHeight: '200px'
+                    }}
+                >
+                    <div className="min-w-full" style={{ minWidth: '768px' }}>
+                        <table className="w-full text-left border-collapse text-neutral-50">
+                            <tbody>
+                                {filteredAndSortedApartments.map((apartment) => (
+                                    <Suspense key={apartment.id} fallback={<TableRowSkeleton />}>
+                                        <ApartmentRow
+                                            apartment={apartment}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDeleteClick}
+                                            loadingAction={loadingAction}
+                                            getImageUrl={getImageUrl}
+                                        />
+                                    </Suspense>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 {filteredAndSortedApartments.length === 0 && (
                     <div className="text-center py-8 text-neutral-400">
                         {apartments.length === 0

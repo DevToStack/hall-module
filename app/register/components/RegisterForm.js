@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faPaperPlane, faUser, faPhone, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
-import Toast from './toast';
+import Toast from '../../../components/toast';
 
 export default function RegisterForm() {
     const [step, setStep] = useState(1); // 1: Fill details + send OTP, 2: Verify OTP & Register
