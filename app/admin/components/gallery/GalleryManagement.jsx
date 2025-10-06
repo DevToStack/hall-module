@@ -76,6 +76,7 @@ const ApartmentGallery = () => {
                 setLoading(true);
                 const res = await fetch(`/api/admin/gallery?apartmentId=${selectedApartmentId}`);
                 const data = await res.json();
+                console.log(data);
                 const imagesData = data.images || [];
                 setImages(imagesData);
                 setFilteredImages(imagesData);

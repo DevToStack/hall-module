@@ -81,7 +81,7 @@ export default function BookingCalendar({
                 }}
                 modifiersClassNames={{
                     disabled: 'bg-white/10 text-gray-400 opacity-50',
-                    locked: 'bg-red-600/40 text-red-200 line-through',
+                    locked: 'bg-red-600/40 text-red-200',
                     selected: 'bg-white/20 text-white',
                     range_start: 'bg-white/20 text-white rounded-l-full',
                     range_end: 'bg-red-200 text-white rounded-r-full',

@@ -1,4 +1,3 @@
-// app/api/admin/apartments/route.js
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/mysql-wrapper';
 import { verifyToken } from '@/lib/jwt';
@@ -23,10 +22,12 @@ function verifyAdmin(token) {
     return { admin: decoded };
 }
 
-// ✅ GET - Fetch all apartments or single apartment by ID
+// ----------------------
+// GET - fetch all or single
+// ----------------------
 export async function GET(req) {
     try {
-        // 🔑 Verify admin
+        // verify admin
         const cookieHeader = req.headers.get('cookie');
         const cookies = parseCookies(cookieHeader);
         const token = cookies.token;
@@ -36,12 +37,10 @@ export async function GET(req) {
             return NextResponse.json({ error: adminCheck.error }, { status: 401 });
         }
 
-        // Check if we're fetching a single apartment
         const url = new URL(req.url);
         const id = url.searchParams.get('id');
 
         if (id) {
-            // ✅ Get single apartment by ID
             const sql = 'SELECT * FROM apartments WHERE id = ?';
             const results = await query(sql, [id]);
 
@@ -51,7 +50,6 @@ export async function GET(req) {
 
             return NextResponse.json({ apartment: results[0] }, { status: 200 });
         } else {
-            // ✅ Get all apartments
             const sql = 'SELECT * FROM apartments ORDER BY created_at DESC';
             const results = await query(sql);
             return NextResponse.json({ apartments: results }, { status: 200 });
@@ -62,10 +60,12 @@ export async function GET(req) {
     }
 }
 
-// ✅ POST - Create new apartment
+// ----------------------
+// POST - create new apartment
+// ----------------------
 export async function POST(req) {
     try {
-        // 🔑 Verify admin
+        // verify admin
         const cookieHeader = req.headers.get('cookie');
         const cookies = parseCookies(cookieHeader);
         const token = cookies.token;
@@ -75,36 +75,52 @@ export async function POST(req) {
             return NextResponse.json({ error: adminCheck.error }, { status: 401 });
         }
 
-        // ✅ Parse body
-        const { title, description, location, price_per_night, image_url, available } =
-            await req.json();
+        const body = await req.json();
+        const { title, description, location, price_per_night, image_url, available, max_guests } = body;
 
-        if (!title || !description || !location || !price_per_night || !image_url) {
+        // Basic required field checks
+        if (!title || !description || !location || price_per_night === undefined || !image_url) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // ✅ Insert new apartment
+        // Validate numeric fields
+        const price = parseFloat(price_per_night);
+        if (Number.isNaN(price) || price <= 0) {
+            return NextResponse.json({ error: 'price_per_night must be a number greater than 0' }, { status: 400 });
+        }
+
+        // max_guests validation (allow missing and default to 1)
+        let maxGuests = 1;
+        if (max_guests !== undefined) {
+            maxGuests = parseInt(max_guests, 10);
+            if (Number.isNaN(maxGuests) || maxGuests < 1) {
+                return NextResponse.json({ error: 'max_guests must be an integer >= 1' }, { status: 400 });
+            }
+        }
+
+        // Normalize available to 1/0
+        const avail = (available === undefined) ? 1 : (available === true || available === 'true' || available === 1 || available === '1') ? 1 : 0;
+
         const sql = `
-            INSERT INTO apartments (title, description, location, price_per_night, image_url, available)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+      INSERT INTO apartments (title, description, location, price_per_night, max_guests, image_url, available)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
 
-        const result = await query(sql, [title, description, location, price_per_night, image_url, available ?? 1]);
+        const result = await query(sql, [title, description, location, price, maxGuests, image_url, avail]);
 
-        return NextResponse.json({
-            message: 'Apartment created successfully',
-            id: result.insertId
-        }, { status: 201 });
+        return NextResponse.json({ message: 'Apartment created successfully', id: result.insertId }, { status: 201 });
     } catch (err) {
         console.error('❌ Admin apartment creation error:', err);
         return NextResponse.json({ error: 'Failed to create apartment' }, { status: 500 });
     }
 }
 
-// ✅ PUT - Update existing apartment
+// ----------------------
+// PUT - update existing apartment
+// ----------------------
 export async function PUT(req) {
     try {
-        // 🔑 Verify admin
+        // verify admin
         const cookieHeader = req.headers.get('cookie');
         const cookies = parseCookies(cookieHeader);
         const token = cookies.token;
@@ -114,19 +130,34 @@ export async function PUT(req) {
             return NextResponse.json({ error: adminCheck.error }, { status: 401 });
         }
 
-        // ✅ Parse body
-        const { id, title, description, location, price_per_night, image_url, available } =
-            await req.json();
+        const body = await req.json();
+        const { id, title, description, location, price_per_night, image_url, available, max_guests } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'Apartment ID is required' }, { status: 400 });
         }
 
-        if (!title || !description || !location || !price_per_night || !image_url) {
+        if (!title || !description || !location || price_per_night === undefined || !image_url) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // ✅ Check if apartment exists
+        // Validate numeric fields
+        const price = parseFloat(price_per_night);
+        if (Number.isNaN(price) || price <= 0) {
+            return NextResponse.json({ error: 'price_per_night must be a number greater than 0' }, { status: 400 });
+        }
+
+        let maxGuests = 1;
+        if (max_guests !== undefined) {
+            maxGuests = parseInt(max_guests, 10);
+            if (Number.isNaN(maxGuests) || maxGuests < 1) {
+                return NextResponse.json({ error: 'max_guests must be an integer >= 1' }, { status: 400 });
+            }
+        }
+
+        const avail = (available === undefined) ? 1 : (available === true || available === 'true' || available === 1 || available === '1') ? 1 : 0;
+
+        // check existence
         const checkSql = 'SELECT id FROM apartments WHERE id = ?';
         const existing = await query(checkSql, [id]);
 
@@ -134,14 +165,13 @@ export async function PUT(req) {
             return NextResponse.json({ error: 'Apartment not found' }, { status: 404 });
         }
 
-        // ✅ Update apartment
         const updateSql = `
-            UPDATE apartments 
-            SET title = ?, description = ?, location = ?, price_per_night = ?, image_url = ?, available = ?
-            WHERE id = ?
-        `;
+      UPDATE apartments
+      SET title = ?, description = ?, location = ?, price_per_night = ?, max_guests = ?, image_url = ?, available = ?
+      WHERE id = ?
+    `;
 
-        await query(updateSql, [title, description, location, price_per_night, image_url, available ?? 1, id]);
+        await query(updateSql, [title, description, location, price, maxGuests, image_url, avail, id]);
 
         return NextResponse.json({ message: 'Apartment updated successfully' }, { status: 200 });
     } catch (err) {
@@ -150,10 +180,12 @@ export async function PUT(req) {
     }
 }
 
-// ✅ DELETE - Remove apartment
+// ----------------------
+// DELETE - remove apartment
+// ----------------------
 export async function DELETE(req) {
     try {
-        // 🔑 Verify admin
+        // verify admin
         const cookieHeader = req.headers.get('cookie');
         const cookies = parseCookies(cookieHeader);
         const token = cookies.token;
@@ -163,7 +195,6 @@ export async function DELETE(req) {
             return NextResponse.json({ error: adminCheck.error }, { status: 401 });
         }
 
-        // ✅ Get apartment ID from query parameters
         const url = new URL(req.url);
         const id = url.searchParams.get('id');
 
@@ -171,7 +202,6 @@ export async function DELETE(req) {
             return NextResponse.json({ error: 'Apartment ID is required' }, { status: 400 });
         }
 
-        // ✅ Check if apartment exists
         const checkSql = 'SELECT id FROM apartments WHERE id = ?';
         const existing = await query(checkSql, [id]);
 
@@ -179,7 +209,6 @@ export async function DELETE(req) {
             return NextResponse.json({ error: 'Apartment not found' }, { status: 404 });
         }
 
-        // ✅ Delete apartment
         const deleteSql = 'DELETE FROM apartments WHERE id = ?';
         await query(deleteSql, [id]);
 

@@ -9,7 +9,7 @@ export async function PUT(request, { params }) {
         const { status, admin_notes } = await request.json();
 
         // Validate status
-        const validStatuses = ['pending', 'confirmed', 'cancelled', 'expired'];
+        const validStatuses = ['pending', 'confirmed', 'cancelled', 'expired', "paid"];
         if (!validStatuses.includes(status)) {
             return NextResponse.json({ success: false, message: 'Invalid status' }, { status: 400 });
         }

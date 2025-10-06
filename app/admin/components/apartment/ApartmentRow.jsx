@@ -14,6 +14,7 @@ const ApartmentRow = ({ apartment, onEdit, onDelete, loadingAction, getImageUrl 
             </div>
         </td>
         <td className="p-4 text-neutral-50">{apartment.location}</td>
+        <td className='p-4 text-neutral-50'>{apartment.max_guests}</td>
         <td className="p-4 text-neutral-50">₹{apartment.price_per_night?.toLocaleString()}</td>
         <td className="p-4">
             <span

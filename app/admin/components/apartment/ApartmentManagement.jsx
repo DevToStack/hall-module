@@ -13,6 +13,7 @@ const initialFormState = {
     description: '',
     location: '',
     price_per_night: '',
+    max_guests:'',
     image_url: '',
     available: true,
 };
@@ -132,6 +133,7 @@ const ApartmentsManager = () => {
             description: apartment.description,
             location: apartment.location,
             price_per_night: apartment.price_per_night,
+            max_guests:apartment.max_guests,
             image_url: apartment.image_url,
             available: apartment.available,
         });
@@ -309,38 +311,47 @@ const ApartmentsManager = () => {
                     </button>
                 </div>
             </div>
-
-            {/* Apartments Table */}
             <div className="bg-neutral-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <div className="min-w-full" style={{ minWidth: '768px' }}>
-                        <table className="w-full text-left border-collapse text-neutral-50">
-                            <thead className="bg-neutral-700">
-                                <tr>
-                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('id')}>ID</th>
-                                    <th className="p-4">Apartment</th>
-                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('location')}>Location</th>
-                                    <th className="p-4 cursor-pointer" onClick={() => handleSort('price_per_night')}>Price/Night</th>
-                                    <th className="p-4">Available</th>
-                                    <th className="p-4">Actions</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Scrollable table body */}
                 <div
-                    className="overflow-y-auto"
+                    className="overflow-y-auto overflow-x-auto"
                     style={{
                         maxHeight: 'calc(100vh - 400px)',
                         minHeight: '200px'
                     }}
                 >
-                    <div className="min-w-full" style={{ minWidth: '768px' }}>
-                        <table className="w-full text-left border-collapse text-neutral-50">
-                            <tbody>
-                                {filteredAndSortedApartments.map((apartment) => (
+                    <table className="w-full text-left border-collapse text-neutral-50 min-w-[768px]">
+                        {/* ---------- Table Header ---------- */}
+                        <thead className="bg-neutral-700 sticky top-0 z-20">
+                            <tr>
+                                <th
+                                    className="p-4 cursor-pointer text-sm font-semibold"
+                                    onClick={() => handleSort('id')}
+                                >
+                                    ID
+                                </th>
+                                <th className="p-4 text-sm font-semibold">Apartment</th>
+                                <th
+                                    className="p-4 cursor-pointer text-sm font-semibold"
+                                    onClick={() => handleSort('location')}
+                                >
+                                    Location
+                                </th>
+                                <th className="p-2 text-sm font-semibold">Max Guests</th>
+                                <th
+                                    className="p-4 cursor-pointer text-sm font-semibold"
+                                    onClick={() => handleSort('price_per_night')}
+                                >
+                                    Price/Night
+                                </th>
+                                <th className="p-4 text-sm font-semibold">Available</th>
+                                <th className="p-4 text-sm font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+
+                        {/* ---------- Table Body ---------- */}
+                        <tbody className="divide-y divide-neutral-700">
+                            {filteredAndSortedApartments.length > 0 ? (
+                                filteredAndSortedApartments.map((apartment) => (
                                     <Suspense key={apartment.id} fallback={<TableRowSkeleton />}>
                                         <ApartmentRow
                                             apartment={apartment}
@@ -350,19 +361,22 @@ const ApartmentsManager = () => {
                                             getImageUrl={getImageUrl}
                                         />
                                     </Suspense>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan="7"
+                                        className="p-6 text-center text-neutral-400 text-sm"
+                                    >
+                                        {apartments.length === 0
+                                            ? 'No apartments found. Create your first apartment!'
+                                            : 'No apartments match your filters.'}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-
-                {filteredAndSortedApartments.length === 0 && (
-                    <div className="text-center py-8 text-neutral-400">
-                        {apartments.length === 0
-                            ? 'No apartments found. Create your first apartment!'
-                            : 'No apartments match your filters.'}
-                    </div>
-                )}
             </div>
 
             {/* Apartment Form Modal */}

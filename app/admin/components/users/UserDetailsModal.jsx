@@ -19,7 +19,7 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
                         <FontAwesomeIcon icon={faUser} className="mr-2" />
-                        {user.name}
+                        {user.name || "Undefiend"}
                     </h3>
                     <div className="flex space-x-2">
                         <button
@@ -45,32 +45,33 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
                 ) : (
                     <div className="space-y-8">
                         {/* Compact Stats */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                            <CompactStatCard
-                                title="Bookings"
-                                value={user.statistics.total_bookings}
-                                color="green"
-                                icon="clipboardList"
-                            />
-                            <CompactStatCard
-                                title="Payments"
-                                value={user.statistics.total_payments}
-                                color="blue"
-                                icon="moneyBill"
-                            />
-                            <CompactStatCard
-                                title="Reviews"
-                                value={user.statistics.total_reviews}
-                                color="orange"
-                                icon="star"
-                            />
-                            <CompactStatCard
-                                title="Total Spent"
-                                value={`$${user.statistics.total_spent || 0}`}
-                                color="purple"
-                                icon="creditCard"
-                            />
-                        </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <CompactStatCard
+                                    title="Bookings"
+                                    value={user.statistics?.total_bookings || 0}
+                                    color="green"
+                                    icon="clipboardList"
+                                />
+                                <CompactStatCard
+                                    title="Payments"
+                                    value={user.statistics?.total_payments || 0}
+                                    color="blue"
+                                    icon="moneyBill"
+                                />
+                                <CompactStatCard
+                                    title="Reviews"
+                                    value={user.statistics?.total_reviews || 0}
+                                    color="orange"
+                                    icon="star"
+                                />
+                                <CompactStatCard
+                                    title="Total Spent"
+                                    value={`$${user.statistics?.total_spent || 0}`}
+                                    color="purple"
+                                    icon="creditCard"
+                                />
+                            </div>
+
                         <div className='max-h-[70vh] overflow-y-auto space-y-8 max-sm:pb-50 pb-20'>
                             {/* Personal Info */}
                             <Section title="Personal Information">
@@ -87,7 +88,7 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
                             </Section>
 
                             {/* Bookings */}
-                            <Section title={`Bookings (${bookings.length})`}>
+                            <Section title={`Bookings (${bookings?.length})`}>
                                 <DataTable
                                     data={bookings}
                                     columns={[
@@ -123,7 +124,7 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
                             </Section>
 
                             {/* Payments */}
-                            <Section title={`Payments (${payments.length})`}>
+                            <Section title={`Payments (${payments?.length})`}>
                                 <DataTable
                                     data={payments}
                                     columns={[
@@ -156,8 +157,8 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
                             </Section>
 
                             {/* Reviews */}
-                            <Section title={`Reviews (${reviews.length})`}>
-                                {reviews.length > 0 ? (
+                            <Section title={`Reviews (${reviews?.length})`}>
+                                {reviews?.length > 0 ? (
                                     <div className="space-y-4">
                                         {reviews.map((r) => (
                                             <ReviewCard key={r.id} review={r} />
@@ -170,7 +171,7 @@ export default function UserDetailsModal({ userDetails, loading, onClose, onEdit
 
                             {/* Activity */}
                             <Section title="Recent Activity">
-                                {activities.length > 0 ? (
+                                {activities?.length > 0 ? (
                                     <div className="space-y-3">
                                         {activities.map((a) => (
                                             <ActivityItem key={a.id} activity={a} />

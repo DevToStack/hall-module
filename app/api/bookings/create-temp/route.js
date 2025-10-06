@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { rateLimit } from '@/lib/rate-limit';
 import { validateBookingData } from '@/lib/booking-validation';
 import { createTempBooking } from '@/lib/booking-service';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/jwt'; // sync
 
 // === RATE LIMITER ===
 const limiter = rateLimit({
@@ -24,13 +24,9 @@ export async function POST(request) {
             );
         }
 
-        const cookieStore = await cookies(); // ✅ await here
+        // === 2. AUTHENTICATION ===
+        const cookieStore = await cookies(); // ✅ await required in Next.js 13+
         const sessionToken = cookieStore.get('token')?.value;
-        console.log("JWT_SECRET in verify:", process.env.JWT_SECRET);
-        console.log("Token being verified:", sessionToken);
-        console.log("Request cookie header:", request.headers.get("cookie"));
-
-        
         if (!sessionToken) {
             return NextResponse.json(
                 { error: 'Authentication required', code: 'UNAUTHORIZED' },
@@ -38,9 +34,7 @@ export async function POST(request) {
             );
         }
 
-        // Verify token synchronously
         const tokenResult = verifyToken(sessionToken);
-        console.log(tokenResult)
         if (!tokenResult.valid) {
             return NextResponse.json(
                 { error: 'Invalid or expired session', code: 'UNAUTHORIZED' },
@@ -48,11 +42,12 @@ export async function POST(request) {
             );
         }
 
-        const user = tokenResult.decoded; // decoded payload from JWT
+        const userId = tokenResult.decoded.id;
 
         // === 3. RATE LIMITING ===
-        const identifier = sessionToken || request.headers.get('x-forwarded-for') || 'anonymous';
-        const allowed = await limiter.check(identifier); // returns true if allowed
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+        const identifier = sessionToken || ip || 'anonymous';
+        const allowed = await limiter.check(identifier);
         if (!allowed) {
             return NextResponse.json(
                 { error: 'Too many requests. Please try again later.', code: 'RATE_LIMIT_EXCEEDED' },
@@ -60,7 +55,7 @@ export async function POST(request) {
             );
         }
 
-        // === 4. INPUT VALIDATION ===
+        // === 4. VALIDATION ===
         const validation = validateBookingData(body);
         if (!validation.isValid) {
             return NextResponse.json(
@@ -73,22 +68,8 @@ export async function POST(request) {
             );
         }
 
-        // Destructure validated data
-        const { apartment_id, check_in, check_out, guests, total_amount, nights } = validation.data;
-
-        const startDate = new Date(check_in);
-        const endDate = new Date(check_out);
-
         // === 5. CREATE TEMPORARY BOOKING ===
-        const bookingResult = await createTempBooking({
-            apartment_id,
-            start_date: startDate,
-            end_date: endDate,
-            guests,
-            total_amount,
-            nights,
-            sessionToken
-        });
+        const bookingResult = await createTempBooking(validation.data,userId);
 
         if (!bookingResult.success) {
             return NextResponse.json(
@@ -103,13 +84,16 @@ export async function POST(request) {
         // === 6. SUCCESS RESPONSE ===
         return NextResponse.json({
             success: true,
-            booking_id: bookingResult.bookingId,
-            expires_at: bookingResult.expiresAt,
-            message: 'Temporary booking created successfully. Proceed to payment.'
+            message: 'Temporary booking created successfully.Wait for admin Verification.'
         }, { status: 201 });
 
     } catch (error) {
-        console.error('Create temp booking error:', error);
+        console.error({
+            context: 'create-temp booking API',
+            message: error.message,
+            stack: error.stack
+        });
+
         return NextResponse.json(
             { error: 'Internal server error', code: 'INTERNAL_ERROR' },
             { status: 500 }

@@ -13,6 +13,7 @@ import Link from 'next/link';
 import BookingSection from '@/app/profile/components/bookingsSection';
 import PaymentsSection from '@/app/profile/components/paymentBlock';
 import Menu from '@/components/Menu';
+import DotsLoader from '@/components/loader';
 
 const navItems = [
     { id: 'overview', label: 'Overview', icon: faHome },
@@ -65,7 +66,7 @@ export default function ProfileDashboard() {
         fetchProfile();
     }, [fetchProfile]);
 
-    if (!profile) return <div className="h-screen flex items-center justify-center text-gray-500">Loading...</div>;
+    if (!profile) return <DotsLoader/>;
 
     const { user, activity } = profile;
 
@@ -261,7 +262,7 @@ export default function ProfileDashboard() {
                                 },
                                 {
                                     title: 'Upcoming Bookings',
-                                    value: bookings.filter(b => new Date(b.start_date) > new Date() && b.status === 'confirmed').length,
+                                    value: bookings.filter(b => new Date(b.start_date) > new Date() && b.status === 'paid').length,
                                 },
                                 {
                                     title: 'Last Booking',
@@ -404,7 +405,7 @@ export default function ProfileDashboard() {
                 )}
 
                 {active === 'bookings' && (
-                    <BookingSection bookings={bookings} setBookings={setBookings} />
+                    <BookingSection/>
                 )}
 
                 {active === 'payments' && (

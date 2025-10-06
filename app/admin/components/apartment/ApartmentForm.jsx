@@ -44,6 +44,15 @@ const ApartmentForm = ({ editingApartment, formData, setFormData, loading, onSub
                     min="0"
                 />
                 <input
+                    type="number"
+                    placeholder="Max Guests"
+                    value={formData.max_guests}
+                    onChange={(e) => setFormData({ ...formData, max_guests: e.target.value })}
+                    className="w-full p-2 rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                    required
+                    min="1"
+                />
+                <input
                     type="url"
                     placeholder="Image URL"
                     value={formData.image_url}

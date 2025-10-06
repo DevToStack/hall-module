@@ -1,35 +1,49 @@
+// app/api/admin/users/route.js
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import { query } from "@/lib/mysql-wrapper";
+import { verifyAdmin } from "@/lib/adminAuth";
+import { parseCookies } from "@/lib/cookies";
 
 // GET all users with complete information
-export async function GET() {
+export async function GET(req) {
     try {
-        const connection = await pool.getConnection();
+        const cookies = parseCookies(req.headers.get("cookie"));
+        const token = cookies.token;
 
-        const [users] = await connection.query(`
-      SELECT 
-        u.id, 
-        u.name, 
-        u.email, 
-        u.alternate_email, 
-        u.phone_number, 
-        u.alternate_phone,
-        u.role,
-        u.created_at,
-        COUNT(DISTINCT b.id) as total_bookings,
-        COUNT(DISTINCT p.id) as total_payments,
-        COUNT(DISTINCT r.id) as total_reviews,
-        COUNT(DISTINCT s.id) as active_sessions
-      FROM users u
-      LEFT JOIN bookings b ON u.id = b.user_id
-      LEFT JOIN payments p ON u.id = p.booking_id
-      LEFT JOIN reviews r ON u.id = r.user_id
-      LEFT JOIN sessions s ON u.id = s.user_id AND s.expires_at > NOW()
-      GROUP BY u.id
-      ORDER BY u.created_at DESC
-    `);
+        // ✅ Verify admin
+        const { valid, error } = await verifyAdmin(token);
+        if (!valid) return NextResponse.json({ error }, { status: 401 });
 
-        connection.release();
+        const users = await query(`
+            SELECT 
+            u.id, 
+            u.name, 
+            u.email, 
+            u.alternate_email, 
+            u.phone_number, 
+            u.alternate_phone,
+            u.role,
+            u.created_at,
+            COUNT(DISTINCT b.id) AS total_bookings,
+            COUNT(DISTINCT p.id) AS total_payments,
+            COUNT(DISTINCT r.id) AS total_reviews,
+            COUNT(DISTINCT s.id) AS active_sessions,
+            COALESCE((
+                SELECT SUM(amount)
+                FROM payments p2
+                INNER JOIN bookings b2 ON b2.id = p2.booking_id
+                WHERE b2.user_id = u.id AND p2.status='paid'
+            ),0) AS total_spent
+        FROM users u
+        LEFT JOIN bookings b ON u.id = b.user_id
+        LEFT JOIN payments p ON b.id = p.booking_id
+        LEFT JOIN reviews r ON u.id = r.user_id
+        LEFT JOIN sessions s ON u.id = s.user_id AND s.expires_at > NOW()
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+        
+        `);
+
         return NextResponse.json({ users });
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -40,20 +54,24 @@ export async function GET() {
     }
 }
 
-// POST - Create new user (if needed)
-export async function POST(request) {
+
+// POST - Create new user
+export async function POST(req) {
     try {
-        const { name, email, alternate_email, phone_number, alternate_phone, role = 'guest' } = await request.json();
+        const cookies = parseCookies(req.headers.get("cookie"));
+        const token = cookies.token;
 
-        const connection = await pool.getConnection();
+        // ✅ Verify admin
+        const { valid, error } = await verifyAdmin(token);
+        if (!valid) return NextResponse.json({ error }, { status: 401 });
 
-        const [result] = await connection.query(
+        const { name, email, alternate_email, phone_number, alternate_phone, role = 'guest' } = await req.json();
+
+        const result = await query(
             `INSERT INTO users (name, email, alternate_email, phone_number, alternate_phone, role, password) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [name, email, alternate_email, phone_number, alternate_phone, role, 'temporary_password']
         );
-
-        connection.release();
 
         return NextResponse.json({
             message: "User created successfully",

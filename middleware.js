@@ -4,49 +4,42 @@ import { jwtVerify } from "jose";
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function middleware(req) {
-    const logs = [];
-    const log = (msg) => {
-        console.log("[Middleware]", msg);
-        logs.push(msg);
-    };
+    const path = req.nextUrl.pathname;
 
-    log(`Middleware hit for: ${req.nextUrl.pathname}`);
+    // Check only protected routes
+    if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
+        const token = req.cookies.get("token")?.value;
 
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-        log("No token → rewriting to /404");
-        return NextResponse.rewrite(new URL("/404", req.url));
-    }
-    log("Token found");
+        if (!token) {
+            return NextResponse.redirect(new URL("/signin", req.url));
+        }
 
-    let decoded;
-    try {
-        const verified = await jwtVerify(token, JWT_SECRET);
-        decoded = verified.payload;
-        log(`JWT decoded successfully: ${JSON.stringify(decoded)}`);
-    } catch (err) {
-        log(`JWT verification failed: ${err.message}`);
-        return NextResponse.rewrite(new URL("/404", req.url));
-    }
+        try {
+            const { payload } = await jwtVerify(token, JWT_SECRET, {
+                algorithms: ["HS256"],
+                issuer:
+                    process.env.NODE_ENV === "production"
+                        ? "https://apartment-booking-site.vercel.app/"
+                        : "http://localhost:3000",
+                audience: "yourapp-users",
+            });
 
-    // Protect both /admin pages and /api/admin/* routes
-    if (
-        req.nextUrl.pathname.startsWith("/admin") ||
-        req.nextUrl.pathname.startsWith("/api/admin")
-    ) {
-        if (decoded.role === "admin") {
-            log("Admin access allowed → next()");
+            if (payload.role !== "admin") {
+                return NextResponse.rewrite(new URL("/404", req.url));
+            }
+
+            // ✅ JWT valid & admin role
             return NextResponse.next();
-        } else {
-            log("Non-admin → /404");
-            return NextResponse.rewrite(new URL("/404", req.url));
+        } catch (err) {
+            console.error("[SECURITY] Middleware JWT verification failed:", err.message);
+            return NextResponse.redirect(new URL("/signin", req.url));
         }
     }
 
-    log("Non-admin page → next()");
+    // For all other routes, continue
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ["/admin/:path*", "/api/admin/:path*"], // <-- protect both
+    matcher: ["/admin/:path*", "/api/admin/:path*"],
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSyncAlt, faFilter, faSearch, faTimes, faChevronDown, faChevronUp, faShieldAlt, faCalendar, faSort } from '@fortawesome/free-solid-svg-icons';
+import { faSyncAlt, faFilter, faSearch, faTimes, faChevronDown, faChevronUp, faShieldAlt, faCalendar, faSort, faUsers, faTrash } from '@fortawesome/free-solid-svg-icons';
 import CompactStatCard from './CompactStatCard';
 import UserDetailsModal from './UserDetailsModal';
 import EditUserModal from './EditUserModal';
@@ -13,7 +13,7 @@ export default function UsersTable() {
     const [error, setError] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
     const [showUserDetails, setShowUserDetails] = useState(false);
-    const [userDetails, setUserDetails] = useState(null);
+    const [userDetails, setUserDetails] = useState([]);
     const [detailsLoading, setDetailsLoading] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -603,7 +603,7 @@ export default function UsersTable() {
 function UserTableRow({ user, isSelected, onSelect, onViewDetails, onEdit, onDelete }) {
     const { faUser, faUserShield, faClipboardList, faDollarSign, faCalendar, faEye, faEdit, faTrash } = require('@fortawesome/free-solid-svg-icons');
     const { FontAwesomeIcon } = require('@fortawesome/react-fontawesome');
-
+    console.log(user)
     return (
         <tr className="border-b border-neutral-800/50 hover:bg-neutral-800/40 transition-colors">
             <td className="px-4 py-3">
@@ -648,7 +648,7 @@ function UserTableRow({ user, isSelected, onSelect, onViewDetails, onEdit, onDel
             <td className="px-4 py-3 text-gray-300">
                 <div className="flex items-center gap-1">
                     <FontAwesomeIcon icon={faDollarSign} className="w-3 h-3 text-gray-500" />
-                    ${user.statistics?.total_spent || 0}
+                    {user?.total_spent || 0}
                 </div>
             </td>
             <td className="px-4 py-3 text-sm text-gray-400">

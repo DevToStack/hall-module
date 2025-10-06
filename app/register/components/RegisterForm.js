@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faPaperPlane, faUser, faPhone, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
@@ -16,20 +15,19 @@ export default function RegisterForm() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [otp, setOtp] = useState(Array(6).fill(""));
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
     const [timer, setTimer] = useState(0);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+    const [passwordStrength, setPasswordStrength] = useState("");
+    const router = useRouter();
     const otpRefs = useRef([]);
+
     // Countdown effect
     useEffect(() => {
         if (timer <= 0) return;
-        const interval = setInterval(() => {
-            setTimer((t) => t - 1);
-        }, 1000);
+        const interval = setInterval(() => setTimer((t) => t - 1), 1000);
         return () => clearInterval(interval);
     }, [timer]);
 
@@ -39,10 +37,29 @@ export default function RegisterForm() {
         }
     }, [step]);
 
+    // Password strength checker
+    const getPasswordStrength = (pwd) => {
+        let strength = 0;
+        if (pwd.length >= 8) strength++;
+        if (/[A-Z]/.test(pwd)) strength++;
+        if (/[a-z]/.test(pwd)) strength++;
+        if (/[0-9]/.test(pwd)) strength++;
+        if (/[@$!%*?&]/.test(pwd)) strength++;
+
+        if (strength <= 2) return 'Weak';
+        if (strength === 3 || strength === 4) return 'Medium';
+        if (strength === 5) return 'Strong';
+    };
+
+    const handlePasswordChange = (value) => {
+        setPassword(value);
+        setPasswordStrength(getPasswordStrength(value));
+    };
+
+    // OTP input handlers
     const handleOtpChange = (value, index) => {
         if (/^\d*$/.test(value)) {
             let newOtp = [...otp];
-
             if (value.length > 1) { // paste case
                 value.split('').slice(0, 6).forEach((char, idx) => {
                     newOtp[idx] = char;
@@ -52,13 +69,10 @@ export default function RegisterForm() {
             } else {
                 newOtp[index] = value;
                 setOtp(newOtp);
-                if (value && index < 5) {
-                    otpRefs.current[index + 1].focus();
-                }
+                if (value && index < 5) otpRefs.current[index + 1].focus();
             }
         }
     };
-    
 
     const handleOtpKeyDown = (e, index) => {
         if (e.key === "Backspace" && !otp[index] && index > 0) {
@@ -66,61 +80,72 @@ export default function RegisterForm() {
         }
     };
 
-    // Step 1: Send OTP
     const handleSendOtp = async (e) => {
         e.preventDefault();
+
+        // Check if passwords match
         if (password !== confirmPassword) {
             setError('Passwords do not match!');
             return;
         }
+
+        // Check password strength
+        const strength = getPasswordStrength(password);
+        if (strength !== 'Strong') {
+            setError(`Password strength is ${strength}. Please use a strong password.`);
+            return; // Stop here, do not send OTP
+        }
+
+        // Clear previous errors and proceed
         setLoading(true);
         setTimer(60);
+        setError('');
+        setSuccess('');
+
         try {
-            const requser = await fetch('/api/user',{
+            const requser = await fetch('/api/user', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email,phone}),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, phone }),
             });
 
             const data = await requser.json();
-            if(requser.ok){
-                console.log("responser is ok")
-                const res = await fetch('/api/auth/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, purpose: 'registration' }),
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    console.log("response is ok")
-                    setSuccess(`OTP sent to ${email}. Please check your inbox.`);
-                    setTimeout(() => {
-                        setStep(2);
-                        setLoading(false);
-                    }, 1000);
-                } else {
-                    setError(data.error || 'Failed to send OTP.')
-                }
-            }
-            else{
+            if (!requser.ok) {
                 setError(data.message);
+                setLoading(false);
+                return;
             }
-            
-        } catch (error) {
-            setError('Something went wrong.Try again later');
-        } finally {
+
+            const res = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, purpose: 'registration' }),
+            });
+
+            const otpData = await res.json();
+            if (res.ok) {
+                setSuccess(`OTP sent to ${email}. Please check your inbox.`);
+                setTimeout(() => {
+                    setStep(2);
+                    setLoading(false);
+                }, 1000);
+            } else {
+                setError(otpData.error || 'Failed to send OTP.');
+                setLoading(false);
+            }
+        } catch (err) {
+            setError('Something went wrong. Try again later');
             setLoading(false);
         }
     };
+    
 
     // Step 2: Verify OTP and Register
     const handleRegister = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setSuccess('');
 
         try {
             const res = await fetch('/api/auth/register', {
@@ -137,12 +162,12 @@ export default function RegisterForm() {
 
             const data = await res.json();
             if (res.ok) {
-                setSuccess("user registered succesfully.")
-                router.push('/signin'); // no delay needed
+                setSuccess("User registered successfully.");
+                router.push('/signin');
             } else {
                 setError(data.message || 'Failed to register account.');
                 setStep(1);
-                setOtp(Array(6).fill("")); // reset OTP
+                setOtp(Array(6).fill(""));
                 setName('');
                 setEmail('');
                 setPhone('');
@@ -155,7 +180,6 @@ export default function RegisterForm() {
             setLoading(false);
         }
     };
-    
 
     return (
         <div className="min-h-screen flex items-center justify-top sm:justify-center bg-white/10 sm:bg-black">
@@ -170,62 +194,41 @@ export default function RegisterForm() {
                             { icon: faUser, type: "text", placeholder: "Full Name", value: name, setter: setName },
                             { icon: faEnvelope, type: "email", placeholder: "Email", value: email, setter: setEmail },
                             { icon: faPhone, type: "tel", placeholder: "Phone Number", value: phone, setter: setPhone },
-                            { icon: faLock, type: "password", placeholder: "Password", value: password, setter: setPassword, show: showPassword, setShow: setShowPassword },
+                            { icon: faLock, type: "password", placeholder: "Password", value: password, setter: handlePasswordChange, show: showPassword, setShow: setShowPassword },
                             { icon: faLock, type: "password", placeholder: "Confirm Password", value: confirmPassword, setter: setConfirmPassword, show: showConfirmPassword, setShow: setShowConfirmPassword },
                         ].map((field, i) => (
-                            <div
-                                key={i}
-                                className="flex items-center border border-white/10 rounded-lg px-3 py-2 focus-within:border-white transition-colors relative"
-                            >
+                            <div key={i} className="flex items-center border border-white/10 rounded-lg px-3 py-2 focus-within:border-white transition-colors relative">
                                 <FontAwesomeIcon icon={field.icon} className="text-gray-100 mr-4" />
-
                                 <input
                                     type={field.show !== undefined ? (field.show ? "text" : "password") : field.type}
                                     placeholder={field.placeholder}
                                     value={field.value}
-                                    onChange={(e) => {
-                                        let val = e.target.value;
-
-                                        // ✅ Smart gmail autofill for email
-                                        if (field.type === "email") {
-                                            if (val.endsWith("@") && !val.includes("@gmail.com")) {
-                                                val = val + "gmail.com";
-                                            }
-                                            if (val.includes("@gmail.com")) {
-                                                const index = val.indexOf("@gmail.com") + "@gmail.com".length;
-                                                val = val.slice(0, index);
-                                            }
-                                        }
-
-                                        field.setter(val);
-                                    }}
+                                    onChange={(e) => field.setter(e.target.value)}
                                     className="flex-1 outline-none bg-transparent text-gray-100"
                                     required
                                 />
-
-                                {/* Eye icon for password fields */}
                                 {field.type === "password" && (
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            // Show password
-                                            field.setShow(true);
-
-                                            // Hide after 3 seconds
-                                            setTimeout(() => field.setShow(false), 3000);
-                                        }}
+                                        onClick={() => field.setShow(true)}
                                         className="absolute right-3 text-gray-400 hover:text-gray-200"
                                     >
                                         <FontAwesomeIcon icon={field.show ? faEyeSlash : faEye} />
                                     </button>
                                 )}
-
                             </div>
                         ))}
 
+                        {/* Password strength text */}
+                        {password && (
+                            <p className={`text-sm ${passwordStrength === 'Weak' ? 'text-red-500' : passwordStrength === 'Medium' ? 'text-yellow-400' : 'text-green-500'}`}>
+                                Password Strength: {passwordStrength}
+                            </p>
+                        )}
+
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || passwordStrength !== 'Strong'}
                             className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg flex items-center justify-center"
                         >
                             {loading ? "Sending..." : (
@@ -243,10 +246,9 @@ export default function RegisterForm() {
                             </a>
                         </p>
                     </form>
-                  
                 )}
 
-                {step === 2 &&(
+                {step === 2 && (
                     <div>
                         <form onSubmit={handleRegister} className="space-y-4">
                             <div className="flex justify-between gap-2">
@@ -287,8 +289,6 @@ export default function RegisterForm() {
                             )}
                         </div>
                     </div>
-                    
-                    
                 )}
 
                 {error && <Toast message={error} type="error" onClose={() => setError(null)} />}

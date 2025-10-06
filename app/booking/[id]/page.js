@@ -39,7 +39,6 @@ function NavBar({ username = "Guest" }) {
   );
 }
 
-
 function getLockedDates(bookings) {
   const locked = [];
   if (!bookings || !Array.isArray(bookings)) return locked;
@@ -154,7 +153,7 @@ export default function BookingPage() {
   const DAILY_RATE = 200; // 200 rupees per day
   const cleaningFee = 500;
 
-  // Calculate price summary whenever dates change
+  // Calculate price summary whenever dates or guests change
   useEffect(() => {
     if (formData.checkin && formData.checkout) {
       const nights = calculateNights(formData.checkin, formData.checkout);
@@ -165,12 +164,13 @@ export default function BookingPage() {
         nights,
         basePrice,
         cleaningFee,
-        total
+        total,
+        guests: formData.guests // Include guests in booking summary
       });
     } else {
       setBookingSummary(null);
     }
-  }, [formData.checkin, formData.checkout]);
+  }, [formData.checkin, formData.checkout, formData.guests]);
 
   const plan = apartmentPlans.find((p) => p.id === Number(id));
 
@@ -254,11 +254,33 @@ export default function BookingPage() {
     try {
       setLoading(true);
 
+      // Validate required fields
+      if (!formData.guests || formData.guests < 1) {
+        setFormError("Please select number of guests.");
+        setShowVerificationModal(false);
+        return;
+      }
+
+      if (!bookingSummary) {
+        setFormError("Please select valid dates.");
+        setShowVerificationModal(false);
+        return;
+      }
+
       const checkinDateTime = new Date(`${formData.checkin}T${checkinTime}`);
       const checkoutDateTime = new Date(`${formData.checkout}T${checkoutTime}`);
 
       const checkinSQL = formatForMySQL(checkinDateTime);
       const checkoutSQL = formatForMySQL(checkoutDateTime);
+
+      console.log("Sending booking data:", {
+        apartment_id: id,
+        check_in: checkinSQL,
+        check_out: checkoutSQL,
+        guests: formData.guests,
+        total_amount: bookingSummary.total,
+        nights: bookingSummary.nights,
+      });
 
       // Create a temporary booking and redirect to payment page
       const bookingRes = await fetch("/api/bookings/create-temp", {
@@ -266,12 +288,12 @@ export default function BookingPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          apartment_id: id,
+          apartment_id: Number(id),
           check_in: checkinSQL,
           check_out: checkoutSQL,
-          guests: 1,
-          total_amount: bookingSummary.total,
-          nights: bookingSummary.nights,
+          guests: Number(formData.guests),
+          total_amount: Number(bookingSummary.total),
+          nights: Number(bookingSummary.nights),
         }),
       });
 
@@ -283,7 +305,7 @@ export default function BookingPage() {
         return;
       }
 
-      // Redirect to payment page with booking ID
+      // Redirect to profile page after successful booking
       router.push(`/profile`);
 
     } catch (err) {
