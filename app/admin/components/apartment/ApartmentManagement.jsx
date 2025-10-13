@@ -7,15 +7,23 @@ const ApartmentForm = lazy(() => import('./ApartmentForm'));
 const ApartmentRow = lazy(() => import('./ApartmentRow'));
 const ConfirmModal = lazy(() => import('./ConfirmModal'));
 
-// Initial form state
+// Initial form state with all new fields
 const initialFormState = {
     title: '',
     description: '',
     location: '',
     price_per_night: '',
-    max_guests:'',
+    max_guests: '',
     image_url: '',
     available: true,
+    features: [],
+    inclusions: [],
+    rules: [],
+    whyBook: [],
+    policies: {
+        cancellation: '',
+        booking: ''
+    }
 };
 
 const ApartmentsManager = () => {
@@ -51,6 +59,19 @@ const ApartmentsManager = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // 🔹 Fetch single apartment with all details for editing
+    const fetchApartmentDetails = async (id) => {
+        try {
+            const res = await fetch(`/api/admin/apartments?id=${id}`, { credentials: 'include' });
+            const data = await res.json();
+            if (res.ok) return data.apartment;
+            else console.error('Fetch details error:', data.error);
+        } catch (err) {
+            console.error('Error fetching apartment details:', err);
+        }
+        return null;
     };
 
     // Fetch on mount
@@ -100,7 +121,7 @@ const ApartmentsManager = () => {
 
     // 🔹 Save or update apartment
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         setLoadingAction(true);
         try {
             const method = editingApartment ? 'PUT' : 'POST';
@@ -125,19 +146,37 @@ const ApartmentsManager = () => {
         }
     };
 
-    // 🔹 Edit apartment
-    const handleEdit = (apartment) => {
-        setEditingApartment(apartment);
-        setFormData({
-            title: apartment.title,
-            description: apartment.description,
-            location: apartment.location,
-            price_per_night: apartment.price_per_night,
-            max_guests:apartment.max_guests,
-            image_url: apartment.image_url,
-            available: apartment.available,
-        });
-        setShowForm(true);
+    // 🔹 Edit apartment - fetch complete details
+    const handleEdit = async (apartment) => {
+        setLoadingAction(true);
+        try {
+            const apartmentDetails = await fetchApartmentDetails(apartment.id);
+            if (apartmentDetails) {
+                setEditingApartment(apartmentDetails);
+                setFormData({
+                    title: apartmentDetails.title || '',
+                    description: apartmentDetails.description || '',
+                    location: apartmentDetails.location || '',
+                    price_per_night: apartmentDetails.price_per_night || '',
+                    max_guests: apartmentDetails.max_guests || '',
+                    image_url: apartmentDetails.image_url || '',
+                    available: apartmentDetails.available || true,
+                    features: apartmentDetails.features || [],
+                    inclusions: apartmentDetails.inclusions || [],
+                    rules: apartmentDetails.rules || [],
+                    whyBook: apartmentDetails.whyBook || [],
+                    policies: apartmentDetails.policies || { cancellation: '', booking: '' }
+                });
+                setShowForm(true);
+            } else {
+                throw new Error('Failed to load apartment details');
+            }
+        } catch (error) {
+            console.error('Error loading apartment details:', error);
+            alert('Error loading apartment details. Please try again.');
+        } finally {
+            setLoadingAction(false);
+        }
     };
 
     // 🔹 Delete flow
@@ -184,6 +223,13 @@ const ApartmentsManager = () => {
         setShowForm(false);
         setEditingApartment(null);
         setFormData(initialFormState);
+    };
+
+    // 🔹 Add new apartment
+    const handleAddNew = () => {
+        setEditingApartment(null);
+        setFormData(initialFormState);
+        setShowForm(true);
     };
 
     const handleSort = (field) => {
@@ -234,7 +280,7 @@ const ApartmentsManager = () => {
                     </button>
 
                     <button
-                        onClick={() => setShowForm(true)}
+                        onClick={handleAddNew}
                         className="bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 px-4 py-2 rounded-lg flex items-center space-x-2 text-neutral-50 font-medium"
                         disabled={loadingAction}
                     >
@@ -311,6 +357,8 @@ const ApartmentsManager = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Apartments Table */}
             <div className="bg-neutral-800 rounded-xl shadow-sm overflow-hidden">
                 <div
                     className="overflow-y-auto overflow-x-auto"
@@ -426,11 +474,15 @@ const TableRowSkeleton = () => (
 
 const FormSkeleton = () => (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-md">
+        <div className="bg-neutral-900 p-6 rounded-xl border border-white/10 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="animate-pulse space-y-4">
-                <div className="h-6 bg-neutral-700 rounded w-32"></div>
-                <div className="h-10 bg-neutral-700 rounded"></div>
-                <div className="h-24 bg-neutral-700 rounded"></div>
+                <div className="h-6 bg-neutral-700 rounded w-32 mb-4"></div>
+                <div className="flex space-x-1 mb-4">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-8 bg-neutral-700 rounded w-20"></div>
+                    ))}
+                </div>
+                <div className="h-64 bg-neutral-700 rounded"></div>
             </div>
         </div>
     </div>

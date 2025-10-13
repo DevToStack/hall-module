@@ -13,8 +13,7 @@ export default function Toast({ message, type = "error", onClose }) {
     useEffect(() => {
       const timer = setTimeout(onClose, 3000);
       return () => clearTimeout(timer);
-      // Remove [onClose] if you want it to run only once
-    }, []);
+    }, [onClose]);
 
   const icon =
     type === "success"

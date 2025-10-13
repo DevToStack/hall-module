@@ -22,6 +22,55 @@ function verifyAdmin(token) {
     return { admin: decoded };
 }
 
+// Helper function to process array data for related tables
+async function processRelatedData(apartmentId, data, tableName, fields) {
+    if (!data || !Array.isArray(data)) return;
+
+    // Delete existing records
+    await query(`DELETE FROM ${tableName} WHERE apartment_id = ?`, [apartmentId]);
+
+    // Insert new records
+    for (const item of data) {
+        const values = [apartmentId];
+        const placeholders = ['?'];
+
+        for (const field of fields) {
+            values.push(item[field]);
+            placeholders.push('?');
+        }
+
+        await query(
+            `INSERT INTO ${tableName} (apartment_id, ${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
+            values
+        );
+    }
+}
+
+// Helper function to fetch related data
+async function fetchRelatedData(apartmentId) {
+    const [
+        features,
+        inclusions,
+        rules,
+        whyBook,
+        policies
+    ] = await Promise.all([
+        query('SELECT icon, text FROM apartment_features WHERE apartment_id = ?', [apartmentId]),
+        query('SELECT icon, text FROM apartment_inclusions WHERE apartment_id = ?', [apartmentId]),
+        query('SELECT icon, text FROM apartment_rules WHERE apartment_id = ?', [apartmentId]),
+        query('SELECT icon, text FROM apartment_why_book WHERE apartment_id = ?', [apartmentId]),
+        query('SELECT cancellation, booking FROM apartment_policies WHERE apartment_id = ?', [apartmentId])
+    ]);
+
+    return {
+        features,
+        inclusions,
+        rules,
+        whyBook,
+        policies: policies[0] || null
+    };
+}
+
 // ----------------------
 // GET - fetch all or single
 // ----------------------
@@ -41,6 +90,7 @@ export async function GET(req) {
         const id = url.searchParams.get('id');
 
         if (id) {
+            // Fetch single apartment with all related data
             const sql = 'SELECT * FROM apartments WHERE id = ?';
             const results = await query(sql, [id]);
 
@@ -48,8 +98,17 @@ export async function GET(req) {
                 return NextResponse.json({ error: 'Apartment not found' }, { status: 404 });
             }
 
-            return NextResponse.json({ apartment: results[0] }, { status: 200 });
+            const apartment = results[0];
+            const relatedData = await fetchRelatedData(id);
+
+            return NextResponse.json({
+                apartment: {
+                    ...apartment,
+                    ...relatedData
+                }
+            }, { status: 200 });
         } else {
+            // Fetch all apartments (basic info only)
             const sql = 'SELECT * FROM apartments ORDER BY created_at DESC';
             const results = await query(sql);
             return NextResponse.json({ apartments: results }, { status: 200 });
@@ -76,7 +135,21 @@ export async function POST(req) {
         }
 
         const body = await req.json();
-        const { title, description, location, price_per_night, image_url, available, max_guests } = body;
+        const {
+            title,
+            description,
+            location,
+            price_per_night,
+            image_url,
+            available,
+            max_guests,
+            // New fields for related tables
+            features,
+            inclusions,
+            rules,
+            whyBook,
+            policies
+        } = body;
 
         // Basic required field checks
         if (!title || !description || !location || price_per_night === undefined || !image_url) {
@@ -107,8 +180,28 @@ export async function POST(req) {
     `;
 
         const result = await query(sql, [title, description, location, price, maxGuests, image_url, avail]);
+        const apartmentId = result.insertId;
 
-        return NextResponse.json({ message: 'Apartment created successfully', id: result.insertId }, { status: 201 });
+        // Process related data
+        await Promise.all([
+            processRelatedData(apartmentId, features, 'apartment_features', ['icon', 'text']),
+            processRelatedData(apartmentId, inclusions, 'apartment_inclusions', ['icon', 'text']),
+            processRelatedData(apartmentId, rules, 'apartment_rules', ['icon', 'text']),
+            processRelatedData(apartmentId, whyBook, 'apartment_why_book', ['icon', 'text'])
+        ]);
+
+        // Process policies (special case - single record)
+        if (policies) {
+            await query(
+                'INSERT INTO apartment_policies (apartment_id, cancellation, booking) VALUES (?, ?, ?)',
+                [apartmentId, policies.cancellation, policies.booking]
+            );
+        }
+
+        return NextResponse.json({
+            message: 'Apartment created successfully',
+            id: apartmentId
+        }, { status: 201 });
     } catch (err) {
         console.error('❌ Admin apartment creation error:', err);
         return NextResponse.json({ error: 'Failed to create apartment' }, { status: 500 });
@@ -131,7 +224,22 @@ export async function PUT(req) {
         }
 
         const body = await req.json();
-        const { id, title, description, location, price_per_night, image_url, available, max_guests } = body;
+        const {
+            id,
+            title,
+            description,
+            location,
+            price_per_night,
+            image_url,
+            available,
+            max_guests,
+            // New fields for related tables
+            features,
+            inclusions,
+            rules,
+            whyBook,
+            policies
+        } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'Apartment ID is required' }, { status: 400 });
@@ -165,6 +273,7 @@ export async function PUT(req) {
             return NextResponse.json({ error: 'Apartment not found' }, { status: 404 });
         }
 
+        // Update main apartment data
         const updateSql = `
       UPDATE apartments
       SET title = ?, description = ?, location = ?, price_per_night = ?, max_guests = ?, image_url = ?, available = ?
@@ -172,6 +281,37 @@ export async function PUT(req) {
     `;
 
         await query(updateSql, [title, description, location, price, maxGuests, image_url, avail, id]);
+
+        // Process related data
+        await Promise.all([
+            processRelatedData(id, features, 'apartment_features', ['icon', 'text']),
+            processRelatedData(id, inclusions, 'apartment_inclusions', ['icon', 'text']),
+            processRelatedData(id, rules, 'apartment_rules', ['icon', 'text']),
+            processRelatedData(id, whyBook, 'apartment_why_book', ['icon', 'text'])
+        ]);
+
+        // Process policies
+        if (policies) {
+            // Check if policies record exists
+            const existingPolicies = await query(
+                'SELECT id FROM apartment_policies WHERE apartment_id = ?',
+                [id]
+            );
+
+            if (existingPolicies.length > 0) {
+                // Update existing
+                await query(
+                    'UPDATE apartment_policies SET cancellation = ?, booking = ? WHERE apartment_id = ?',
+                    [policies.cancellation, policies.booking, id]
+                );
+            } else {
+                // Insert new
+                await query(
+                    'INSERT INTO apartment_policies (apartment_id, cancellation, booking) VALUES (?, ?, ?)',
+                    [id, policies.cancellation, policies.booking]
+                );
+            }
+        }
 
         return NextResponse.json({ message: 'Apartment updated successfully' }, { status: 200 });
     } catch (err) {
@@ -211,6 +351,8 @@ export async function DELETE(req) {
 
         const deleteSql = 'DELETE FROM apartments WHERE id = ?';
         await query(deleteSql, [id]);
+
+        // Note: Related data will be automatically deleted due to ON DELETE CASCADE
 
         return NextResponse.json({ message: 'Apartment deleted successfully' }, { status: 200 });
     } catch (err) {

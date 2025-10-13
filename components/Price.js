@@ -77,24 +77,8 @@ const glassStyles = [
 
 export default function PricingSection() {
     const router = useRouter();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        fetch("/api/profile", { credentials: "include" })
-            .then(async (res) => {
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data?.user) setIsLoggedIn(true);
-                }
-            })
-            .catch(() => setIsLoggedIn(false));
-    }, []);
 
     const handleBook = (plan) => {
-        if (!isLoggedIn) {
-            router.push("/signin");
-            return;
-        }
         router.push(`/booking/${plan.id}`);
     };
 

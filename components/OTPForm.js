@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function OtpVerificationPage() {
@@ -21,7 +21,7 @@ export default function OtpVerificationPage() {
             sendOtp();
             sentOnce.current = true;
         }
-    }, [email, purpose]);
+    }, [email, purpose, sendOtp]);
 
     // Countdown for resend
     useEffect(() => {
@@ -31,7 +31,7 @@ export default function OtpVerificationPage() {
         }
     }, [resendTimer]);
 
-    const sendOtp = async () => {
+    const sendOtp = useCallback(async () => {
         setMessage('');
         setLoading(true);
         try {
@@ -51,7 +51,7 @@ export default function OtpVerificationPage() {
             setMessage('Server error while sending OTP.');
         }
         setLoading(false);
-    };
+    }, [email, purpose]);
 
     const verifyOtp = async (e) => {
         e.preventDefault();

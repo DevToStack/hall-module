@@ -1,133 +1,177 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import NextImage from 'next/image';
+import { FaChevronLeft, FaChevronRight, FaTimes, FaExpand, FaPlay, FaPause } from 'react-icons/fa';
 
-const images = [
-    '/image1.jpg',
-    '/image2.jpg',
-    '/image3.jpg',
-    '/image4.jpg',
-    '/image5.jpg',
-    '/image6.jpg',
-    '/image7.jpg',
-    '/image8.jpg',
-];
+/**
+ * Refactored GallerySection
+ *
+ * Props:
+ *  - images: Array<{ id?, image_url, image_name? }> (required)
+ *  - initialIndex: number (optional) -> start at specific image
+ *  - groupSize: number (optional, default 4) -> thumbnails per row
+ */
+const GallerySection = ({ images = [], initialIndex = 0, groupSize = 4 }) => {
+    const [currentIndex, setCurrentIndex] = useState(initialIndex);
+    const [groupStart, setGroupStart] = useState(Math.floor(initialIndex / groupSize) * groupSize);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [autoPlay, setAutoPlay] = useState(false);
+    const [mainImageLoaded, setMainImageLoaded] = useState(false);
 
-const GallerySection = () => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [groupStart, setGroupStart] = useState(0);
-    const [prevGroupStart, setPrevGroupStart] = useState(0);
-    const groupSize = 4;
+    const autoPlayRef = useRef(null);
 
-    // Auto-slide main image + update group if needed
+    // Auto-play effect
     useEffect(() => {
-        const interval = setInterval(() => {
-            const nextIndex = (currentIndex + 1) % images.length;
-            setCurrentIndex(nextIndex);
+        if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+        if (!images.length || !autoPlay) return;
 
-            const newGroupStart = Math.floor(nextIndex / groupSize) * groupSize;
-            if (newGroupStart !== groupStart) {
-                setPrevGroupStart(groupStart);
-                setGroupStart(newGroupStart);
-            }
+        autoPlayRef.current = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % images.length);
         }, 4000);
 
-        return () => clearInterval(interval);
-    }, [currentIndex, groupStart]);
+        return () => clearInterval(autoPlayRef.current);
+    }, [images.length, autoPlay]);
+
+    // Update thumbnail group on index change
+    useEffect(() => {
+        if (!isFullscreen) {
+            setGroupStart(Math.floor(currentIndex / groupSize) * groupSize);
+        }
+    }, [currentIndex, isFullscreen, groupSize]);
+
+    const goToNext = useCallback(() => {
+        setMainImageLoaded(false);
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, [images.length]);
+
+    const goToPrevious = useCallback(() => {
+        setMainImageLoaded(false);
+        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    }, [images.length]);
 
     const handleThumbnailClick = (index) => {
+        if (index === currentIndex) return;
+        setMainImageLoaded(false);
         setCurrentIndex(index);
-
-        const newGroupStart = Math.floor(index / groupSize) * groupSize;
-        if (newGroupStart !== groupStart) {
-            setPrevGroupStart(groupStart);
-            setGroupStart(newGroupStart);
-        }
     };
 
+    const openFullscreen = () => {
+        setIsFullscreen(true);
+        if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
+        setAutoPlay(false);
+    };
+
+    const closeFullscreen = () => {
+        setIsFullscreen(false);
+        if (typeof document !== 'undefined') document.body.style.overflow = '';
+        setAutoPlay(false);
+    };
+
+    const toggleAutoPlay = () => setAutoPlay((p) => !p);
+
+    if (!images || images.length === 0) {
+        return <div className="text-center text-gray-500 py-10">No images available.</div>;
+    }
+
     const currentThumbnails = images.slice(groupStart, groupStart + groupSize);
-    const isForward = groupStart > prevGroupStart;
+    const currentImage = images[currentIndex];
+    const MAIN_W = 1200;
+    const MAIN_H = 800;
 
     return (
-        <section
-            className="h-full py-12 px-4 sm:px-8 lg:px-20 flex flex-col lg:flex-row items-center gap-8"
-            aria-labelledby="gallery-heading"
-            role="region"
-        >
-            <h2 id="gallery-heading" className="sr-only">Apartment Gallery</h2>
+        <>
+            <section className="h-full py-12 px-4 sm:px-8 lg:px-20 flex flex-col lg:flex-row items-center gap-8">
+                {/* Main Image */}
+                <div className="w-full lg:w-1/2">
+                    <div className="relative rounded-xl overflow-hidden shadow-lg group" style={{ paddingTop: '70%' }}>
+                        <div className={`absolute inset-0 transition-opacity duration-300 ${mainImageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+                            <div className="w-full h-full flex items-center justify-center">
+                                <NextImage
+                                    src={currentImage.image_url}
+                                    alt={currentImage.image_name || `Apartment image ${currentIndex + 1}`}
+                                    width={MAIN_W}
+                                    height={MAIN_H}
+                                    className="object-cover w-full h-full cursor-zoom-in"
+                                    priority={currentIndex === 0}
+                                    onLoadingComplete={() => setMainImageLoaded(true)}
+                                    quality={75}
+                                />
+                            </div>
+                        </div>
+                        {!mainImageLoaded && <div className="absolute inset-0 bg-gray-100 animate-pulse" />}
 
-            {/* Left - Main Image */}
-            <div className="w-full lg:w-1/2">
-                <div className="relative aspect-[10/7] rounded-xl overflow-hidden shadow-lg">
-                    <AnimatePresence mode="async">
-                        <motion.div
-                            key={images[currentIndex]}
-                            initial={{ x: '100%' }}
-                            animate={{ x: '0%' }}
-                            exit={{ x: '-100%' }}
-                            transition={{ duration: 1, ease: 'easeInOut' }}
-                            className="absolute top-0 left-0 w-full h-full"
-                        >
-                            <Image
-                                src={images[currentIndex]}
-                                alt={`Featured apartment view ${currentIndex + 1}`}
-                                fill
-                                className="object-cover"
-                                priority
-                            />
-                        </motion.div>
-                    </AnimatePresence>
+                        {/* Navigation */}
+                        <button onClick={goToPrevious} className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200" aria-label="Previous image">
+                            <FaChevronLeft />
+                        </button>
+                        <button onClick={goToNext} className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200" aria-label="Next image">
+                            <FaChevronRight />
+                        </button>
+
+                        {/* Controls */}
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            <button onClick={toggleAutoPlay} className="flex justify-center items-center bg-black/50 hover:bg-black/70 text-white p-2 w-10 h-10 rounded-full" aria-label={autoPlay ? 'Pause slideshow' : 'Play slideshow'}>
+                                {autoPlay ? <FaPause /> : <FaPlay />}
+                            </button>
+                            <button onClick={openFullscreen} className="flex justify-center items-center bg-black/50 hover:bg-black/70 text-white p-2 w-10 h-10 rounded-full" aria-label="View fullscreen">
+                                <FaExpand />
+                            </button>
+                        </div>
+
+                        {/* Counter */}
+                        <div className="absolute bottom-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">{currentIndex + 1} / {images.length}</div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Right - Thumbnails */}
-            <div
-                className="w-full lg:w-1/2 aspect-[10/7.05] overflow-hidden p-2"
-                aria-label="Apartment image thumbnails"
-            >
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={groupStart}
-                        initial={{ x: isForward ? '100%' : '-100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: isForward ? '-100%' : '100%' }}
-                        transition={{ duration: 0.5, ease: 'easeInOut' }}
-                        className="grid grid-cols-2 grid-rows-2 gap-4 h-full w-full"
-                    >
+                {/* Thumbnails */}
+                <div className="w-full lg:w-1/2 p-2">
+                    <div className="grid grid-cols-2 gap-4">
                         {currentThumbnails.map((img, idx) => {
                             const actualIndex = groupStart + idx;
                             return (
-                                <div
-                                    key={img + actualIndex}
-                                    onClick={() => handleThumbnailClick(actualIndex)}
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            handleThumbnailClick(actualIndex);
-                                        }
-                                    }}
-                                    className={`relative aspect-[10/7] rounded-xl overflow-hidden cursor-pointer border-3 transition-all duration-200 ${actualIndex === currentIndex
-                                            ? 'border-black opacity-65'
-                                            : 'border-transparent'
-                                        }`}
-                                    role="button"
-                                    aria-label={`View image ${actualIndex + 1}`}
-                                >
-                                    <Image
-                                        src={img}
-                                        alt={`Apartment thumbnail ${actualIndex + 1}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
+                                <button key={`${img.id || img.image_url}-${idx}`} onClick={() => handleThumbnailClick(actualIndex)} className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${actualIndex === currentIndex ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-blue-300'}`}>
+                                    <div style={{ paddingTop: '70%', position: 'relative' }}>
+                                        <NextImage
+                                            src={img.image_url}
+                                            alt={img.image_name || `Thumbnail ${actualIndex + 1}`}
+                                            fill
+                                            sizes="(max-width: 768px) 25vw, (max-width: 1200px) 15vw, 10vw"
+                                            loading="lazy"
+                                            quality={65}
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                </button>
                             );
                         })}
-                    </motion.div>
-                </AnimatePresence>
-            </div>
-        </section>
+                    </div>
+                </div>
+            </section>
+
+            {/* Fullscreen */}
+            {isFullscreen && (
+                <div className="fixed inset-0 bg-black z-50 flex items-center justify-center" onClick={closeFullscreen}>
+                    <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={closeFullscreen} className="absolute top-4 right-4 text-white p-2 hover:bg-white/20 rounded-full">
+                            <FaTimes />
+                        </button>
+                        <div className="flex items-center justify-center">
+                            <NextImage src={currentImage.image_url} alt={currentImage.image_name || `Apartment image ${currentIndex + 1}`} width={MAIN_W} height={MAIN_H} className="object-contain max-w-full max-h-full" priority quality={90} />
+                        </div>
+
+                        <button onClick={goToPrevious} className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 text-white p-4 rounded-full">
+                            <FaChevronLeft />
+                        </button>
+                        <button onClick={goToNext} className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 text-white p-4 rounded-full">
+                            <FaChevronRight />
+                        </button>
+
+                        <div className="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-full">{currentIndex + 1} / {images.length}</div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

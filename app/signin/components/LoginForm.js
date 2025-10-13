@@ -18,7 +18,7 @@ export default function LoginForm() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch("/api/profile", {
+                const res = await fetch("/api/auth/me", {
                     method: "GET",
                     credentials: "include",
                 });

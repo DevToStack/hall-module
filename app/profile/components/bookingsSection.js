@@ -7,8 +7,8 @@ import {
     faTimesCircle,
     faAngleLeft,
 } from '@fortawesome/free-solid-svg-icons';
+import NextImage from 'next/image';
 import BookingCard from './BookingCard';
-import { fa } from 'zod/v4/locales';
 
 export default function BookingSection() {
     const [bookings, setBookings ] = useState([]);
@@ -151,7 +151,14 @@ export default function BookingSection() {
                 </div>
             ) : bookings.length === 0 ? (
                 <div className="text-center text-gray-400">
-                    <img src="/no_bookings.png" alt="No bookings" className="mx-auto w-48 opacity-80 mb-4" />
+                    <NextImage 
+                        src="/no_bookings.png" 
+                        alt="No bookings" 
+                        width={192}
+                        height={192}
+                        className="mx-auto w-48 opacity-80 mb-4" 
+                        priority
+                    />
                     <h1 className="text-white text-2xl">Book Now</h1>
                     <p className="text-lg">You have not made any bookings yet.</p>
                     <p className="text-sm">Start exploring apartments to find your next stay!</p>

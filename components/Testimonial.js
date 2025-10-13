@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar as solidStar } from "@fortawesome/free-solid-svg-icons";
 import { faStar as regularStar } from "@fortawesome/free-regular-svg-icons";
+import NextImage from 'next/image';
 
 const testimonials = [
     {
@@ -68,11 +69,12 @@ const TestimonialSection = () => {
                             className="bg-white rounded-xl shadow-md p-6 text-left hover:shadow-lg transition duration-300"
                         >
                             <figcaption className="flex items-center mb-4">
-                                <img
+                                <NextImage
                                     src={t.image}
                                     alt={`Photo of ${t.name}`}
+                                    width={48}
+                                    height={48}
                                     className="w-12 h-12 rounded-full object-cover mr-4"
-                                    loading="lazy"
                                 />
                                 <div>
                                     <h3 className="font-semibold text-gray-800">{t.name}</h3>

@@ -17,6 +17,8 @@ export async function GET(req) {
             return NextResponse.json({ error: error || 'Invalid or expired token' }, { status: 401 });
         }
 
+        //fetch user name and id
+        const users = await query(`SELECT id, name from users WHERE id = ?`,[decoded.id]);
         // ✅ Fetch reviews by this user
         const reviews = await query(`
             SELECT r.id, r.rating, r.comment, r.created_at
@@ -25,7 +27,7 @@ export async function GET(req) {
             ORDER BY r.created_at DESC
         `, [decoded.id]);
 
-        return NextResponse.json({ reviews });
+        return NextResponse.json({ reviews, users });
 
     } catch (err) {
         console.error('GET user reviews error:', err);

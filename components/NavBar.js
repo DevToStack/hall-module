@@ -23,7 +23,7 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
         const fetchProfile = async () => {
             try {
-                const res = await fetch("/api/profile", {
+                const res = await fetch("/api/auth/me", {
                     method: "GET",
                     credentials: "include", // ✅ send HttpOnly cookies automatically
                     cache: "no-store",
@@ -43,8 +43,8 @@ export default function NavBar({ activeTab, setActiveTab }) {
 
                 const data = await res.json();
 
-                if (data?.user) {
-                    setProfile(data.user);
+                if (data) {
+                    setProfile(data);
                 } else {
                     setProfile(null);
                     router.push("/");

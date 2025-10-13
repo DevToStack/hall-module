@@ -1,10 +1,16 @@
-import { useCallback, useMemo } from 'react';
-import Particles from 'react-tsparticles';
-import { loadSlim } from 'tsparticles-slim';
+import { useCallback, useMemo, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// Lazy load particles to reduce initial bundle size
+const Particles = dynamic(() => import('react-tsparticles'), { ssr: false });
 
 const HeroParticlesBackground = () => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    
     const particlesInit = useCallback(async (engine) => {
+        const { loadSlim } = await import('tsparticles-slim');
         await loadSlim(engine);
+        setIsLoaded(true);
     }, []);
 
     const options = useMemo(() => ({
@@ -85,6 +91,22 @@ const HeroParticlesBackground = () => {
         },
       }), []);
       
+
+    // Don't render particles on mobile for better performance
+    const [isMobile, setIsMobile] = useState(false);
+    
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    if (isMobile) {
+        return <div className="w-full h-full bg-neutral-900" />;
+    }
 
     return (
         <Particles
